@@ -1,0 +1,19 @@
+public enum CPRState {
+        CheckSafety,
+        WearPPE,
+        CheckConsciousness,
+        Call119AndRequestAED,
+        CheckBreathingAndPulse,
+        ChestCompressions,
+        OpenAirway,
+        ProvideRescueBreaths,
+        ContinueCPR,
+        DirectAssistants,
+        TurnOnAED,
+        AttachPads,
+        ClearArea,
+        DeliverShock,
+        ResumeChestCompressions,
+        RecordDocuments,
+        Completed
+ }

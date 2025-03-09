@@ -1,0 +1,4 @@
+repository "Capstone_Desgin_V2/Capstone_Design_V2@14569534635072@cloud"
+  path "/"
+    br "/main"
+    co "/main"
