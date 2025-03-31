@@ -17,143 +17,137 @@ using UnityEngine.UI;
 
 namespace HoloLensWithOpenCVForUnityExample
 {
-    /// <summary>
+
     /// HoloLens ArUco Example
     /// An example of marker based AR using OpenCVForUnity on Hololens.
     /// Referring to https://github.com/opencv/opencv_contrib/blob/master/modules/aruco/samples/detect_markers.cpp.
-    /// </summary>
+
     [RequireComponent(typeof(HLCameraStream2MatHelper), typeof(ImageOptimizationHelper))]
     public class HLArUcoExample : MonoBehaviour
     {
         [HeaderAttribute("Preview")]
-
-        /// <summary>
         /// The preview quad.
-        /// </summary>
         public GameObject previewQuad;
 
-        /// <summary>
         /// Determines if displays the camera preview.
-        /// </summary>
         public bool displayCameraPreview;
 
-        /// <summary>
         /// The toggle for switching the camera preview display state.
-        /// </summary>
+
         public Toggle displayCameraPreviewToggle;
 
 
         [HeaderAttribute("Detection")]
 
-        /// <summary>
+
         /// Determines if enables the detection.
-        /// </summary>
+
         public bool enableDetection = true;
 
-        /// <summary>
+
         /// Determines if restores the camera parameters when the file exists.
-        /// </summary>
+
         public bool useStoredCameraParameters = false;
 
-        /// <summary>
+
         /// The toggle for switching to use the stored camera parameters.
-        /// </summary>
+
         public Toggle useStoredCameraParametersToggle;
 
-        /// <summary>
+
         /// Determines if enable downscale.
-        /// </summary>
+
         public bool enableDownScale;
 
-        /// <summary>
+
         /// The enable downscale toggle.
-        /// </summary>
+
         public Toggle enableDownScaleToggle;
 
 
         [HeaderAttribute("AR")]
 
-        /// <summary>
+
         /// Determines if applied the pose estimation.
-        /// </summary>
+
         public bool applyEstimationPose = true;
 
-        /// <summary>
+
         /// The dictionary identifier.
-        /// </summary>
+
         public int dictionaryId = Objdetect.DICT_6X6_250;
 
-        /// <summary>
+
         /// The length of the markers' side. Normally, unit is meters.
-        /// </summary>
+
         public float markerLength = 0.188f;
 
-        /// <summary>
+
         /// The AR cube.
-        /// </summary>
+
         public GameObject arCube;
 
-        /// <summary>
+
         /// The AR game object.
-        /// </summary>
+
         public ARGameObject arGameObject;
 
-        /// <summary>
+
         /// The AR camera.
-        /// </summary>
+
         public Camera arCamera;
 
 
         [Space(10)]
 
-        /// <summary>
+
         /// Determines if enable lerp filter.
-        /// </summary>
+
         public bool enableLerpFilter;
 
-        /// <summary>
+
         /// The enable lerp filter toggle.
-        /// </summary>
+
         public Toggle enableLerpFilterToggle;
 
-        /// <summary>
+
         /// The cameraparam matrix.
-        /// </summary>
+
         Mat camMatrix;
 
-        /// <summary>
+
         /// The distCoeffs.
-        /// </summary>
+
         MatOfDouble distCoeffs;
 
-        /// <summary>
+
         /// The matrix that inverts the Y-axis.
-        /// </summary>
+
         Matrix4x4 invertYM;
 
-        /// <summary>
+
         /// The matrix that inverts the Z-axis.
-        /// </summary>
+
         Matrix4x4 invertZM;
 
-        /// <summary>
+
         /// The transformation matrix.
-        /// </summary>
+
         Matrix4x4 transformationM;
 
-        /// <summary>
+
         /// The transformation matrix for AR.
-        /// </summary>
+
         Matrix4x4 ARM;
 
-        /// <summary>
+
         /// The webcam texture to mat helper.
-        /// </summary>
+
         HLCameraStream2MatHelper webCamTextureToMatHelper;
 
-        /// <summary>
+
         /// The image optimization helper.
-        /// </summary>
+
         ImageOptimizationHelper imageOptimizationHelper;
 
         Mat rgbMat4preview;
@@ -263,9 +257,9 @@ namespace HoloLensWithOpenCVForUnityExample
             webCamTextureToMatHelper.Initialize();
         }
 
-        /// <summary>
+
         /// Raises the web cam texture to mat helper initialized event.
-        /// </summary>
+
         public void OnWebCamTextureToMatHelperInitialized()
         {
             Debug.Log("OnWebCamTextureToMatHelperInitialized");
@@ -448,9 +442,9 @@ namespace HoloLensWithOpenCVForUnityExample
             rgbMat4preview = new Mat();
         }
 
-        /// <summary>
+
         /// Raises the web cam texture to mat helper disposed event.
-        /// </summary>
+
         public void OnWebCamTextureToMatHelperDisposed()
         {
             Debug.Log("OnWebCamTextureToMatHelperDisposed");
@@ -510,9 +504,9 @@ namespace HoloLensWithOpenCVForUnityExample
             DebugUtils.ClearDebugStr();
         }
 
-        /// <summary>
+
         /// Raises the webcam texture to mat helper error occurred event.
-        /// </summary>
+
         /// <param name="errorCode">Error code.</param>
         /// <param name="message">Message.</param>
         public void OnWebCamTextureToMatHelperErrorOccurred(Source2MatHelperErrorCode errorCode, string message)
@@ -954,9 +948,9 @@ namespace HoloLensWithOpenCVForUnityExample
             }
         }
 
-        /// <summary>
+
         /// Raises the destroy event.
-        /// </summary>
+
         void OnDestroy()
         {
 #if WINDOWS_UWP && !DISABLE_HOLOLENSCAMSTREAM_API
@@ -966,49 +960,49 @@ namespace HoloLensWithOpenCVForUnityExample
             imageOptimizationHelper.Dispose();
         }
 
-        /// <summary>
+
         /// Raises the back button click event.
-        /// </summary>
+
         public void OnBackButtonClick()
         {
             SceneManager.LoadScene("HoloLensWithOpenCVForUnityExample");
         }
 
-        /// <summary>
+
         /// Raises the play button click event.
-        /// </summary>
+
         public void OnPlayButtonClick()
         {
             webCamTextureToMatHelper.Play();
         }
 
-        /// <summary>
+
         /// Raises the pause button click event.
-        /// </summary>
+
         public void OnPauseButtonClick()
         {
             webCamTextureToMatHelper.Pause();
         }
 
-        /// <summary>
+
         /// Raises the stop button click event.
-        /// </summary>
+
         public void OnStopButtonClick()
         {
             webCamTextureToMatHelper.Stop();
         }
 
-        /// <summary>
+
         /// Raises the change camera button click event.
-        /// </summary>
+
         public void OnChangeCameraButtonClick()
         {
             webCamTextureToMatHelper.requestedIsFrontFacing = !webCamTextureToMatHelper.requestedIsFrontFacing;
         }
 
-        /// <summary>
+
         /// Raises the display camera preview toggle value changed event.
-        /// </summary>
+
         public void OnDisplayCamreaPreviewToggleValueChanged()
         {
             displayCameraPreview = displayCameraPreviewToggle.isOn;
@@ -1016,9 +1010,9 @@ namespace HoloLensWithOpenCVForUnityExample
             previewQuad.SetActive(displayCameraPreview);
         }
 
-        /// <summary>
+
         /// Raises the use stored camera parameters toggle value changed event.
-        /// </summary>
+
         public void OnUseStoredCameraParametersToggleValueChanged()
         {
             useStoredCameraParameters = useStoredCameraParametersToggle.isOn;
@@ -1029,9 +1023,9 @@ namespace HoloLensWithOpenCVForUnityExample
             }
         }
 
-        /// <summary>
+
         /// Raises the enable downscale toggle value changed event.
-        /// </summary>
+
         public void OnEnableDownScaleToggleValueChanged()
         {
             enableDownScale = enableDownScaleToggle.isOn;
@@ -1043,9 +1037,9 @@ namespace HoloLensWithOpenCVForUnityExample
             }
         }
 
-        /// <summary>
+
         /// Raises the enable lerp filter toggle value changed event.
-        /// </summary>
+
         public void OnEnableLerpFilterToggleValueChanged()
         {
             enableLerpFilter = enableLerpFilterToggle.isOn;

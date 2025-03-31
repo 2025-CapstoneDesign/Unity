@@ -100,15 +100,14 @@ namespace OpenCVForUnity.UnityUtils.Helper
         public virtual Mat GetDownScaleMat(Mat originalMat)
         {
             if (Mathf.Approximately(_downscaleRatio, 1f))
-                return originalMat;
+                return originalMat.clone();
 
-            if (downScaleFrameMat == null)
-                downScaleFrameMat = new Mat();
+            Mat downScaled = new Mat();
+            Imgproc.resize(originalMat, downScaled, new Size(), 1.0 / _downscaleRatio, 1.0 / _downscaleRatio, Imgproc.INTER_LINEAR);
 
-            Imgproc.resize(originalMat, downScaleFrameMat, new Size(), 1.0 / _downscaleRatio, 1.0 / _downscaleRatio, Imgproc.INTER_LINEAR);
-
-            return downScaleFrameMat;
+            return downScaled;  // 항상 새 Mat 반환
         }
+
 
         /// <summary>
         /// To release the resources for the initialized method.
