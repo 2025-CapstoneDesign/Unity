@@ -38,7 +38,7 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("ver.20250331 Modular");
+        Debug.Log("ver.20250401 V2");
 
         optimizationHelper = GetComponent<ImageOptimizationHelper>();
         camHelper = GetComponent<HLCameraStream2MatHelper>();
@@ -167,23 +167,23 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
         Matrix4x4 markerToCamera = GetTransformMatrix(rvec, tvec);
         Matrix4x4 markerToWorld = camToWorld * markerToCamera;
 
-        Matrix4x4 flipped = markerToWorld;
-        flipped.SetColumn(2, -markerToWorld.GetColumn(2));
+        Vector3 pos = markerToWorld.GetColumn(3);
+        Quaternion rot = Quaternion.LookRotation(markerToWorld.GetColumn(2), markerToWorld.GetColumn(1));
 
-        Vector3 pos = useFlippedZ ? flipped.GetColumn(3) : markerToWorld.GetColumn(3);
-        Quaternion rot = useFlippedZ
-            ? Quaternion.LookRotation(flipped.GetColumn(2), flipped.GetColumn(1))
-            : Quaternion.LookRotation(markerToWorld.GetColumn(2), markerToWorld.GetColumn(1));
+        // 👉 눈 위치 보정
+        Vector3 eyeOffset = new Vector3(0f, 0.03f, -0.05f);
+        Vector3 worldOffset = camToWorld.MultiplyVector(eyeOffset);
+        pos += worldOffset;
 
         markerMap[markerId] = new MarkerData(pos, rot);
 
-        // 👉 메인 스레드에서 Camera.main 접근
         MainThreadDispatcher.Enqueue(() =>
         {
             float distance = Vector3.Distance(Camera.main.transform.position, pos);
             Debug.Log($"[ARUCO] ID: {markerId} | Position: {pos} | Distance: {distance:F2}m");
         });
     }
+
 
 
     private void RecalculateCameraMatrix(float scale)
@@ -227,18 +227,24 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
         Mat rotMat = new Mat();
         Calib3d.Rodrigues(rvec, rotMat);
 
+        // 변환 행렬 생성
         Matrix4x4 m = Matrix4x4.identity;
         for (int row = 0; row < 3; row++)
             for (int col = 0; col < 3; col++)
                 m[row, col] = (float)rotMat.get(row, col)[0];
 
+        // 위치 벡터 넣기
         m[0, 3] = (float)tvec.get(0, 0)[0];
         m[1, 3] = (float)tvec.get(1, 0)[0];
         m[2, 3] = (float)tvec.get(2, 0)[0];
 
         rotMat.Dispose();
-        return m;
+
+        // 🧩 좌표계 변환: Y, Z 축 반전
+        Matrix4x4 convert = Matrix4x4.Scale(new Vector3(1, -1, -1));
+        return convert * m;
     }
+
 
     private void OnDestroy()
     {
