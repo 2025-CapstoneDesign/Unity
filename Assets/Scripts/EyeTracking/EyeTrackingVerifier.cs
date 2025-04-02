@@ -22,6 +22,8 @@ public class EyeTrackingVerifier : MonoBehaviour
 
     private Action onVerifiedCallback;
 
+    public bool IsVerified => isVerified;
+
     /// <summary>
     /// 외부에서 좌표, 크기, 시간, 성공 콜백을 한 번에 넣어 검증을 시작합니다.
     /// </summary>
@@ -55,8 +57,6 @@ public class EyeTrackingVerifier : MonoBehaviour
         isVerified = false;
         currentLookTime = 0f;
     }
-
-    public bool IsVerified => isVerified;
 
     void Update()
     {

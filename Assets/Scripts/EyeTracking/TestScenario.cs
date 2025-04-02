@@ -22,13 +22,12 @@ public class TestScenario : MonoBehaviour
         Debug.Log("🟢 1단계 시작: AED를 3초간 바라보세요");
         currentStep = 1;
 
-        verifier.Initialize(
+        verifier.BeginVerification(
             aedTargetTransform.position,
             targetSize,
             3.0f,
             OnStep1Success
         );
-        verifier.StartVerification();
     }
 
     void OnStep1Success()
@@ -42,13 +41,12 @@ public class TestScenario : MonoBehaviour
         Debug.Log("🟢 2단계 시작: 환자 머리를 2초간 바라보세요");
         currentStep = 2;
 
-        verifier.Initialize(
+        verifier.BeginVerification(
             headTargetTransform.position,
             targetSize,
             2.0f,
             OnStep2Success
         );
-        verifier.StartVerification();
     }
 
     void OnStep2Success()

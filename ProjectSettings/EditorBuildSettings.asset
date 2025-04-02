@@ -8,7 +8,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/OpenCVForUnity/Examples/MainModules/objdetect/ArUcoExample/ArUcoExample_Built-in.unity
     guid: 341aba2f1628bc049af49cd0dda3a513
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/CaptureScene.unity
     guid: 2e164d60b7e9fe9489308fcbf7b956a9
   - enabled: 0
@@ -23,7 +23,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/StageSelectScene.unity
     guid: 0c50264652bc453429df8239577cdb35
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/EyeTrackerScene.unity
     guid: 8e4b0933058dc994c9cffe525a6874f1
   m_configObjects:
