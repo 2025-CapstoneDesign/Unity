@@ -5,7 +5,7 @@ public class MarkerFollower : MonoBehaviour
     public int markerId = 0;
     public float moveSpeed = 5f;
     public float rotateSpeed = 5f;
-    public int updateInterval = 10; // 💡 10프레임마다 실행
+    public int updateInterval = 2; // 💡 2프레임마다 실행
 
     private Renderer objectRenderer;
     private int frameCounter = 0;
@@ -26,19 +26,29 @@ public class MarkerFollower : MonoBehaviour
     void Update()
     {
         frameCounter++;
-
         if (frameCounter < updateInterval) return;
-
-        // 💡 10프레임마다 한 번만 아래 실행
         frameCounter = 0;
 
         if (OptimizedArUcoMarkerDetection.markerMap.TryGetValue(markerId, out MarkerData data))
         {
-            transform.position = Vector3.Lerp(transform.position, data.position, Time.deltaTime * moveSpeed);
-            transform.rotation = Quaternion.Slerp(transform.rotation, data.rotation, Time.deltaTime * rotateSpeed);
+            Vector3 markerUp = data.rotation * Vector3.up;
+            Vector3 markerForward = data.rotation * Vector3.forward;
+            bool isWall = Mathf.Abs(Vector3.Dot(markerUp, Vector3.up)) < 0.5f;
+            float offsetDistance = 0.02f;
+
+            Vector3 offsetPosition = isWall
+                ? data.position + markerForward * offsetDistance
+                : data.position + markerUp * offsetDistance;
+
+            transform.position = offsetPosition;
+            transform.rotation = data.rotation;
 
             if (objectRenderer != null && !objectRenderer.enabled)
                 objectRenderer.enabled = true;
+
+            // ✅ 디버그 로그 & 라인 추가
+            Debug.Log($"📍 MarkerFollower [{markerId}] 위치: {offsetPosition} (벽 여부: {isWall})");
+            Debug.Log($"🔄 MarkerFollower [{markerId}] 회전: {transform.rotation.eulerAngles}");
         }
         else
         {

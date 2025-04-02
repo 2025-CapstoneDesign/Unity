@@ -14,15 +14,18 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/CalScene.unity
     guid: 0afc5c5291f15e44bb10d46b21925bd3
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MenuScene.unity
     guid: c490f855a4ead7243a1e6c34cb1e1868
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/StageSelectScene.unity
     guid: 0c50264652bc453429df8239577cdb35
+  - enabled: 0
+    path: Assets/Scenes/EyeTrackerScene.unity
+    guid: 8e4b0933058dc994c9cffe525a6874f1
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: dddc7d64e5389e4459680f88ba84a33a, type: 2}
     com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 0fcb81375c03b974e9ff0d216548492b, type: 2}
