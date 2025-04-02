@@ -8,7 +8,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/OpenCVForUnity/Examples/MainModules/objdetect/ArUcoExample/ArUcoExample_Built-in.unity
     guid: 341aba2f1628bc049af49cd0dda3a513
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/CaptureScene.unity
     guid: 2e164d60b7e9fe9489308fcbf7b956a9
   - enabled: 0
@@ -26,6 +26,9 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/EyeTrackerScene.unity
     guid: 8e4b0933058dc994c9cffe525a6874f1
+  - enabled: 1
+    path: Assets/Scenes/NetworkScene.unity
+    guid: b3ea8b6d02e036a4d836a44f19121807
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: dddc7d64e5389e4459680f88ba84a33a, type: 2}
     com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 0fcb81375c03b974e9ff0d216548492b, type: 2}

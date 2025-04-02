@@ -16,7 +16,7 @@ public class WebSocketClient : MonoBehaviour
     private float reconnectInterval = 5f;
     private float reconnectTimer = 0f;
 
-    private string serverUrl = "ws://203.255.221.148:10050"; // TODO: 실제 주소로 변경
+    private string serverUrl = "ws://192.168.131.18:10050"; // TODO: 실제 주소로 변경
 
     void Awake() => Instance = this;
 
@@ -122,7 +122,10 @@ public class WebSocketClient : MonoBehaviour
 
     public bool IsConnected()
     {
-        return websocket != null && websocket.State == WebSocketState.Open;
+        bool result = websocket != null && websocket.State == WebSocketState.Open;
+        Debug.Log("🔌 연결 상태 확인: " + result);
+        return result;
     }
+
 
 }

@@ -37,7 +37,7 @@ public class LessonManager : MonoBehaviour
         currentStep = step;
         Debug.Log($"📘 Step {currentStep} 시작");
 
-        if (currentStep == 2) // 평가가 필요한 단계
+        if (currentStep == 1) // 평가가 필요한 단계
         {
             VoiceSender.Instance.StartCapture();
         }
