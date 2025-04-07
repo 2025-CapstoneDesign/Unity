@@ -31,13 +31,11 @@ public class HandTrackingValidate : MonoBehaviour
         currentTime = 0f;
         isActive = true;
 
-        Debug.Log("🖐️ 손 위치 검증 시작됨");
     }
 
     public void StopVerification()
     {
         isActive = false;
-        Debug.Log("⛔ 손 위치 검증 중단됨");
     }
 
     void Update()
@@ -47,7 +45,6 @@ public class HandTrackingValidate : MonoBehaviour
 
         if (!OptimizedArUcoMarkerDetection.markerMap.TryGetValue(markerId, out MarkerData marker))
         {
-            Debug.LogWarning($"❌ 마커 ID {markerId} 를 찾을 수 없습니다.");
             return;
         }
 
@@ -61,8 +58,6 @@ public class HandTrackingValidate : MonoBehaviour
             Vector3 handPos = pose.Position;
         float dist = Vector3.Distance(handPos, targetWorldPos);
 
-        // ✅ 디버그 출력
-        Debug.Log($"[HAND DEBUG] 🖐️ 손 위치: {handPos:F3} | 🎯 목표 위치: {targetWorldPos:F3} | 📍마커 위치: {marker.position:F3} | 📏 거리: {dist:F3}");
 
             if (dist <= radius)
             {
@@ -72,7 +67,6 @@ public class HandTrackingValidate : MonoBehaviour
                 {
                     IsVerified = true;
                     isActive = false;
-                    Debug.Log("✅ 손 위치 검증 성공!");
                     onVerifiedCallback?.Invoke();
                 }
             }

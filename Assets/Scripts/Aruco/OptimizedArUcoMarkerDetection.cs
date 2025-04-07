@@ -38,7 +38,6 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("ver.20250401 V2");
 
         optimizationHelper = GetComponent<ImageOptimizationHelper>();
         camHelper = GetComponent<HLCameraStream2MatHelper>();
@@ -73,7 +72,6 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
         scaledCamMatrix = new Mat(3, 3, CvType.CV_64FC1);
         scaledDistCoeffs = new MatOfDouble(distCoeffs.clone());
 
-        Debug.Log("[NS] ✅ 카메라 파라미터 초기화 완료");
     }
 
     public void OnWebCamTextureToMatHelperInitialized()
@@ -124,7 +122,6 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.Log("[NS] : Exception in OnFrameMatAcquired - " + e);
         }
         finally
         {
@@ -180,7 +177,6 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
         MainThreadDispatcher.Enqueue(() =>
         {
             float distance = Vector3.Distance(Camera.main.transform.position, pos);
-            Debug.Log($"[ARUCO] ID: {markerId} | Position: {pos} | Distance: {distance:F2}m");
         });
     }
 

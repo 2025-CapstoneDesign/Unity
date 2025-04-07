@@ -23,14 +23,11 @@ public class MarkerDistanceValidate : MonoBehaviour
 
         IsVerified = false;
         isActive = true;
-
-        Debug.Log($"📏 마커 거리 검증 시작: ID {markerId1} ↔ {markerId2}, 범위 [{minDistance:F2} ~ {maxDistance:F2}]");
     }
 
     public void StopValidation()
     {
         isActive = false;
-        Debug.Log("⛔ 마커 거리 검증 중단됨");
     }
 
     void Update()
@@ -48,18 +45,15 @@ public class MarkerDistanceValidate : MonoBehaviour
             {
                 IsVerified = true;
                 isActive = false;
-                Debug.Log($"✅ 마커 거리 검증 성공! 거리: {distance:F2}m");
 
                 onVerifiedCallback?.Invoke();
             }
             else
             {
-                Debug.Log($"❌ 거리 {distance:F2}m - 범위 [{minDistance:F2} ~ {maxDistance:F2}] 벗어남");
             }
         }
         else
         {
-            Debug.LogWarning("❌ 마커 위치를 찾을 수 없음: 하나 또는 둘 다 인식되지 않음");
         }
     }
 }

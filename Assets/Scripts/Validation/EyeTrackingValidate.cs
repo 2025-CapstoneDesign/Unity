@@ -68,13 +68,9 @@ public class EyeTrackingValidate : MonoBehaviour
                     targetObject.SetActive(true);
                 });
             }
-
-
-            Debug.Log("👁️‍🗨️ 시선 검증 시작됨 (마커 기준)");
         }
         else
         {
-            Debug.LogWarning($"❌ 마커 ID {markerId} 를 찾을 수 없습니다.");
             isActive = false;
         }
     }
@@ -93,8 +89,6 @@ public class EyeTrackingValidate : MonoBehaviour
                 isLooking = false;
             }
         }
-
-        Debug.Log("⛔ 시선 검증 중단됨");
     }
 
     void Update()
@@ -133,8 +127,6 @@ public class EyeTrackingValidate : MonoBehaviour
 
                         if (targetObject != null)
                             targetObject.SetActive(false);
-
-                        Debug.Log("✅ 시선 검증 성공 (마커 기준)!");
                         onVerifiedCallback?.Invoke();
                     }
                 }

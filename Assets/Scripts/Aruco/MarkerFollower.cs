@@ -45,10 +45,6 @@ public class MarkerFollower : MonoBehaviour
 
             if (objectRenderer != null && !objectRenderer.enabled)
                 objectRenderer.enabled = true;
-
-            // ✅ 디버그 로그 & 라인 추가
-            Debug.Log($"📍 MarkerFollower [{markerId}] 위치: {offsetPosition} (벽 여부: {isWall})");
-            Debug.Log($"🔄 MarkerFollower [{markerId}] 회전: {transform.rotation.eulerAngles}");
         }
         else
         {
