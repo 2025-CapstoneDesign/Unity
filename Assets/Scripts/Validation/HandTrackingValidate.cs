@@ -58,7 +58,11 @@ public class HandTrackingValidate : MonoBehaviour
         // 손 위치 (오른손 기준)
         if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Palm, Handedness.Right, out MixedRealityPose pose))
         {
-            float dist = Vector3.Distance(pose.Position, targetWorldPos);
+            Vector3 handPos = pose.Position;
+        float dist = Vector3.Distance(handPos, targetWorldPos);
+
+        // ✅ 디버그 출력
+        Debug.Log($"[HAND DEBUG] 🖐️ 손 위치: {handPos:F3} | 🎯 목표 위치: {targetWorldPos:F3} | 📍마커 위치: {marker.position:F3} | 📏 거리: {dist:F3}");
 
             if (dist <= radius)
             {
