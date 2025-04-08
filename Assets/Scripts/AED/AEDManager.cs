@@ -91,16 +91,85 @@ public class AEDManager : MonoBehaviour
     }
 
     private IEnumerator CPRProcedure()
+{
+    while (currentState != CPRState.Completed)
     {
-        while (currentState != CPRState.Completed)
+        UpdateStepUI();
+
+        switch (currentState)
         {
-            UpdateStepUI();
-            yield return StartCoroutine(WaitForInput());
+            case CPRState.CheckSafety:
+                // 예: 타이머 표시 등
+                break;
+
+            case CPRState.WearPPE:
+                // 예: 장갑 착용 애니메이션 등
+                break;
+
+            case CPRState.CheckConsciousness:
+                // 예: 환자에게 말걸기 애니메이션
+                break;
+
+            case CPRState.Call119AndRequestAED:
+                // 예: 전화기 오브젝트 활성화 등
+                break;
+
+            case CPRState.CheckBreathingAndPulse:
+                // 예: 손 위치 안내 표시
+                break;
+
+            case CPRState.ChestCompressions:
+                // ✅ 강도 UI를 활성화하거나 압박 깊이 측정 시작
+                break;
+
+            case CPRState.OpenAirway:
+                // 예: 머리 젖히는 동작 안내
+                break;
+
+            case CPRState.ProvideRescueBreaths:
+                // 예: 포켓마스크 애니메이션, 숨 불어넣기
+                break;
+
+            case CPRState.ContinueCPR:
+                // 예: 반복 사이클 표시
+                break;
+
+            case CPRState.DirectAssistants:
+                // 예: 손짓 애니메이션
+                break;
+
+            case CPRState.TurnOnAED:
+                // 예: AED 오브젝트 버튼 활성화
+                break;
+
+            case CPRState.AttachPads:
+                // 예: 패드 위치 가이드 표시
+                break;
+
+            case CPRState.ClearArea:
+                // 예: 주위 사람들 물러서게 하는 알림
+                break;
+
+            case CPRState.DeliverShock:
+                // 예: 버튼 누르면 이펙트 발생
+                break;
+
+            case CPRState.ResumeChestCompressions:
+                // ✅ 다시 압박 유도 시작
+                break;
+
+            case CPRState.RecordDocuments:
+                // 예: 기록지 작성 인터랙션
+                break;
         }
 
-        aedMessageText.text = "🎉 훈련이 완료되었습니다!";
-        UpdateProgressBar();
+        yield return StartCoroutine(WaitForInput());
     }
+
+    aedMessageText.text = "🎉 훈련이 완료되었습니다!";
+    UpdateProgressBar();
+}
+
 
     private void UpdateStepUI()
     {
