@@ -3,56 +3,59 @@ using UnityEngine;
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit;
 
+/*
+    사용 예시 :
+    Vector3 targetPos = new Vector3(0, 1.5f, 2f);
+    Vector3 targetSize = new Vector3(0.4f, 0.4f, 0.4f);
+    float lookTime = 2.5f;
+    verifier.BeginVerification(targetPos, targetSize, lookTime, OnEyeVerified);
+*/
 public class EyeTrackingVerifier : MonoBehaviour
 {
     private Vector3 targetPosition;
     private Vector3 targetSize;
     private float requiredLookTime;
     private float currentLookTime = 0f;
-    private float outOfBoundsTimer = 0f;
-
-    public float allowedLookAwayTime = 0.5f;
 
     private bool isVerified = false;
-    private bool isInitialized = false;
     private bool isActive = false;
 
-    public Action OnVerified;
+    private Action onVerifiedCallback;
 
-    public void Initialize(Vector3 position, Vector3 size, float lookTime, Action onSuccess)
+    public bool IsVerified => isVerified;
+
+    /// <summary>
+    /// 외부에서 좌표, 크기, 시간, 성공 콜백을 한 번에 넣어 검증을 시작합니다.
+    /// </summary>
+    public void BeginVerification(Vector3 position, Vector3 size, float lookTime, Action onSuccess)
     {
         targetPosition = position;
         targetSize = size;
         requiredLookTime = lookTime;
-        OnVerified = onSuccess;
+        onVerifiedCallback = onSuccess;
 
-        isInitialized = true;
         ResetVerification();
-    }
-
-    public void StartVerification()
-    {
-        if (!isInitialized)
-        {
-            Debug.LogWarning("🔴 EyeTrackingVerifier: Initialize() 먼저 호출해야 합니다.");
-            return;
-        }
-
         isActive = true;
+
         Debug.Log("👁️‍🗨️ 시선 검증 시작됨");
     }
 
+    /// <summary>
+    /// 검증 강제 중단
+    /// </summary>
     public void StopVerification()
     {
         isActive = false;
         Debug.Log("⛔ 시선 검증 중단됨");
     }
 
-    public void ResetVerification()
+    /// <summary>
+    /// 내부 상태 초기화
+    /// </summary>
+    private void ResetVerification()
     {
         isVerified = false;
         currentLookTime = 0f;
-        outOfBoundsTimer = 0f;
     }
 
     void Update()
@@ -68,12 +71,10 @@ public class EyeTrackingVerifier : MonoBehaviour
             Vector3 direction = eyeGazeProvider.GazeDirection;
             Ray gazeRay = new Ray(origin, direction);
 
-            RaycastHit hit;
-            if (Physics.Raycast(gazeRay, out hit, 10f))
+            if (Physics.Raycast(gazeRay, out RaycastHit hit, 10f))
             {
                 Vector3 gazePoint = hit.point;
 
-                // 🔍 디버그용 로그: 무엇을 바라보고 있는가?
                 Debug.Log($"👁️ 시선이 '{hit.collider.gameObject.name}' 오브젝트에 닿음");
 
                 Bounds bounds = new Bounds(targetPosition, targetSize);
@@ -81,29 +82,16 @@ public class EyeTrackingVerifier : MonoBehaviour
                 if (bounds.Contains(gazePoint))
                 {
                     currentLookTime += Time.deltaTime;
-                    outOfBoundsTimer = 0f;
 
                     if (currentLookTime >= requiredLookTime)
                     {
                         isVerified = true;
                         isActive = false;
                         Debug.Log("✅ 시선 검증 성공!");
-                        OnVerified?.Invoke();
-                    }
-                }
-                else
-                {
-                    outOfBoundsTimer += Time.deltaTime;
-
-                    if (outOfBoundsTimer >= allowedLookAwayTime)
-                    {
-                        currentLookTime = 0f;
-                        outOfBoundsTimer = 0f;
-                        Debug.Log("🔁 시선 너무 오래 벗어남, 누적 시간 리셋");
+                        onVerifiedCallback?.Invoke();
                     }
                 }
             }
-
         }
     }
 }
