@@ -9,10 +9,21 @@ public class AEDManager : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI aedMessageText;       // 단계 안내
-    [SerializeField] private TextMeshProUGUI retryMessageText;     // 통과/실패 메시지
     [SerializeField] private Slider progressBar;                   // 진행률 바
     [SerializeField] private Image fillMaskImage;
     [SerializeField] private TextMeshProUGUI timerText;
+    [SerializeField] private CountTextDisplay countTextDisplay;
+
+    [SerializeField] private Image checkIcon; // 체크 아이콘 이미지
+    
+
+    // 테스트: 코드에서 직접 설정
+
+    private Coroutine iconColorResetCoroutine;
+
+private Color passColor = new Color(0f, 1f, 0f, 1f); // 초록
+private Color failColor = new Color(1f, 0f, 0f, 1f); // 빨강
+private Color idleColor = new Color(0.5f, 0.5f, 0.5f, 1f); // 회색
 
    private bool timeOverNotified = false;
     private bool isFlashing = false;
@@ -29,8 +40,7 @@ public class AEDManager : MonoBehaviour
         totalSteps = System.Enum.GetValues(typeof(CPRState)).Length - 1; // Completed 제외
 
         // 시작 시 재시도 메시지 숨기기
-        var cg = retryMessageText.GetComponent<CanvasGroup>();
-        if (cg != null) cg.alpha = 0f;
+        
 
         StartCoroutine(StartWithDelay());
     }
@@ -95,11 +105,11 @@ public class AEDManager : MonoBehaviour
     while (currentState != CPRState.Completed)
     {
         UpdateStepUI();
-
+        // ✅ 각 단계에 따라 UI 업데이트
         switch (currentState)
         {
             case CPRState.CheckSafety:
-                // 예: 타이머 표시 등
+                
                 break;
 
             case CPRState.WearPPE:
@@ -120,6 +130,8 @@ public class AEDManager : MonoBehaviour
 
             case CPRState.ChestCompressions:
                 // ✅ 강도 UI를 활성화하거나 압박 깊이 측정 시작
+            
+                countTextDisplay.ShowCompressionCount(0);
                 break;
 
             case CPRState.OpenAirway:
@@ -131,7 +143,7 @@ public class AEDManager : MonoBehaviour
                 break;
 
             case CPRState.ContinueCPR:
-                // 예: 반복 사이클 표시
+                
                 break;
 
             case CPRState.DirectAssistants:
@@ -171,12 +183,19 @@ public class AEDManager : MonoBehaviour
 }
 
 
-    private void UpdateStepUI()
-    {
-        aedMessageText.text = AEDMessageManager.GetMessage(currentState);
-        aedMessageText.color = Color.white;
-        UpdateProgressBar();
-    }
+   private void UpdateStepUI()
+{
+    aedMessageText.text = AEDMessageManager.GetMessage(currentState);
+    aedMessageText.color = Color.white;
+
+    countTextDisplay.Hide();
+
+    if (checkIcon != null)
+        
+
+    UpdateProgressBar();
+}
+
 
     private void UpdateProgressBar()
     {
@@ -184,6 +203,14 @@ public class AEDManager : MonoBehaviour
         if (progressBar != null)
             progressBar.value = ratio;
     }
+
+    private IEnumerator ResetCheckIconColorAfterDelay(float delay)
+{
+    yield return new WaitForSeconds(delay);
+
+    if (checkIcon != null)
+        checkIcon.color = idleColor;
+}
 
     private IEnumerator WaitForInput()
     {
@@ -200,60 +227,59 @@ public class AEDManager : MonoBehaviour
 {
     if (!waitingForInput || externalInput) return;
 
-    if (isPassed)
+    if (checkIcon != null)
     {
-        Debug.Log($"✅ {currentState} 단계 통과!");
-        StartCoroutine(ShowFeedbackMessage("✅ 통과했습니다!", Color.green, true));
-    }
-    else
-    {
-        Debug.Log($"❌ {currentState} 단계 실패!");
-        StartCoroutine(ShowFeedbackMessage("❌ 다시 시도해주세요!", Color.red, false));
+        // 색상 설정
+        checkIcon.color = isPassed ? passColor : failColor;
+
+        // 기존 코루틴 중지
+        if (iconColorResetCoroutine != null)
+            StopCoroutine(iconColorResetCoroutine);
+
+        // 코루틴 실행: 색 유지 → 복귀 → 다음 단계 처리까지
+        iconColorResetCoroutine = StartCoroutine(HandleCheckIconFeedback(isPassed, 3f));
     }
 
     externalInput = true;
     waitingForInput = false;
 }
 
-
-   private IEnumerator ShowFeedbackMessage(string message, Color color, bool advanceStep)
+private IEnumerator HandleCheckIconFeedback(bool isPassed, float delay)
 {
-    if (retryMessageText == null) yield break;
+    yield return new WaitForSeconds(delay); // ✅ 색 보여주는 시간
 
-    retryMessageText.text = message;
-    retryMessageText.color = color;
+    if (checkIcon != null)
+        checkIcon.color = idleColor;
 
-    CanvasGroup cg = retryMessageText.GetComponent<CanvasGroup>();
-    if (cg == null) yield break;
-
-    // Fade In
-    float t = 0f;
-    while (t < 0.3f)
-    {
-        cg.alpha = Mathf.Lerp(0f, 1f, t / 0.3f);
-        t += Time.deltaTime;
-        yield return null;
-    }
-    cg.alpha = 1f;
-
-    yield return new WaitForSeconds(1.5f);
-
-    // Fade Out
-    t = 0f;
-    while (t < 0.3f)
-    {
-        cg.alpha = Mathf.Lerp(1f, 0f, t / 0.3f);
-        t += Time.deltaTime;
-        yield return null;
-    }
-    cg.alpha = 0f;
-
-    // ✅ 피드백 메시지가 완전히 사라진 후에 다음 단계로 이동
-    if (advanceStep)
+    if (isPassed)
     {
         currentState++;
-        UpdateStepUI(); // 다음 단계 안내문구 갱신
+        UpdateStepUI();
+    }
+    else
+    {
+        // 실패면 상태 유지, 메시지만 갱신하고 다시 시도
+        UpdateStepUI();
     }
 }
+
+
+
+
+//외부에서 호출 시 
+public void UpdateCompressionCount(int count)
+{
+    if (currentState == CPRState.ChestCompressions || currentState == CPRState.ResumeChestCompressions)
+    {
+        countTextDisplay.ShowCompressionCount(count);
+    }
+}
+
+public void UpdateBreathCount(int count)
+{
+    countTextDisplay.ShowBreathCount(count);
+}
+
+
 
 }
