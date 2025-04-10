@@ -17,10 +17,22 @@ public class VoiceSender : MonoBehaviour
         Instance = this;
     }
 
+    void Start(){
+        StartCapture();
+    }
+
     public void StartCapture()
     {
         if (isCapturing) return;
+        foreach (var device in Microphone.devices)
+        {
+            Debug.Log("🎤 마이크 디바이스: " + device);
+        }
 
+        if (Microphone.devices.Length == 0)
+        {
+            Debug.LogWarning("❌ 마이크 디바이스 없음");
+        }
         Debug.Log("🎤 음성 캡처 시작");
         micDevice = Microphone.devices[0];
         clip = Microphone.Start(micDevice, true, 1, 16000);
@@ -76,4 +88,15 @@ public class VoiceSender : MonoBehaviour
         }
         return data;
     }
+
+    void OnDestroy()
+    {
+        StopCapture(); // 오브젝트가 파괴될 때 마이크 녹음 중지
+    }
+
+    void OnDisable()
+    {
+        StopCapture(); // 오브젝트가 비활성화될 때도 중지
+    }
+
 }

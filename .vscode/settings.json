@@ -1,4 +1,4 @@
-﻿{
+{
     "files.exclude":
     {
         "**/.DS_Store":true,
@@ -51,5 +51,9 @@
         "ProjectSettings/":true,
         "temp/":true,
         "Temp/":true
-    }
+    },
+    "C_Cpp.errorSquiggles": "enabled",
+    "dotnet.preferCSharpExtension": true,
+    "omnisharp.useModernNet": false,
+    "omnisharp.enableRoslynAnalyzers": true
 }

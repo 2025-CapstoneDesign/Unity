@@ -16,13 +16,15 @@ public class WebSocketClient : MonoBehaviour
     private float reconnectInterval = 5f;
     private float reconnectTimer = 0f;
 
-    private string serverUrl = "ws://203.255.221.148:10050"; // TODO: 실제 주소로 변경
+    [Header("WebSocket 설정")]
+    [Tooltip("ws:// 형식의 WebSocket 주소를 입력하세요")]
+    public string serverUrl = "ws://localhost:10050"; // ✅ 인스펙터에서 수정 가능
 
     void Awake() => Instance = this;
 
     async void Start()
     {
-        Debug.Log("START WebSocketClient");
+        Debug.Log("START VoiceWebSocketClient");
         await Connect();
     }
 
@@ -37,7 +39,7 @@ public class WebSocketClient : MonoBehaviour
 
         websocket.OnOpen += () =>
         {
-            Debug.Log("✅ WebSocket 연결됨");
+            Debug.Log("✅ VoiceWebSocket 연결됨");
             isConnecting = false;
         };
 
@@ -49,12 +51,12 @@ public class WebSocketClient : MonoBehaviour
 
         websocket.OnError += (e) =>
         {
-            Debug.LogError("❌ WebSocket 에러: " + e);
+            Debug.LogError("❌ VoiceWebSocket 에러: " + e);
         };
 
         websocket.OnClose += (e) =>
         {
-            Debug.LogWarning("🔌 WebSocket 끊김, 재연결 대기 중...");
+            Debug.LogWarning("🔌 VoiceWebSocket 끊김, 재연결 대기 중...");
             if (!isManuallyClosed)
             {
                 isConnecting = false;
@@ -68,7 +70,7 @@ public class WebSocketClient : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Debug.LogError("⚠️ 연결 실패: " + ex.Message);
+            Debug.LogError("⚠️ VoiceWebSocket 연결 실패: " + ex.Message);
             isConnecting = false;
             reconnectTimer = reconnectInterval;
         }
@@ -78,7 +80,6 @@ public class WebSocketClient : MonoBehaviour
     {
         websocket?.DispatchMessageQueue();
 
-        // 연결 상태 체크 및 재시도
         if (!isConnecting && (websocket == null || websocket.State != WebSocketState.Open))
         {
             reconnectTimer -= Time.deltaTime;
@@ -98,7 +99,7 @@ public class WebSocketClient : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("📤 WebSocket 연결되지 않음, 전송 실패");
+            Debug.LogWarning("📤 VoiceWebSocket 연결되지 않음, 전송 실패");
         }
     }
 
@@ -110,7 +111,7 @@ public class WebSocketClient : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("📤 WebSocket 연결되지 않음, 전송 실패");
+            Debug.LogWarning("📤 VoiceWebSocket 연결되지 않음, 전송 실패");
         }
     }
 
@@ -124,5 +125,4 @@ public class WebSocketClient : MonoBehaviour
     {
         return websocket != null && websocket.State == WebSocketState.Open;
     }
-
 }
