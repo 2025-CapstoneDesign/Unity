@@ -50,7 +50,7 @@ public class SensorWebSocketClient : MonoBehaviour
         websocket.OnMessage += (bytes) =>
         {
             string message = Encoding.UTF8.GetString(bytes);
-            Debug.Log("📩 SensorWebSocket 수신 메시지: " + message);
+            // Debug.Log("📩 SensorWebSocket 수신 메시지: " + message);
 
             try
             {

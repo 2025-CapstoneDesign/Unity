@@ -41,6 +41,9 @@ public class TestAEDManager : MonoBehaviour
     private CPRValidator cprValidator = new();
     private BreathValidator breathValidator = new();
 
+    [SerializeField] private TestPositionPutObject testPositionPlacer;
+
+
     void OnDestroy()
     {
         // 구독 해제(메모리 누수 방지)
@@ -49,9 +52,7 @@ public class TestAEDManager : MonoBehaviour
     }
 
     private void OnServerResultReceivedHandler(int score)
-    {
-        Debug.Log("음성 인식 결과를 수신하였습니다.");
-        
+    {        
         if (score >= 2)
         {
             voicePassed = true;
@@ -65,8 +66,6 @@ public class TestAEDManager : MonoBehaviour
     }
     void Start()
     {
-        Debug.Log("🟡 TestAEDManager.Start 실행됨");
-
         currentState = CPRState.CheckSafety;
         totalSteps = System.Enum.GetValues(typeof(CPRState)).Length - 1;
 
@@ -85,8 +84,6 @@ public class TestAEDManager : MonoBehaviour
     private IEnumerator WaitForEvaluatorAndSubscribe()
     {
         yield return new WaitUntil(() => TrainingEvaluator.Instance != null);
-
-        Debug.Log("🟢 TrainingEvaluator.Instance 확인됨, 이벤트 구독 시작");
         TrainingEvaluator.Instance.OnServerResultReceived += OnServerResultReceivedHandler;
     }
 
@@ -182,6 +179,11 @@ public class TestAEDManager : MonoBehaviour
                         initPlag();
                         currentState = CPRState.CheckBreathingAndPulse;
                         handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0f), 0.2f, 2f, setHandTrackingPassed);
+                        testPositionPlacer.PlaceSphere(
+                            markerId: 1,
+                            localOffset: new Vector3(0f, 0.32f, 0f),
+                            radius: 0.2f
+                        );
                     }
                     break;
 
@@ -228,7 +230,7 @@ public class TestAEDManager : MonoBehaviour
                     {
                         initPlag();
                         currentState = CPRState.TurnOnAED;
-                        handValidator.BeginVerification(10, new Vector3(0f, 0.0f, 0f), 0.2f, 1f, setHandTrackingPassed);
+                        handValidator.BeginVerification(12, new Vector3(0f, 0.0f, 0f), 0.2f, 1f, setHandTrackingPassed);
                     }
                     break;
 
@@ -246,12 +248,17 @@ public class TestAEDManager : MonoBehaviour
                             setMarkerPostionFristPassed
                         );
                         markerPositionValidator.BeginValidation(
-                            2,
-                            11,
+                            1,
+                            12,
                             new Vector3(0.1f, -0.1f, 0f),
                             0.1f,
                             1f, // ✅ 1초 이상 위치 유지해야 통과
                             setMarkerPositionSecondPassed
+                        );
+                                                testPositionPlacer.PlaceSphere(
+                            markerId: 1,
+                            localOffset: new Vector3(0.1f, -0.1f, 0f),
+                            radius: 0.1f
                         );
                     }
                     break;
@@ -269,7 +276,7 @@ public class TestAEDManager : MonoBehaviour
                     {
                         initPlag();
                         currentState = CPRState.DeliverShock;
-                        handValidator.BeginVerification(10, new Vector3(0f, 0f, 0f), 0.2f, 1f, setHandTrackingPassed);
+                        handValidator.BeginVerification(12, new Vector3(0f, 0f, 0f), 0.2f, 1f, setHandTrackingPassed);
                     }
                     break;
 
@@ -323,24 +330,24 @@ public class TestAEDManager : MonoBehaviour
         }
     }
 
-    public void ReceiveInputResult(bool isPassed)
-    {
-        if (!waitingForInput || externalInput) return;
+    // public void ReceiveInputResult(bool isPassed)
+    // {
+    //     if (!waitingForInput || externalInput) return;
 
-        if (isPassed)
-        {
-            Debug.Log($"✅ {currentState} 단계 통과!");
-            StartCoroutine(ShowFeedbackMessage("✅ 통과했습니다!", Color.green, true));
-        }
-        else
-        {
-            Debug.Log($"❌ {currentState} 단계 실패!");
-            StartCoroutine(ShowFeedbackMessage("❌ 다시 시도해주세요!", Color.red, false));
-        }
+    //     if (isPassed)
+    //     {
+    //         Debug.Log($"✅ {currentState} 단계 통과!");
+    //         StartCoroutine(ShowFeedbackMessage("✅ 통과했습니다!", Color.green, true));
+    //     }
+    //     else
+    //     {
+    //         Debug.Log($"❌ {currentState} 단계 실패!");
+    //         StartCoroutine(ShowFeedbackMessage("❌ 다시 시도해주세요!", Color.red, false));
+    //     }
 
-        externalInput = true;
-        waitingForInput = false;
-    }
+    //     externalInput = true;
+    //     waitingForInput = false;
+    // }
 
 
     private IEnumerator ShowFeedbackMessage(string message, Color color, bool advanceStep)
@@ -424,7 +431,7 @@ public class TestAEDManager : MonoBehaviour
 
     public void setMarkerPositionSecondPassed()
     {
-        markerPositionSecondPassed = false;
+        markerPositionSecondPassed = true;
     }
 
     public void setGyroPassed()
@@ -469,8 +476,9 @@ public class TestAEDManager : MonoBehaviour
 
             case CPRState.ChestCompressions:
                 if (type == "압력 센서" && !pressurePassed)
-                {
+                {   
                     bool complete = cprValidator.TryAddCompression(value);
+                    Debug.Log($"압력 센서 : {cprValidator.compressionTimestamps.Count} 횟수 입니다.");
                     if (complete)
                     {
                         Debug.Log("🫀 CPR 30회 성공!");
