@@ -15,15 +15,14 @@ public class TestAEDManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI timerText;
 
     private bool timeOverNotified = false;
-    private bool isFlashing = false;
     private float flashTimer = 0f;
     private float flashInterval = 0.5f; // 깜빡이는 속도 (초)
     private CPRState currentState;
     private bool externalInput = false;
-    private bool waitingForInput = false;
     private int totalSteps;
 
     // 검증 플래그
+    private bool wearPassed = false;
     private bool voicePassed = false;
     private bool sensorPassed = false;
     private bool handTrackingPassed = false;
@@ -52,17 +51,20 @@ public class TestAEDManager : MonoBehaviour
     }
 
     private void OnServerResultReceivedHandler(int score)
-    {        
+    {
         if (score >= 2)
         {
             voicePassed = true;
-            Debug.Log("🟢 음성 평가 통과 (이벤트)");
+            Debug.Log("🟢 음성 평가 : 통과");
         }
-        else
+        else if (score == 1)
         {
-            Debug.Log("🔴 음성 평가 실패 (이벤트)");
+            Debug.Log("🟡 음성 평가 : 오답");
         }
-        Debug.Log($"📊 현재 단계: {currentState}, voicePassed: {voicePassed}");
+        else if (score == 0)
+        {
+            Debug.Log("🔴 음성 평가 : 헛소리");
+        }
     }
     void Start()
     {
@@ -147,153 +149,202 @@ public class TestAEDManager : MonoBehaviour
         while (currentState != CPRState.Completed)
         {
             UpdateStepUI();
-
             switch (currentState)
             {
                 case CPRState.CheckSafety:
-                    if (voicePassed)
-                    {
-                        initPlag();
-                        currentState = CPRState.WearPPE;
+                    if (!voicePassed)
+                    { // 1. 음성통과인식 안되면 패스
+                        break;
                     }
+                    initPlag();
+                    currentState = CPRState.WearPPE;
                     break;
                 case CPRState.WearPPE:
-                    bool wearPassed = true; // 보호장구착용추가 착용 감지
-                    if (wearPassed && voicePassed)
+                    // 1. 보호장비 착용 감지 먼저 (외부에서 wearPassed = true로 설정된 경우)
+                    if (!wearPassed)
                     {
-                        initPlag();
-                        currentState = CPRState.CheckConsciousness;
+                        voicePassed = false; // 이전 음성 평가 초기화
+                        Debug.Log("🧤 보호장비 착용 대기 중...");
+                        break;
                     }
+
+                    // 2. 착용 감지 후, 음성 평가 대기
+                    if (!voicePassed)
+                    {
+                        Debug.Log("🎤 음성 평가 대기 중...");
+                        break;
+                    }
+
+                    // 3. 둘 다 통과 시 다음 단계
+                    Debug.Log("✅ 보호장비 착용 + 음성 평가 완료");
+                    initPlag();
+                    currentState = CPRState.CheckConsciousness;
                     break;
+
                 case CPRState.CheckConsciousness:
-                    if (gyroPassed)
+                    if (!gyroPassed) // 1. 자이로 센서 통과 안되면 패스
                     {
-                        initPlag();
-                        currentState = CPRState.Call119AndRequestAED;
+                        break;
                     }
+                    initPlag();
+                    currentState = CPRState.Call119AndRequestAED;
                     break;
                 case CPRState.Call119AndRequestAED:
-                    // 이전 단계 통과 시 사람이 나와야해요!
-                    if (voicePassed)
+                    // 이전 단계 로직에 통과 시 사람이 나오게 호출해야해요! (추후에)
+                    if (!voicePassed) // 1. 음성인식 안되면 패스
                     {
-                        initPlag();
-                        currentState = CPRState.CheckBreathingAndPulse;
-                        handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0f), 0.2f, 2f, setHandTrackingPassed);
-                        testPositionPlacer.PlaceSphere(
-                            markerId: 1,
-                            localOffset: new Vector3(0f, 0.32f, 0f),
-                            radius: 0.2f
-                        );
+                        break;
                     }
+                    initPlag();
+                    currentState = CPRState.CheckBreathingAndPulse;
+                    // 2. 다음단계에 필요한 손 인식 코드입니다.
+                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case CPRState.CheckBreathingAndPulse:
-                    if (voicePassed && handTrackingPassed)
+                    // 1. 손 인식 먼저 기다리기
+                    if (!handTrackingPassed)
                     {
-                        initPlag();
-                        currentState = CPRState.ChestCompressions;
+                        voicePassed = false; // 이전 음성 평가 초기화
+                        Debug.Log("✋ 손 위치 인식 대기 중...");
+                        break;
                     }
+
+                    // 2. 손 인식 통과 후 음성 평가 기다림
+                    if (!voicePassed)
+                    {
+                        Debug.Log("🎤 손 인식 완료됨! 음성 평가 대기 중...");
+                        break;
+                    }
+
+                    // 3. 둘 다 통과 시 다음 단계로 이동
+                    Debug.Log("✅ 손 위치 + 음성 평가 완료");
+                    initPlag();
+                    currentState = CPRState.ChestCompressions;
                     break;
                 case CPRState.ChestCompressions:
-                    if (pressurePassed)
+                    if (!pressurePassed)
                     {
-                        initPlag();
-                        currentState = CPRState.OpenAirway;
+                        break;
                     }
+                    initPlag();
+                    currentState = CPRState.OpenAirway;
                     break;
                 case CPRState.OpenAirway:
-                    if (gyroPassed)
+                    if (!gyroPassed)
                     {
-                        initPlag();
-                        currentState = CPRState.ProvideRescueBreaths;
+                        break;
                     }
+                    initPlag();
+                    currentState = CPRState.ProvideRescueBreaths;
                     break;
 
                 case CPRState.ProvideRescueBreaths:
-                    if (flowPassed)
+                    if (!flowPassed)
                     {
-                        initPlag();
-                        currentState = CPRState.ContinueCPR;
+                        break;
                     }
+                    initPlag();
+                    currentState = CPRState.ContinueCPR;
                     break;
 
                 case CPRState.ContinueCPR:
-                    if (pressurePassed && flowPassed) // 5주기 변경
+                    if (!pressurePassed) // 5주기 변경
                     {
-                        initPlag();
-                        currentState = CPRState.DirectAssistants;
+                        flowPassed = false;
+                        break;
                     }
+                    if (!flowPassed)
+                    {
+                        break;
+                    }
+                    initPlag();
+                    currentState = CPRState.DirectAssistants;
                     break;
 
                 case CPRState.DirectAssistants:
-                    if (voicePassed)
+                    if (!voicePassed)
                     {
-                        initPlag();
-                        currentState = CPRState.TurnOnAED;
-                        handValidator.BeginVerification(12, new Vector3(0f, 0.0f, 0f), 0.2f, 1f, setHandTrackingPassed);
+                        break;
                     }
+                    initPlag();
+                    currentState = CPRState.TurnOnAED;
+                    handValidator.BeginVerification(12, new Vector3(0f, 0.0f, 0f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
                 case CPRState.TurnOnAED:
-                    if (handTrackingPassed)
+                    if (!handTrackingPassed)
                     {
-                        initPlag();
-                        currentState = CPRState.AttachPads;
-                        markerPositionValidator.BeginValidation(
-                            1,
-                            11,
-                            new Vector3(-0.1f, 0.1f, 0f),
-                            0.1f,
-                            1f, // ✅ 1초 이상 위치 유지해야 통과
-                            setMarkerPostionFristPassed
-                        );
-                        markerPositionValidator.BeginValidation(
-                            1,
-                            12,
-                            new Vector3(0.1f, -0.1f, 0f),
-                            0.1f,
-                            1f, // ✅ 1초 이상 위치 유지해야 통과
-                            setMarkerPositionSecondPassed
-                        );
-                                                testPositionPlacer.PlaceSphere(
-                            markerId: 1,
-                            localOffset: new Vector3(0.1f, -0.1f, 0f),
-                            radius: 0.1f
-                        );
+                        break;
                     }
+                    initPlag();
+                    currentState = CPRState.AttachPads;
+                    markerPositionValidator.BeginValidation(
+                        1,
+                        11,
+                        new Vector3(-0.1f, 0.1f, 0f),
+                        0.1f,
+                        1f, // ✅ 1초 이상 위치 유지해야 통과
+                        setMarkerPostionFristPassed
+                    );
+                    markerPositionValidator.BeginValidation(
+                        1,
+                        12,
+                        new Vector3(0.1f, -0.1f, 0f),
+                        0.1f,
+                        1f, // ✅ 1초 이상 위치 유지해야 통과
+                        setMarkerPositionSecondPassed
+                    );
+                    testPositionPlacer.PlaceSphere(
+                        markerId: 1,
+                        localOffset: new Vector3(0.1f, -0.1f, 0f),
+                        radius: 0.1f
+                    ); // todo : 위치 디버그 필요
                     break;
 
                 case CPRState.AttachPads:
-                    if (markerPositionFirstPassed && markerPositionSecondPassed)
+                    if (markerPositionFirstPassed)
                     {
-                        initPlag();
-                        currentState = CPRState.ClearArea;
+                        // 첫번째 패드 부착 신호
                     }
+                    if (markerPositionSecondPassed)
+                    {
+                        // 두번째 패드 부착 신호 
+                    }
+                    if (!markerPositionFirstPassed || !markerPositionSecondPassed)
+                    {
+                        // 패드 둘 중 하나가 부착이 안되면 통과 못함
+                        break;
+                    }
+                    initPlag();
+                    currentState = CPRState.ClearArea;
                     break;
-
                 case CPRState.ClearArea:
-                    if (voicePassed)
+                    if (!voicePassed)
                     {
-                        initPlag();
-                        currentState = CPRState.DeliverShock;
-                        handValidator.BeginVerification(12, new Vector3(0f, 0f, 0f), 0.2f, 1f, setHandTrackingPassed);
+                        break;
                     }
+                    initPlag();
+                    currentState = CPRState.DeliverShock;
+                    handValidator.BeginVerification(12, new Vector3(0f, 0f, 0f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
                 case CPRState.DeliverShock:
-                    if (handTrackingPassed)
+                    if (!handTrackingPassed)
                     {
-                        initPlag();
-                        currentState = CPRState.ResumeChestCompressions;
+                        break;
                     }
+                    initPlag();
+                    currentState = CPRState.ResumeChestCompressions;
                     break;
 
                 case CPRState.ResumeChestCompressions:
-                    if (pressurePassed)
+                    if (!pressurePassed)
                     {
-                        initPlag();
-                        currentState = CPRState.Completed;
+                        break;
                     }
+                    initPlag();
+                    currentState = CPRState.Completed;
                     break;
             }
 
@@ -317,17 +368,6 @@ public class TestAEDManager : MonoBehaviour
         float ratio = (float)(int)currentState / totalSteps;
         if (progressBar != null)
             progressBar.value = ratio;
-    }
-
-    private IEnumerator WaitForInput()
-    {
-        externalInput = false;
-        waitingForInput = true;
-
-        while (!externalInput)
-        {
-            yield return null;
-        }
     }
 
     // public void ReceiveInputResult(bool isPassed)
@@ -392,6 +432,7 @@ public class TestAEDManager : MonoBehaviour
 
     private void initPlag()
     {
+        wearPassed = false;
         voicePassed = false;
         sensorPassed = false;
         handTrackingPassed = false;
@@ -476,7 +517,7 @@ public class TestAEDManager : MonoBehaviour
 
             case CPRState.ChestCompressions:
                 if (type == "압력 센서" && !pressurePassed)
-                {   
+                {
                     bool complete = cprValidator.TryAddCompression(value);
                     Debug.Log($"압력 센서 : {cprValidator.compressionTimestamps.Count} 횟수 입니다.");
                     if (complete)
