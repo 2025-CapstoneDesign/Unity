@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class BreathValidator
 {
-    private int breathCount = 0;
+    public int breathCount = 0;
 
     private const float requiredFlow = 3.0f;    // 성공 기준 유량
     private const int requiredCount = 2;        // 2회 인공호흡
