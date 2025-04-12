@@ -12,18 +12,23 @@ public class VoiceSender : MonoBehaviour
     private Coroutine sendCoroutine;
     private bool isCapturing = false;
 
+    // ✅ 현재 단계 태그 (외부에서 설정해줘야 함)
+    public string CurrentStageTag { get; set; } = "UNKNOWN";
+
     void Awake()
     {
         Instance = this;
     }
 
-    void Start(){
+    void Start()
+    {
         StartCapture();
     }
 
     public void StartCapture()
     {
         if (isCapturing) return;
+
         foreach (var device in Microphone.devices)
         {
             Debug.Log("🎤 마이크 디바이스: " + device);
@@ -33,6 +38,7 @@ public class VoiceSender : MonoBehaviour
         {
             Debug.LogWarning("❌ 마이크 디바이스 없음");
         }
+
         Debug.Log("🎤 음성 캡처 시작");
         micDevice = Microphone.devices[0];
         clip = Microphone.Start(micDevice, true, 1, 16000);
@@ -69,9 +75,15 @@ public class VoiceSender : MonoBehaviour
 
         float[] samples = new float[clip.samples * clip.channels];
         clip.GetData(samples, 0);
-
         byte[] bytes = FloatArrayToPCM(samples);
+
+        // ✅ 1. 현재 단계 태그 먼저 전송
+        SendVoiceTag(CurrentStageTag);
+
+        // ✅ 2. 음성 데이터 전송
         WebSocketClient.Instance.SendBytes(bytes);
+
+        Debug.Log($"📤 음성과 태그 전송 완료: {CurrentStageTag}");
 
         yield return null;
     }
@@ -89,14 +101,23 @@ public class VoiceSender : MonoBehaviour
         return data;
     }
 
+    public void SendVoiceTag(string tag)
+    {
+        if (WebSocketClient.Instance != null && WebSocketClient.Instance.IsConnected())
+        {
+            string json = $"{{\"type\": \"voice_tag\", \"value\": \"{tag}\"}}";
+            WebSocketClient.Instance.SendText(json);
+            Debug.Log($"📤 보이스 태그 전송: {tag}");
+        }
+    }
+
     void OnDestroy()
     {
-        StopCapture(); // 오브젝트가 파괴될 때 마이크 녹음 중지
+        StopCapture();
     }
 
     void OnDisable()
     {
-        StopCapture(); // 오브젝트가 비활성화될 때도 중지
+        StopCapture();
     }
-
 }

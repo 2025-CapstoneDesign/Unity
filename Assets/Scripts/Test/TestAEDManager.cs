@@ -75,7 +75,7 @@ public class TestAEDManager : MonoBehaviour
 
         var cg = retryMessageText.GetComponent<CanvasGroup>();
         if (cg != null) cg.alpha = 0f;
-
+        setState(CPRState.CheckSafety);
         StartCoroutine(InitSequence());
     }
 
@@ -161,7 +161,7 @@ public class TestAEDManager : MonoBehaviour
                         break;
                     }
                     initPlag();
-                    currentState = CPRState.WearPPE;
+                    setState(CPRState.WearPPE);
                     break;
 
                 case CPRState.WearPPE:
@@ -183,7 +183,7 @@ public class TestAEDManager : MonoBehaviour
                     // 3. 둘 다 통과 시 다음 단계
                     Debug.Log("✅ 보호장비 착용 + 음성 평가 완료");
                     initPlag();
-                    currentState = CPRState.CheckConsciousness;
+                    setState(CPRState.CheckConsciousness);
                     break;
 
                 case CPRState.CheckConsciousness:
@@ -192,7 +192,7 @@ public class TestAEDManager : MonoBehaviour
                         break;
                     }
                     initPlag();
-                    currentState = CPRState.Call119AndRequestAED;
+                    setState(CPRState.Call119AndRequestAED);
                     break;
 
                 case CPRState.Call119AndRequestAED:
@@ -202,7 +202,7 @@ public class TestAEDManager : MonoBehaviour
                         break;
                     }
                     initPlag();
-                    currentState = CPRState.CheckBreathingAndPulse;
+                    setState(CPRState.CheckBreathingAndPulse);
                     // 2. 다음단계에 필요한 손 인식 코드입니다.
                     handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0f), 0.2f, 2f, setHandTrackingPassed);
                     break;
@@ -226,7 +226,7 @@ public class TestAEDManager : MonoBehaviour
                     // 3. 둘 다 통과 시 다음 단계로 이동
                     Debug.Log("✅ 손 위치 + 음성 평가 완료");
                     initPlag();
-                    currentState = CPRState.ChestCompressions;
+                    setState(CPRState.ChestCompressions);
                     break;
 
                 case CPRState.ChestCompressions:
@@ -235,7 +235,7 @@ public class TestAEDManager : MonoBehaviour
                         break;
                     }
                     initPlag();
-                    currentState = CPRState.OpenAirway;
+                    setState(CPRState.OpenAirway);
                     break;
 
                 case CPRState.OpenAirway:
@@ -244,7 +244,7 @@ public class TestAEDManager : MonoBehaviour
                         break;
                     }
                     initPlag();
-                    currentState = CPRState.ProvideRescueBreaths;
+                    setState(CPRState.ProvideRescueBreaths);
                     break;
 
                 case CPRState.ProvideRescueBreaths:
@@ -253,7 +253,7 @@ public class TestAEDManager : MonoBehaviour
                         break;
                     }
                     initPlag();
-                    currentState = CPRState.ContinueCPR;
+                    setState(CPRState.ContinueCPR);
                     break;
 
                 // fiveCycleCount % 2 == 0 : 심폐소생술
@@ -278,7 +278,7 @@ public class TestAEDManager : MonoBehaviour
                         break;
                     }
                     initPlag();
-                    currentState = CPRState.DirectAssistants;
+                    setState(CPRState.DirectAssistants);
                     break;
 
                 case CPRState.DirectAssistants:
@@ -287,7 +287,7 @@ public class TestAEDManager : MonoBehaviour
                         break;
                     }
                     initPlag();
-                    currentState = CPRState.TurnOnAED;
+                    setState(CPRState.TurnOnAED);
                     handValidator.BeginVerification(12, new Vector3(0f, 0.0f, 0f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
@@ -297,7 +297,7 @@ public class TestAEDManager : MonoBehaviour
                         break;
                     }
                     initPlag();
-                    currentState = CPRState.AttachPads;
+                    setState(CPRState.AttachPads);
                     markerPositionValidator.BeginValidation(
                         1,
                         11,
@@ -327,7 +327,7 @@ public class TestAEDManager : MonoBehaviour
                         break;
                     }
                     initPlag();
-                    currentState = CPRState.ClearArea;
+                    setState(CPRState.ClearArea);
                     break;
 
                 case CPRState.ClearArea:
@@ -336,7 +336,7 @@ public class TestAEDManager : MonoBehaviour
                         break;
                     }
                     initPlag();
-                    currentState = CPRState.DeliverShock;
+                    setState(CPRState.DeliverShock);
                     handValidator.BeginVerification(12, new Vector3(0f, 0f, 0f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
@@ -346,7 +346,7 @@ public class TestAEDManager : MonoBehaviour
                         break;
                     }
                     initPlag();
-                    currentState = CPRState.ResumeChestCompressions;
+                    setState(CPRState.ResumeChestCompressions);
                     break;
 
                 case CPRState.ResumeChestCompressions:
@@ -355,7 +355,7 @@ public class TestAEDManager : MonoBehaviour
                         break;
                     }
                     initPlag();
-                    currentState = CPRState.Completed;
+                    setState(CPRState.Completed);
                     break;
             }
 
@@ -366,6 +366,12 @@ public class TestAEDManager : MonoBehaviour
         UpdateProgressBar();
     }
 
+    private void setState(CPRState nextState)
+    {
+        currentState = nextState;
+        VoiceSender.Instance.CurrentStageTag = nextState.ToVoiceTag();
+        Debug.Log($"➡️ 상태 전환: {currentState}");
+    }
 
     // type : 센서 타입 (예: "자이로 센서", "압력 센서", "유량 센서")
     // value : 센서 값 (예: 자이로 각도, 압력 값, 유량 값)
