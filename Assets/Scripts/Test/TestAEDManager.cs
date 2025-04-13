@@ -42,9 +42,6 @@ public class TestAEDManager : MonoBehaviour
     private CPRValidator cprValidator = new();
     private BreathValidator breathValidator = new();
 
-    [SerializeField] private TestPositionPutObject testPositionPlacer;
-
-
     void OnDestroy()
     {
         // 구독 해제(메모리 누수 방지)
@@ -76,6 +73,7 @@ public class TestAEDManager : MonoBehaviour
         var cg = retryMessageText.GetComponent<CanvasGroup>();
         if (cg != null) cg.alpha = 0f;
         setState(CPRState.CheckSafety);
+        ResetValidationFlags(); // 초기화
         StartCoroutine(InitSequence());
     }
 
@@ -88,6 +86,9 @@ public class TestAEDManager : MonoBehaviour
     private IEnumerator WaitForEvaluatorAndSubscribe()
     {
         yield return new WaitUntil(() => TrainingEvaluator.Instance != null);
+
+        // 중복 방지: 기존에 구독돼 있으면 먼저 제거
+        TrainingEvaluator.Instance.OnServerResultReceived -= OnServerResultReceivedHandler;
         TrainingEvaluator.Instance.OnServerResultReceived += OnServerResultReceivedHandler;
     }
 
@@ -166,6 +167,7 @@ public class TestAEDManager : MonoBehaviour
 
                 case CPRState.WearPPE:
                     // 1. 보호장비 착용 감지 먼저 (외부에서 wearPassed = true로 설정된 경우)
+                    wearPassed = true;
                     if (!wearPassed)
                     {
                         voicePassed = false; // 이전 음성 평가 초기화
@@ -301,7 +303,7 @@ public class TestAEDManager : MonoBehaviour
                     markerPositionValidator.BeginValidation(
                         1,
                         11,
-                        new Vector3(-0.1f, 0.1f, 0f),
+                        new Vector3(0.1f, 0.1f, 0f),
                         0.1f,
                         1f, // ✅ 1초 이상 위치 유지해야 통과
                         setMarkerPostionFristPassed
@@ -309,16 +311,11 @@ public class TestAEDManager : MonoBehaviour
                     markerPositionValidator.BeginValidation(
                         1,
                         12,
-                        new Vector3(0.1f, -0.1f, 0f),
+                        new Vector3(-0.1f, -0.1f, 0f),
                         0.1f,
                         1f, // ✅ 1초 이상 위치 유지해야 통과
                         setMarkerPositionSecondPassed
                     );
-                    testPositionPlacer.PlaceSphere(
-                        markerId: 1,
-                        localOffset: new Vector3(0.1f, -0.1f, 0f),
-                        radius: 0.1f
-                    ); // todo : 위치 디버그용 구체 추후 삭제 필요
                     break;
 
                 case CPRState.AttachPads:
@@ -373,27 +370,41 @@ public class TestAEDManager : MonoBehaviour
         Debug.Log($"➡️ 상태 전환: {currentState}");
     }
 
-    // type : 센서 타입 (예: "자이로 센서", "압력 센서", "유량 센서")
-    // value : 센서 값 (예: 자이로 각도, 압력 값, 유량 값)
+       // roll, pitch : 자이로 센서 각도 값
+    // 이 메서드는 SensorEvents.OnGyroDataReceived 이벤트에 의해 호출됨
+    private void HandleGyroData(float roll, float pitch)
+    {
+        Debug.Log($"📐 자이로 수신 - Roll: {roll}, Pitch: {pitch}");
+
+        // 단계별로 자이로 센서 조건에 따라 처리
+        switch (currentState)
+        {
+            case CPRState.CheckConsciousness:
+                if (!gyroPassed && Mathf.Abs(pitch) > 50f)
+                {
+                    Debug.Log("🌀 생존 확인 성공!");
+                    setGyroPassed();
+                }
+                break;
+
+            case CPRState.OpenAirway:
+                if (!gyroPassed && Mathf.Abs(pitch) > 30f)
+                {
+                    Debug.Log("🌀 고개 기울이기 성공!");
+                    setGyroPassed();
+                }
+                break;
+        }
+    }
+
+    // type : 센서 타입 (예: "압력 센서", "유량 센서")
+    // value : 센서 값 (예: 압력 값, 유량 값)
     // 이 메서드는 SensorEvents.OnSensorDataReceived 이벤트에 의해 호출됨
     private void HandleSensorData(string type, float value)
     {
         // 단계별로 센서 타입과 조건에 따라 처리
         switch (currentState)
         {
-            case CPRState.CheckConsciousness:
-                if (type == "자이로 센서" && !gyroPassed)
-                {
-                    if (Mathf.Abs(value) > 50f)
-                    {
-                        Debug.Log("🌀 생존 확인 성공!");
-                        // 약간 성공! 하고 1초 wait UI ? 이후 패스 처리해도 괜찮을듯
-                        setGyroPassed();
-                    }
-                }
-                break;
-
-
             // cprValidator.compressionTimestamps.Count : 심폐소생술 횟수 접근
             // value : 압력 값 (예: 압력 센서 값)
             // cprValidator 내부에 속도에 따른 분기 로직이 존재함 필요 시 사용 가능
@@ -411,20 +422,8 @@ public class TestAEDManager : MonoBehaviour
                 }
                 break;
 
-            case CPRState.OpenAirway:
-                if (type == "자이로 센서" && !gyroPassed)
-                {
-                    if (Mathf.Abs(value) > 30f)
-                    {
-                        Debug.Log("🌀 고개 기울이기 성공!");
-                        // 약간 성공! 하고 1초 wait UI ? 이후 패스 처리해도 괜찮을듯
-                        setGyroPassed();
-                    }
-                }
-                break;
-
             // breathValidator.breathValidator : 심폐소생술 횟수 접근
-            // // value : 유량 값 (예: 유량 센서 값)
+            // value : 유량 값 (예: 유량 센서 값)
             case CPRState.ProvideRescueBreaths:
                 if (type == "유량 센서" && !flowPassed)
                 {
@@ -446,7 +445,6 @@ public class TestAEDManager : MonoBehaviour
                     {
                         Debug.Log("🫀 CPR 30회 성공!");
                         setPressurePassed();         // 플래그 처리
-
                         cprValidator.Reset();        // 리셋
                         breathValidator.Reset();
                     }
@@ -458,7 +456,6 @@ public class TestAEDManager : MonoBehaviour
                     {
                         Debug.Log("🌬 인공호흡 2회 성공!");
                         setFlowPassed();
-
                         cprValidator.Reset();        // 리셋
                         breathValidator.Reset();
                     }
@@ -569,6 +566,16 @@ public class TestAEDManager : MonoBehaviour
         markerDistancePassed = false;
     }
 
+    private void ResetValidationFlags()
+    {
+        initPlag();
+
+        fiveCycleCount = 0;
+        cprValidator.Reset();
+        breathValidator.Reset();
+    }
+
+
     public void setVoicePassed()
     {
         voicePassed = true;
@@ -619,10 +626,13 @@ public class TestAEDManager : MonoBehaviour
     void OnEnable()
     {
         SensorEvents.OnSensorDataReceived += HandleSensorData;
+        SensorEvents.OnGyroDataReceived += HandleGyroData;
     }
 
     void OnDisable()
     {
         SensorEvents.OnSensorDataReceived -= HandleSensorData;
+        SensorEvents.OnGyroDataReceived -= HandleGyroData;
     }
+
 }

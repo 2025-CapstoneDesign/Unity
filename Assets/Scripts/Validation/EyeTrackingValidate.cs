@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using Microsoft.MixedReality.Toolkit;
 using Microsoft.MixedReality.Toolkit.Input;
@@ -7,12 +8,12 @@ public class EyeTrackingValidate : MonoBehaviour
 {
     public bool IsVerified { get; private set; } = false;
 
-    [SerializeField]
-    private GameObject targetObject; // 검증 위치에 표시될 오브젝트
+    [SerializeField] private GameObject targetEffectPrefab;
+    private GameObject activeEffect;
+    private Renderer effectRenderer;
 
-    private Renderer targetRenderer;
-    private Color originalColor;
-    private bool isLooking = false;
+    private Color defaultColor = Color.red;
+    private Color successColor = Color.green;
 
     private float radius;
     private float requiredTime;
@@ -20,32 +21,17 @@ public class EyeTrackingValidate : MonoBehaviour
 
     private bool isActive = false;
     private Action onVerifiedCallback;
+    private Coroutine hideCoroutine;
+    private bool isLooking = false;
 
     private int markerId;
+    private Vector3 targetLocalOffset;
+    private Vector3 targetWorldPos;
 
-    void Start()
-    {
-        if (targetObject != null)
-        {
-            targetObject.SetActive(false);
-
-            // 오브젝트의 Renderer 및 색상 저장
-            targetRenderer = targetObject.GetComponent<Renderer>();
-            if (targetRenderer != null)
-            {
-                // 머티리얼 인스턴스를 복사해서 다른 오브젝트에 영향 없게 함
-                targetRenderer.material = new Material(targetRenderer.material);
-                originalColor = targetRenderer.material.color;
-            }
-        }
-    }
-
-    /// <summary>
-    /// 검증 시작: 마커ID, 상대 위치, 반지름, 시간, 콜백
-    /// </summary>
     public void BeginVerification(int markerId, Vector3 localOffset, float radius, float holdTime, Action onSuccess)
     {
         this.markerId = markerId;
+        this.targetLocalOffset = localOffset;
         this.radius = radius;
         this.requiredTime = holdTime;
         this.onVerifiedCallback = onSuccess;
@@ -54,41 +40,21 @@ public class EyeTrackingValidate : MonoBehaviour
         currentTime = 0f;
         isActive = true;
 
-        if (OptimizedArUcoMarkerDetection.markerMap.TryGetValue(markerId, out MarkerData marker))
-        {
-            Vector3 worldOffset = marker.rotation * localOffset;
-            Vector3 targetWorldPos = marker.position + worldOffset;
-
-            if (targetObject != null)
-            {
-                MainThreadDispatcher.Enqueue(() =>
-                {
-                    targetObject.transform.position = targetWorldPos;
-                    targetObject.transform.rotation = marker.rotation;
-                    targetObject.SetActive(true);
-                });
-            }
-        }
-        else
-        {
-            isActive = false;
-        }
+        // 🎯 마커가 없으면 나중에 Update에서 처리
     }
 
     public void StopVerification()
     {
         isActive = false;
 
-        if (targetObject != null)
+        if (activeEffect != null)
         {
-            targetObject.SetActive(false);
-
-            if (targetRenderer != null)
-            {
-                targetRenderer.material.color = originalColor;
-                isLooking = false;
-            }
+            activeEffect.SetActive(false);
+            if (effectRenderer != null)
+                effectRenderer.material.color = defaultColor;
         }
+
+        isLooking = false;
     }
 
     void Update()
@@ -96,8 +62,36 @@ public class EyeTrackingValidate : MonoBehaviour
         if (!isActive || IsVerified || CoreServices.InputSystem?.EyeGazeProvider == null)
             return;
 
-        var gazeProvider = CoreServices.InputSystem.EyeGazeProvider;
+        // ✅ 마커가 인식되었는지 확인
+        if (!OptimizedArUcoMarkerDetection.markerMap.TryGetValue(markerId, out MarkerData marker))
+            return;
 
+        Vector3 worldOffset = marker.rotation * targetLocalOffset;
+        targetWorldPos = marker.position + worldOffset;
+
+        // ✅ 오브젝트 지연 생성
+        if (activeEffect == null && targetEffectPrefab != null)
+        {
+            activeEffect = Instantiate(targetEffectPrefab, targetWorldPos, marker.rotation);
+            activeEffect.transform.localScale = Vector3.one * (radius * 0.5f);
+
+            effectRenderer = activeEffect.GetComponentInChildren<Renderer>();
+            if (effectRenderer != null)
+            {
+                effectRenderer.material = new Material(effectRenderer.material);
+                effectRenderer.material.color = defaultColor;
+            }
+        }
+
+        // ✅ 오브젝트 위치 갱신
+        if (activeEffect != null)
+        {
+            activeEffect.transform.position = targetWorldPos;
+            activeEffect.transform.rotation = marker.rotation;
+            activeEffect.SetActive(true);
+        }
+
+        var gazeProvider = CoreServices.InputSystem.EyeGazeProvider;
         if (!gazeProvider.IsEyeTrackingEnabled)
             return;
 
@@ -111,41 +105,75 @@ public class EyeTrackingValidate : MonoBehaviour
         {
             Vector3 gazePoint = hit.point;
 
-            if (targetObject != null)
+            if (activeEffect != null)
             {
-                float sqrDist = (gazePoint - targetObject.transform.position).sqrMagnitude;
+                float sqrDist = (gazePoint - activeEffect.transform.position).sqrMagnitude;
 
                 if (sqrDist <= radius * radius)
                 {
                     hitTarget = true;
                     currentTime += Time.deltaTime;
 
+                    if (effectRenderer != null)
+                        effectRenderer.material.color = Color.Lerp(effectRenderer.material.color, successColor, Time.deltaTime * 8f);
+
                     if (currentTime >= requiredTime)
                     {
                         IsVerified = true;
                         isActive = false;
-
-                        if (targetObject != null)
-                            targetObject.SetActive(false);
+                        HideEffectAfterDelay(0.5f);
                         onVerifiedCallback?.Invoke();
                     }
                 }
             }
         }
 
-        // 색상 처리
-        if (targetRenderer != null)
+        // 🔁 시선 벗어났을 때 초기화
+        if (effectRenderer != null)
         {
             if (hitTarget && !isLooking)
             {
-                targetRenderer.material.color = Color.green;
                 isLooking = true;
             }
             else if (!hitTarget && isLooking)
             {
-                targetRenderer.material.color = originalColor;
+                effectRenderer.material.color = defaultColor;
                 isLooking = false;
+                currentTime = 0f;
             }
         }
+    }
+
+    private void HideEffectAfterDelay(float delay)
+    {
+        if (activeEffect == null) return;
+
+        if (hideCoroutine != null)
+            StopCoroutine(hideCoroutine);
+
+        hideCoroutine = StartCoroutine(HideEffectCoroutine(delay));
+    }
+
+    private IEnumerator HideEffectCoroutine(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (activeEffect != null)
+            activeEffect.SetActive(false);
+    }
+
+    public void ResetVerification()
+    {
+        IsVerified = false;
+        isActive = false;
+        currentTime = 0f;
+
+        if (activeEffect != null)
+        {
+            activeEffect.SetActive(false);
+            if (effectRenderer != null)
+                effectRenderer.material.color = defaultColor;
+        }
+
+        isLooking = false;
     }
 }

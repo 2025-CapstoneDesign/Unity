@@ -2,6 +2,7 @@ using UnityEngine;
 using NativeWebSocket;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using System;
 
 public class SensorWebSocketClient : MonoBehaviour
 {
@@ -58,15 +59,31 @@ public class SensorWebSocketClient : MonoBehaviour
 
                 foreach (var sensor in sensorArray)
                 {
-                    string type = sensor["type"].ToString();
-                    float value = sensor["value"].ToObject<float>();
+                    string type = sensor["type"]?.ToString();
 
-                    SensorEvents.OnSensorDataReceived?.Invoke(type, value);
+                    switch (type)
+                    {
+                        case "자이로 센서":
+                            float roll = sensor["roll"]?.ToObject<float>() ?? 0f;
+                            float pitch = sensor["pitch"]?.ToObject<float>() ?? 0f;
+                            SensorEvents.OnGyroDataReceived?.Invoke(roll, pitch);
+                            break;
+
+                        case "유량 센서":
+                        case "압력 센서":
+                            float value = sensor["value"]?.ToObject<float>() ?? 0f;
+                            SensorEvents.OnSensorDataReceived?.Invoke(type, value);
+                            break;
+
+                        default:
+                            Debug.LogWarning("⚠️ 알 수 없는 센서 타입: " + type);
+                            break;
+                    }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                Debug.LogWarning("⚠️ SensorWebSocket JSON 파싱 실패");
+                Debug.LogWarning("⚠️ SensorWebSocket JSON 파싱 실패: " + ex.Message);
             }
         };
 
@@ -74,7 +91,7 @@ public class SensorWebSocketClient : MonoBehaviour
         {
             await websocket.Connect();
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Debug.LogError("⚠️ SensorWebSocket 연결 실패: " + ex.Message);
             isConnecting = false;
