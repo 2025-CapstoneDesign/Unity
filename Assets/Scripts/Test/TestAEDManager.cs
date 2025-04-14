@@ -9,10 +9,13 @@ public class TestAEDManager : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI aedMessageText;       // 단계 안내
-    [SerializeField] private TextMeshProUGUI retryMessageText;     // 통과/실패 메시지
     [SerializeField] private Slider progressBar;                   // 진행률 바
     [SerializeField] private Image fillMaskImage;
     [SerializeField] private TextMeshProUGUI timerText;
+
+     [SerializeField] private CountTextDisplay countTextDisplay;
+
+    [SerializeField] private Image checkIcon; // 체크 아이콘 이미지
 
     private bool timeOverNotified = false;
     private float flashTimer = 0f;
@@ -20,6 +23,12 @@ public class TestAEDManager : MonoBehaviour
     private CPRState currentState;
     private bool externalInput = false;
     private int totalSteps;
+
+    // 체크 아이콘 색깔
+    private Coroutine iconColorResetCoroutine;
+    private Color passColor = new Color(0f, 1f, 0f, 1f); // 초록
+    private Color idleColor = new Color(0.5f, 0.5f, 0.5f, 1f); // 회색
+    private Color failColor = new Color(1f, 0f, 0f, 1f); // 빨강
 
     // 검증 플래그
     private bool wearPassed = false;
@@ -70,8 +79,7 @@ public class TestAEDManager : MonoBehaviour
         currentState = CPRState.CheckSafety;
         totalSteps = System.Enum.GetValues(typeof(CPRState)).Length - 1;
 
-        var cg = retryMessageText.GetComponent<CanvasGroup>();
-        if (cg != null) cg.alpha = 0f;
+     
         setState(CPRState.CheckSafety);
         ResetValidationFlags(); // 초기화
         StartCoroutine(InitSequence());
@@ -159,8 +167,12 @@ public class TestAEDManager : MonoBehaviour
                 case CPRState.CheckSafety:
                     if (!voicePassed)
                     { // 1. 음성통과인식 안되면 패스
+                        ShowCheckIconFail();
                         break;
                     }
+                    // 음성 통과 로직
+                    // 0.5 초 시간아 멈춰라
+                    ShowCheckIconPass();
                     initPlag();
                     setState(CPRState.WearPPE);
                     break;
@@ -172,6 +184,7 @@ public class TestAEDManager : MonoBehaviour
                     {
                         voicePassed = false; // 이전 음성 평가 초기화
                         Debug.Log("🧤 보호장비 착용 대기 중...");
+                        ShowCheckIconFail();
                         break;
                     }
 
@@ -179,11 +192,13 @@ public class TestAEDManager : MonoBehaviour
                     if (!voicePassed)
                     {
                         Debug.Log("🎤 음성 평가 대기 중...");
+                        ShowCheckIconFail();
                         break;
                     }
 
                     // 3. 둘 다 통과 시 다음 단계
                     Debug.Log("✅ 보호장비 착용 + 음성 평가 완료");
+                    ShowCheckIconPass();
                     initPlag();
                     setState(CPRState.CheckConsciousness);
                     break;
@@ -191,8 +206,10 @@ public class TestAEDManager : MonoBehaviour
                 case CPRState.CheckConsciousness:
                     if (!gyroPassed) // 1. 자이로 센서 통과 안되면 패스
                     {
+                        ShowCheckIconFail();
                         break;
                     }
+                    ShowCheckIconPass();
                     initPlag();
                     setState(CPRState.Call119AndRequestAED);
                     break;
@@ -201,8 +218,10 @@ public class TestAEDManager : MonoBehaviour
                     // 이전 단계 로직에 통과 시 사람이 나오게 호출해야해요! (추후에)
                     if (!voicePassed) // 1. 음성인식 안되면 패스
                     {
+                        ShowCheckIconFail();
                         break;
                     }
+                    ShowCheckIconPass();
                     initPlag();
                     setState(CPRState.CheckBreathingAndPulse);
                     // 2. 다음단계에 필요한 손 인식 코드입니다.
@@ -213,6 +232,7 @@ public class TestAEDManager : MonoBehaviour
                     // 1. 손 인식 먼저 기다리기
                     if (!handTrackingPassed)
                     {
+                        ShowCheckIconFail();
                         voicePassed = false; // 이전 음성 평가 초기화
                         Debug.Log("✋ 손 위치 인식 대기 중...");
                         break;
@@ -221,12 +241,14 @@ public class TestAEDManager : MonoBehaviour
                     // 2. 손 인식 통과 후 음성 평가 기다림
                     if (!voicePassed)
                     {
+                        ShowCheckIconFail();
                         Debug.Log("🎤 손 인식 완료됨! 음성 평가 대기 중...");
                         break;
                     }
 
                     // 3. 둘 다 통과 시 다음 단계로 이동
                     Debug.Log("✅ 손 위치 + 음성 평가 완료");
+                    ShowCheckIconPass();
                     initPlag();
                     setState(CPRState.ChestCompressions);
                     break;
@@ -234,17 +256,21 @@ public class TestAEDManager : MonoBehaviour
                 case CPRState.ChestCompressions:
                     if (!pressurePassed)
                     {
+                        ShowCheckIconFail();
                         break;
                     }
                     initPlag();
+                    ShowCheckIconPass();
                     setState(CPRState.OpenAirway);
                     break;
 
                 case CPRState.OpenAirway:
                     if (!gyroPassed)
                     {
+                        ShowCheckIconFail();
                         break;
                     }
+                    ShowCheckIconPass();
                     initPlag();
                     setState(CPRState.ProvideRescueBreaths);
                     break;
@@ -252,9 +278,11 @@ public class TestAEDManager : MonoBehaviour
                 case CPRState.ProvideRescueBreaths:
                     if (!flowPassed)
                     {
+                        ShowCheckIconFail();
                         break;
                     }
                     initPlag();
+                    ShowCheckIconPass();
                     setState(CPRState.ContinueCPR);
                     break;
 
@@ -270,12 +298,18 @@ public class TestAEDManager : MonoBehaviour
                             flowPassed = false;
                             break;
                         }
+                        else {
+                            
+                        }
                         if (fiveCycleCount % 2 == 1 && flowPassed)
                         {
                             Debug.Log($"🌬 심폐소생술 {fiveCycleCount / 2 + 1}주기 - 인공호흡 완료"); // ✅ 추가
                             fiveCycleCount++;
                             pressurePassed = false;
                             break;
+                        }
+                        else {
+
                         }
                         break;
                     }
@@ -286,9 +320,11 @@ public class TestAEDManager : MonoBehaviour
                 case CPRState.DirectAssistants:
                     if (!voicePassed)
                     {
+                        ShowCheckIconFail();
                         break;
                     }
                     initPlag();
+                    ShowCheckIconPass();
                     setState(CPRState.TurnOnAED);
                     handValidator.BeginVerification(12, new Vector3(0f, 0.0f, 0f), 0.2f, 1f, setHandTrackingPassed);
                     break;
@@ -296,9 +332,11 @@ public class TestAEDManager : MonoBehaviour
                 case CPRState.TurnOnAED:
                     if (!handTrackingPassed)
                     {
+                        ShowCheckIconFail();
                         break;
                     }
                     initPlag();
+                    ShowCheckIconPass();
                     setState(CPRState.AttachPads);
                     markerPositionValidator.BeginValidation(
                         1,
@@ -510,46 +548,39 @@ public class TestAEDManager : MonoBehaviour
     //     waitingForInput = false;
     // }
 
+    private void ShowCheckIconPass()
+{
+    if (checkIcon == null) return;
 
-    private IEnumerator ShowFeedbackMessage(string message, Color color, bool advanceStep)
-    {
-        if (retryMessageText == null) yield break;
+    checkIcon.color = passColor;
 
-        retryMessageText.text = message;
-        retryMessageText.color = color;
+    if (iconColorResetCoroutine != null)
+        StopCoroutine(iconColorResetCoroutine);
 
-        CanvasGroup cg = retryMessageText.GetComponent<CanvasGroup>();
-        if (cg == null) yield break;
+    iconColorResetCoroutine = StartCoroutine(ResetCheckIconColorAfterDelay(2f));
+}
 
-        // Fade In
-        float t = 0f;
-        while (t < 0.3f)
-        {
-            cg.alpha = Mathf.Lerp(0f, 1f, t / 0.3f);
-            t += Time.deltaTime;
-            yield return null;
-        }
-        cg.alpha = 1f;
+private void ShowCheckIconFail()
+{
+    if (checkIcon == null) return;
 
-        yield return new WaitForSeconds(1.5f);
+    checkIcon.color = failColor;
 
-        // Fade Out
-        t = 0f;
-        while (t < 0.3f)
-        {
-            cg.alpha = Mathf.Lerp(1f, 0f, t / 0.3f);
-            t += Time.deltaTime;
-            yield return null;
-        }
-        cg.alpha = 0f;
+    if (iconColorResetCoroutine != null)
+        StopCoroutine(iconColorResetCoroutine);
 
-        // ✅ 피드백 메시지가 완전히 사라진 후에 다음 단계로 이동
-        if (advanceStep)
-        {
-            currentState++;
-            UpdateStepUI(); // 다음 단계 안내문구 갱신
-        }
-    }
+    iconColorResetCoroutine = StartCoroutine(ResetCheckIconColorAfterDelay(2f));
+}
+
+
+private IEnumerator ResetCheckIconColorAfterDelay(float delay)
+{
+    yield return new WaitForSeconds(delay);
+    if (checkIcon != null)
+        checkIcon.color = idleColor;
+}
+
+
 
     private void initPlag()
     {
