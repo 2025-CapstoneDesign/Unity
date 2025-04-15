@@ -13,9 +13,11 @@ public class TestAEDManager : MonoBehaviour
     [SerializeField] private Image fillMaskImage;
     [SerializeField] private TextMeshProUGUI timerText;
 
-    [SerializeField] private CountTextDisplay countTextDisplay;
-
+    [SerializeField] private TextMeshProUGUI countTextDisplay;
+    [SerializeField] private CompressionUI compressionUI;
     [SerializeField] private Image checkIcon; // 체크 아이콘 이미지
+
+
 
     private bool timeOverNotified = false;
     private float flashTimer = 0f;
@@ -82,7 +84,7 @@ public class TestAEDManager : MonoBehaviour
         currentState = CPRState.CheckSafety;
         totalSteps = System.Enum.GetValues(typeof(CPRState)).Length - 1;
 
-
+     
         setState(CPRState.CheckSafety);
         ResetValidationFlags(); // 초기화
         StartCoroutine(InitSequence());
@@ -160,6 +162,9 @@ public class TestAEDManager : MonoBehaviour
 
     private IEnumerator CPRProcedure()
     {
+        int count_of_compression = 0;
+        int count_of_openAirway = 0;
+
         while (currentState != CPRState.Completed)
         {
             Debug.Log($"🧭 현재 단계: {currentState}"); // ✅ 추가: 현재 진행 단계 로그
@@ -168,7 +173,7 @@ public class TestAEDManager : MonoBehaviour
             switch (currentState)
             {
                 case CPRState.CheckSafety:
-                    updateCountText(false);
+                    updateCountText(true);
                     if (!voicePassed)
                     { // 1. 음성통과인식 안되면 패스
                        
@@ -183,6 +188,7 @@ public class TestAEDManager : MonoBehaviour
 
                 case CPRState.WearPPE:
                     // 1. 보호장비 착용 감지 먼저 (외부에서 wearPassed = true로 설정된 경우)
+                    updateCountText(true);
                     wearPassed = true;
                     if (!wearPassed)
                     {
@@ -208,6 +214,7 @@ public class TestAEDManager : MonoBehaviour
                     break;
 
                 case CPRState.CheckConsciousness:
+                    updateCountText(true);
                     if (!gyroPassed) // 1. 자이로 센서 통과 안되면 패스
                     {
                       
@@ -219,6 +226,7 @@ public class TestAEDManager : MonoBehaviour
                     break;
 
                 case CPRState.Call119AndRequestAED:
+                    updateCountText(true);
                     // 이전 단계 로직에 통과 시 사람이 나오게 호출해야해요! (추후에)
                     if (!voicePassed) // 1. 음성인식 안되면 패스
                     {
@@ -227,37 +235,16 @@ public class TestAEDManager : MonoBehaviour
                     }
                     ShowCheckIconPass();
                     initPlag();
-                    setState(CPRState.CheckBreathingAndPulse);
+                    setState(CPRState.ChestCompressions);
                     // 2. 다음단계에 필요한 손 인식 코드입니다.
                     handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
-                case CPRState.CheckBreathingAndPulse:
-                    // 1. 손 인식 먼저 기다리기
-                    if (!handTrackingPassed)
-                    {
-                       
-                        voicePassed = false; // 이전 음성 평가 초기화
-                        Debug.Log("✋ 손 위치 인식 대기 중...");
-                        break;
-                    }
-
-                    // 2. 손 인식 통과 후 음성 평가 기다림
-                    if (!voicePassed)
-                    {
-                        
-                        Debug.Log("🎤 손 인식 완료됨! 음성 평가 대기 중...");
-                        break;
-                    }
-
-                    // 3. 둘 다 통과 시 다음 단계로 이동
-                    Debug.Log("✅ 손 위치 + 음성 평가 완료");
-                    ShowCheckIconPass();
-                    initPlag();
-                    setState(CPRState.ChestCompressions);
-                    break;
+           
 
                 case CPRState.ChestCompressions:
+                    updateCountText(false);
+                    
                     if (!pressurePassed)
                     {
                        
@@ -302,21 +289,14 @@ public class TestAEDManager : MonoBehaviour
                             flowPassed = false;
                             break;
                         }
-                        else
-                        {
-
-                        }
-                        if (fiveCycleCount % 2 == 1 && flowPassed)
-                        {
+                        if(fiveCycleCount % 2 == 1 && flowPassed)
+                            {
                             Debug.Log($"🌬 심폐소생술 {fiveCycleCount / 2 + 1}주기 - 인공호흡 완료"); // ✅ 추가
                             fiveCycleCount++;
                             pressurePassed = false;
                             break;
                         }
-                        else
-                        {
 
-                        }
                         break;
                     }
                     initPlag();
@@ -324,6 +304,7 @@ public class TestAEDManager : MonoBehaviour
                     break;
 
                 case CPRState.DirectAssistants:
+                    updateCountText(true);
                     if (!voicePassed)
                     {
                         
@@ -336,6 +317,7 @@ public class TestAEDManager : MonoBehaviour
                     break;
 
                 case CPRState.TurnOnAED:
+                    updateCountText(true);
                     if (!handTrackingPassed)
                     {
                         
@@ -363,6 +345,7 @@ public class TestAEDManager : MonoBehaviour
                     break;
 
                 case CPRState.AttachPads:
+                    updateCountText(true);
                     if (!markerPositionFirstPassed || !markerPositionSecondPassed)
                     {
                         break;
@@ -372,6 +355,7 @@ public class TestAEDManager : MonoBehaviour
                     break;
 
                 case CPRState.ClearArea:
+                    updateCountText(true);
                     if (!voicePassed)
                     {
                         break;
@@ -391,12 +375,40 @@ public class TestAEDManager : MonoBehaviour
                     break;
 
                 case CPRState.ResumeChestCompressions:
+                    updateCountText(false);
                     if (!pressurePassed)
                     {
                         break;
                     }
                     initPlag();
                     setState(CPRState.Completed);
+                    break;
+
+                //나중에 원래 차례로 이동시킬 것
+                case CPRState.CheckBreathingAndPulse:
+                    // 1. 손 인식 먼저 기다리기
+                    updateCountText(true);
+                    if (!handTrackingPassed)
+                    {
+
+                        voicePassed = false; // 이전 음성 평가 초기화
+                        Debug.Log("✋ 손 위치 인식 대기 중...");
+                        break;
+                    }
+
+                    // 2. 손 인식 통과 후 음성 평가 기다림
+                    if (!voicePassed)
+                    {
+
+                        Debug.Log("🎤 손 인식 완료됨! 음성 평가 대기 중...");
+                        break;
+                    }
+
+                    // 3. 둘 다 통과 시 다음 단계로 이동
+                    Debug.Log("✅ 손 위치 + 음성 평가 완료");
+                    ShowCheckIconPass();
+                    initPlag();
+                    setState(CPRState.ChestCompressions);
                     break;
             }
 
@@ -457,6 +469,8 @@ public class TestAEDManager : MonoBehaviour
                 {
                     bool complete = cprValidator.TryAddCompression(value);
                     Debug.Log($"압력 센서 : {cprValidator.compressionTimestamps.Count} 횟수 입니다.");
+                    compressionUI.SetForce(cprValidator.LastPressureValue);
+                    countTextDisplay.text = $"가슴압박 : {cprValidator.compressionTimestamps.Count}회 / 30회";
                     if (complete)
                     {
                         Debug.Log("🫀 CPR 30회 성공!");
@@ -472,6 +486,7 @@ public class TestAEDManager : MonoBehaviour
                 if (type == "유량 센서" && !flowPassed)
                 {
                     bool success = breathValidator.TryAddBreath(value);
+                    countTextDisplay.text = $"인공호흡 : {breathValidator.breathCount}회 / 2회";
                     if (success)
                     {
                         Debug.Log("🌬 인공호흡 2회 성공!");
@@ -485,6 +500,7 @@ public class TestAEDManager : MonoBehaviour
                 if (fiveCycleCount % 2 == 0 && type == "압력 센서" && !pressurePassed)
                 {
                     bool complete = cprValidator.TryAddCompression(value);
+                    countTextDisplay.text = $"가습압박 : {cprValidator.compressionTimestamps.Count}회 / 30회";
                     if (complete)
                     {
                         Debug.Log("🫀 CPR 30회 성공!");
@@ -496,6 +512,7 @@ public class TestAEDManager : MonoBehaviour
                 if (fiveCycleCount % 2 == 1 && type == "유량 센서" && !flowPassed)
                 {
                     bool success = breathValidator.TryAddBreath(value);
+                    countTextDisplay.text =  $"인공호흡 : {breathValidator.breathCount}회 / 2회";
                     if (success)
                     {
                         Debug.Log("🌬 인공호흡 2회 성공!");
@@ -510,6 +527,7 @@ public class TestAEDManager : MonoBehaviour
                 if (type == "압력 센서" && !pressurePassed)
                 {
                     bool complete = cprValidator.TryAddCompression(value);
+                    countTextDisplay.text = $"가슴압박 : {cprValidator.compressionTimestamps.Count}회 / 30회";
                     if (complete)
                     {
                         Debug.Log("🫀 재압박 30회 성공!");
