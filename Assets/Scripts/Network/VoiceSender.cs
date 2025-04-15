@@ -25,26 +25,33 @@ public class VoiceSender : MonoBehaviour
         StartCapture();
     }
 
-    public void StartCapture()
+   public void StartCapture()
+{
+    // ✅ 강제로 캡처 실행 (테스트용)
+    isCapturing = false; // ★ 여기를 false로 해서 아래 코드가 실행되게 만듦
+
+    if (isCapturing) return;
+
+    foreach (var device in Microphone.devices)
     {
-        if (isCapturing) return;
-
-        foreach (var device in Microphone.devices)
-        {
-            Debug.Log("🎤 마이크 디바이스: " + device);
-        }
-
-        if (Microphone.devices.Length == 0)
-        {
-            Debug.LogWarning("❌ 마이크 디바이스 없음");
-        }
-
-        Debug.Log("🎤 음성 캡처 시작");
-        micDevice = Microphone.devices[0];
-        clip = Microphone.Start(micDevice, true, 1, 16000);
-        sendCoroutine = StartCoroutine(SendLoop());
-        isCapturing = true;
+        Debug.Log("🎤 마이크 디바이스: " + device);
     }
+
+    if (Microphone.devices.Length == 0)
+    {
+        Debug.LogWarning("❌ 마이크 디바이스 없음 - 테스트용 더미 마이크 사용");
+        micDevice = null; // 마이크 없을 때도 진행 (주의!)
+    }
+    else
+    {
+        micDevice = Microphone.devices[0];
+    }
+
+    Debug.Log("🎤 음성 캡처 시작");
+    clip = Microphone.Start(micDevice, true, 1, 16000);
+    sendCoroutine = StartCoroutine(SendLoop());
+    isCapturing = true;
+}
 
     public void StopCapture()
     {

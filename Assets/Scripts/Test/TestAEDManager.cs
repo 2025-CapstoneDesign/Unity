@@ -13,7 +13,7 @@ public class TestAEDManager : MonoBehaviour
     [SerializeField] private Image fillMaskImage;
     [SerializeField] private TextMeshProUGUI timerText;
 
-     [SerializeField] private CountTextDisplay countTextDisplay;
+    [SerializeField] private CountTextDisplay countTextDisplay;
 
     [SerializeField] private Image checkIcon; // 체크 아이콘 이미지
 
@@ -67,19 +67,22 @@ public class TestAEDManager : MonoBehaviour
         }
         else if (score == 1)
         {
+            ShowCheckIconFail();
             Debug.Log("🟡 음성 평가 : 오답");
         }
         else if (score == 0)
         {
+            ShowCheckIconFail();
             Debug.Log("🔴 음성 평가 : 헛소리");
         }
     }
     void Start()
     {
+        checkIcon.color = idleColor;
         currentState = CPRState.CheckSafety;
         totalSteps = System.Enum.GetValues(typeof(CPRState)).Length - 1;
 
-     
+
         setState(CPRState.CheckSafety);
         ResetValidationFlags(); // 초기화
         StartCoroutine(InitSequence());
@@ -165,9 +168,10 @@ public class TestAEDManager : MonoBehaviour
             switch (currentState)
             {
                 case CPRState.CheckSafety:
+                    updateCountText(false);
                     if (!voicePassed)
                     { // 1. 음성통과인식 안되면 패스
-                        ShowCheckIconFail();
+                       
                         break;
                     }
                     // 음성 통과 로직
@@ -184,7 +188,7 @@ public class TestAEDManager : MonoBehaviour
                     {
                         voicePassed = false; // 이전 음성 평가 초기화
                         Debug.Log("🧤 보호장비 착용 대기 중...");
-                        ShowCheckIconFail();
+                        
                         break;
                     }
 
@@ -192,7 +196,7 @@ public class TestAEDManager : MonoBehaviour
                     if (!voicePassed)
                     {
                         Debug.Log("🎤 음성 평가 대기 중...");
-                        ShowCheckIconFail();
+                        
                         break;
                     }
 
@@ -206,7 +210,7 @@ public class TestAEDManager : MonoBehaviour
                 case CPRState.CheckConsciousness:
                     if (!gyroPassed) // 1. 자이로 센서 통과 안되면 패스
                     {
-                        ShowCheckIconFail();
+                      
                         break;
                     }
                     ShowCheckIconPass();
@@ -218,7 +222,7 @@ public class TestAEDManager : MonoBehaviour
                     // 이전 단계 로직에 통과 시 사람이 나오게 호출해야해요! (추후에)
                     if (!voicePassed) // 1. 음성인식 안되면 패스
                     {
-                        ShowCheckIconFail();
+                      
                         break;
                     }
                     ShowCheckIconPass();
@@ -232,7 +236,7 @@ public class TestAEDManager : MonoBehaviour
                     // 1. 손 인식 먼저 기다리기
                     if (!handTrackingPassed)
                     {
-                        ShowCheckIconFail();
+                       
                         voicePassed = false; // 이전 음성 평가 초기화
                         Debug.Log("✋ 손 위치 인식 대기 중...");
                         break;
@@ -241,7 +245,7 @@ public class TestAEDManager : MonoBehaviour
                     // 2. 손 인식 통과 후 음성 평가 기다림
                     if (!voicePassed)
                     {
-                        ShowCheckIconFail();
+                        
                         Debug.Log("🎤 손 인식 완료됨! 음성 평가 대기 중...");
                         break;
                     }
@@ -256,7 +260,7 @@ public class TestAEDManager : MonoBehaviour
                 case CPRState.ChestCompressions:
                     if (!pressurePassed)
                     {
-                        ShowCheckIconFail();
+                       
                         break;
                     }
                     initPlag();
@@ -267,7 +271,7 @@ public class TestAEDManager : MonoBehaviour
                 case CPRState.OpenAirway:
                     if (!gyroPassed)
                     {
-                        ShowCheckIconFail();
+                      
                         break;
                     }
                     ShowCheckIconPass();
@@ -278,7 +282,7 @@ public class TestAEDManager : MonoBehaviour
                 case CPRState.ProvideRescueBreaths:
                     if (!flowPassed)
                     {
-                        ShowCheckIconFail();
+                        
                         break;
                     }
                     initPlag();
@@ -298,8 +302,9 @@ public class TestAEDManager : MonoBehaviour
                             flowPassed = false;
                             break;
                         }
-                        else {
-                            
+                        else
+                        {
+
                         }
                         if (fiveCycleCount % 2 == 1 && flowPassed)
                         {
@@ -308,7 +313,8 @@ public class TestAEDManager : MonoBehaviour
                             pressurePassed = false;
                             break;
                         }
-                        else {
+                        else
+                        {
 
                         }
                         break;
@@ -320,7 +326,7 @@ public class TestAEDManager : MonoBehaviour
                 case CPRState.DirectAssistants:
                     if (!voicePassed)
                     {
-                        ShowCheckIconFail();
+                        
                         break;
                     }
                     initPlag();
@@ -332,7 +338,7 @@ public class TestAEDManager : MonoBehaviour
                 case CPRState.TurnOnAED:
                     if (!handTrackingPassed)
                     {
-                        ShowCheckIconFail();
+                        
                         break;
                     }
                     initPlag();
@@ -394,7 +400,7 @@ public class TestAEDManager : MonoBehaviour
                     break;
             }
 
-            yield return new WaitForSeconds(0.5f); // 0.5초 기다림
+            yield return new WaitForSeconds(3f); // 0.5초 기다림
         }
 
         aedMessageText.text = "🎉 훈련이 완료되었습니다!";
@@ -408,7 +414,7 @@ public class TestAEDManager : MonoBehaviour
         Debug.Log($"➡️ 상태 전환: {currentState}");
     }
 
-       // roll, pitch : 자이로 센서 각도 값
+    // roll, pitch : 자이로 센서 각도 값
     // 이 메서드는 SensorEvents.OnGyroDataReceived 이벤트에 의해 호출됨
     private void HandleGyroData(float roll, float pitch)
     {
@@ -549,36 +555,45 @@ public class TestAEDManager : MonoBehaviour
     // }
 
     private void ShowCheckIconPass()
-{
-    if (checkIcon == null) return;
+    {
+        if (checkIcon == null) return;
 
-    checkIcon.color = passColor;
+        checkIcon.color = passColor;
 
-    if (iconColorResetCoroutine != null)
-        StopCoroutine(iconColorResetCoroutine);
+        if (iconColorResetCoroutine != null)
+            StopCoroutine(iconColorResetCoroutine);
 
-    iconColorResetCoroutine = StartCoroutine(ResetCheckIconColorAfterDelay(2f));
-}
+        iconColorResetCoroutine = StartCoroutine(ResetCheckIconColorAfterDelay(2f));
+    }
 
-private void ShowCheckIconFail()
-{
-    if (checkIcon == null) return;
+    private void ShowCheckIconFail()
+    { 
 
-    checkIcon.color = failColor;
+        if (checkIcon == null) return;
 
-    if (iconColorResetCoroutine != null)
-        StopCoroutine(iconColorResetCoroutine);
+        checkIcon.color = failColor;
 
-    iconColorResetCoroutine = StartCoroutine(ResetCheckIconColorAfterDelay(2f));
-}
+        if (iconColorResetCoroutine != null)
+            StopCoroutine(iconColorResetCoroutine);
+
+        iconColorResetCoroutine = StartCoroutine(ResetCheckIconColorAfterDelay(2f));
+    }
 
 
-private IEnumerator ResetCheckIconColorAfterDelay(float delay)
-{
-    yield return new WaitForSeconds(delay);
-    if (checkIcon != null)
-        checkIcon.color = idleColor;
-}
+    private IEnumerator ResetCheckIconColorAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (checkIcon != null)
+            checkIcon.color = idleColor;
+    }
+
+    private void updateCountText(bool isHidden)
+    {
+        if (countTextDisplay == null) return;
+
+        countTextDisplay.gameObject.SetActive(!isHidden);
+        
+    }
 
 
 
