@@ -1,199 +1,285 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class AEDManager : MonoBehaviour
 {
-    [SerializeField] private TimerManager timerManager; // 타이머 매니저 추가
+    [SerializeField] private TimerManager timerManager;
+
+    [Header("UI")]
+    [SerializeField] private TextMeshProUGUI aedMessageText;       // 단계 안내
+    [SerializeField] private Slider progressBar;                   // 진행률 바
+    [SerializeField] private Image fillMaskImage;
+    [SerializeField] private TextMeshProUGUI timerText;
+    [SerializeField] private CountTextDisplay countTextDisplay;
+
+    [SerializeField] private Image checkIcon; // 체크 아이콘 이미지
+
+
+    // 테스트: 코드에서 직접 설정
+
+    private Coroutine iconColorResetCoroutine;
+
+    private Color passColor = new Color(0f, 1f, 0f, 1f); // 초록
+    private Color failColor = new Color(1f, 0f, 0f, 1f); // 빨강
+    private Color idleColor = new Color(0.5f, 0.5f, 0.5f, 1f); // 회색
+
+    private bool timeOverNotified = false;
+    private bool isFlashing = false;
+    private float flashTimer = 0f;
+    private float flashInterval = 0.5f; // 깜빡이는 속도 (초)
     private CPRState currentState;
-    private bool externalInput;  // 외부 입력값 (True/False
-    //private LLMManager llmManager;
-    private float timeLimit;
-
-
-    [SerializeField] private TextMeshProUGUI aedMessageText;
+    private bool externalInput = false;
+    private bool waitingForInput = false;
+    private int totalSteps;
 
     void Start()
     {
         currentState = CPRState.CheckSafety;
-        externalInput = false;  // 외부 입력은 기본적으로 false로 설정
-        StartCoroutine(CPRProcedure());
+        totalSteps = System.Enum.GetValues(typeof(CPRState)).Length - 1; // Completed 제외
+
+        // 시작 시 재시도 메시지 숨기기
+
+
+        StartCoroutine(StartWithDelay());
     }
 
+    void Update()
+    {
+        if (timerManager.IsTimeUp() && currentState != CPRState.Completed)
+        {
+            float overtime = timerManager.GetOverTime();
+
+            // ✅ FillMask 색상을 빨간색으로 바꿈 (한 번만)
+            if (!timeOverNotified && fillMaskImage != null)
+            {
+                fillMaskImage.color = Color.red;
+                timeOverNotified = true;
+            }
+
+            // ✅ 초과 시간 표시
+            if (timerText != null)
+            {
+                int minutes = Mathf.FloorToInt(overtime / 60f);
+                int seconds = Mathf.FloorToInt(overtime % 60f);
+                timerText.text = $"+ {minutes}:{seconds:00}";
+            }
+
+            // ✅ 초과 시간이 10초 넘으면 FillMask 깜빡임
+            if (overtime >= 10f && fillMaskImage != null)
+            {
+                FlashFillMask();
+            }
+        }
+    }
+    private void FlashFillMask()
+    {
+        flashTimer += Time.deltaTime;
+
+        if (flashTimer >= flashInterval)
+        {
+            // 색이 빨강 ↔ 투명 반복
+            if (fillMaskImage.color.a > 0.9f)
+            {
+                fillMaskImage.color = new Color(1f, 0f, 0f, 0f); // 완전 투명
+            }
+            else
+            {
+                fillMaskImage.color = new Color(1f, 0f, 0f, 1f); // 불투명 빨강
+            }
+
+            flashTimer = 0f;
+        }
+    }
+
+    private IEnumerator StartWithDelay()
+    {
+        yield return new WaitForSeconds(2f);
+        timerManager.StartTimer(300f);
+        StartCoroutine(CPRProcedure());
+    }
 
     private IEnumerator CPRProcedure()
     {
         while (currentState != CPRState.Completed)
         {
-            aedMessageText.text = AEDMessageManager.GetMessage(currentState);
+            UpdateStepUI();
+            // ✅ 각 단계에 따라 UI 업데이트
             switch (currentState)
             {
                 case CPRState.CheckSafety:
-                    Debug.Log("1. 현장 안전을 확인한다.");
 
-                    // 해당 상태에 대한 제한 시간 설정
-                    timeLimit = GetStateTimeLimit(currentState);
-                    timerManager.StartTimer(timeLimit);
-                    Debug.Log("AEDManager : 타이머 시작");
-
-                    // 🔹 타이머 반복문 추가
-                    while (!timerManager.IsTimeUp())
-                    {
-                        yield return null;  // 매 프레임 대기
-                    }
-                    if (timerManager.IsTimeUp())
-                    {
-                        HandleTimeoutMessage();
-                    }
-                    
                     break;
 
                 case CPRState.WearPPE:
-                    Debug.Log("2. 감염 방지를 위한 개인보호장구를 착용한다.");
-
-                    timeLimit = GetStateTimeLimit(currentState);
-                    timerManager.StartTimer(timeLimit);
-
-                    // 🔹 타이머 반복문 추가
-                    while (!timerManager.IsTimeUp())
-                    {
-                        yield return null;  // 매 프레임 대기
-                    }
-
-                    if (timerManager.IsTimeUp())
-                    {
-                        HandleTimeoutMessage();
-                        yield break;  // 시간 초과 시 종료
-                    }
-
+                    // 예: 장갑 착용 애니메이션 등
                     break;
 
                 case CPRState.CheckConsciousness:
-                    Debug.Log("3. 의식을 확인한다.");
+                    // 예: 환자에게 말걸기 애니메이션
                     break;
 
                 case CPRState.Call119AndRequestAED:
-                    Debug.Log("4. 119 신고 및 AED를 요청한다.");
-
+                    // 예: 전화기 오브젝트 활성화 등
                     break;
 
                 case CPRState.CheckBreathingAndPulse:
-                    Debug.Log("5. 호흡과 맥박을 동시에 확인한다.");
-
+                    // 예: 손 위치 안내 표시
                     break;
 
                 case CPRState.ChestCompressions:
-                    Debug.Log("6. 가슴압박을 30회 실시한다.");
-                    // CPRManager cprManager = new CPRManager(sensorManager);
-                    // while (!cprManager.IsCPRPassed)
-                    // {
-                    //     Debug.Log("wait 프레임");
-                    //     yield return null; // 다음 프레임 대기
-                    // }
-                    Debug.Log("CPR 통과!!!!!!!!!!!!");
+                    // ✅ 강도 UI를 활성화하거나 압박 깊이 측정 시작
 
+                    countTextDisplay.ShowCompressionCount(0);
                     break;
 
                 case CPRState.OpenAirway:
-                    Debug.Log("7. 기도를 개방한다.");
-
+                    // 예: 머리 젖히는 동작 안내
                     break;
 
                 case CPRState.ProvideRescueBreaths:
-                    Debug.Log("8. 포켓마스크를 사용하여 인공호흡을 2회 실시한다.");
-
+                    // 예: 포켓마스크 애니메이션, 숨 불어넣기
                     break;
 
                 case CPRState.ContinueCPR:
-                    Debug.Log("9. 가슴압박과 인공호흡을 30 : 2로 5주기 실시한다.");
 
                     break;
 
                 case CPRState.DirectAssistants:
-                    Debug.Log("10. 보조요원에게 CPR을 지시한다.");
-
+                    // 예: 손짓 애니메이션
                     break;
 
                 case CPRState.TurnOnAED:
-                    Debug.Log("11. AED의 전원을 켠다.");
-
+                    // 예: AED 오브젝트 버튼 활성화
                     break;
 
                 case CPRState.AttachPads:
-                    Debug.Log("12. 제세동 패드를 부착한다.");
-
+                    // 예: 패드 위치 가이드 표시
                     break;
 
                 case CPRState.ClearArea:
-                    Debug.Log("13. 분석 전과 제세동 전에 주위 사람들을 물러나도록 한다.");
+                    // 예: 주위 사람들 물러서게 하는 알림
                     break;
 
                 case CPRState.DeliverShock:
-                    Debug.Log("14. 쇼크 버튼을 누른다.");
+                    // 예: 버튼 누르면 이펙트 발생
                     break;
 
                 case CPRState.ResumeChestCompressions:
-                    Debug.Log("15. 즉시 가슴압박을 시작한다.");
+                    // ✅ 다시 압박 유도 시작
                     break;
 
                 case CPRState.RecordDocuments:
-                    Debug.Log("16. 의무기록지에 기록한다.");
+                    // 예: 기록지 작성 인터랙션
                     break;
             }
+
+            yield return StartCoroutine(WaitForInput());
         }
+
+        aedMessageText.text = "🎉 훈련이 완료되었습니다!";
+        UpdateProgressBar();
     }
 
-    // 외부 입력값을 기다리는 코루틴
+
+    private void UpdateStepUI()
+    {
+        aedMessageText.text = AEDMessageManager.GetMessage(currentState);
+        aedMessageText.color = Color.white;
+
+        countTextDisplay.Hide();
+
+        if (checkIcon != null)
+
+
+            UpdateProgressBar();
+    }
+
+
+    private void UpdateProgressBar()
+    {
+        float ratio = (float)(int)currentState / totalSteps;
+        if (progressBar != null)
+            progressBar.value = ratio;
+    }
+
+    private IEnumerator ResetCheckIconColorAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (checkIcon != null)
+            checkIcon.color = idleColor;
+    }
+
     private IEnumerator WaitForInput()
     {
-        // 외부 입력이 true가 될 때까지 대기
+        externalInput = false;
+        waitingForInput = true;
+
         while (!externalInput)
-        {
-            yield return null;  // 프레임마다 계속 대기
-        }   
-
-        // 외부 입력이 true일 경우, 다음 단계로 넘어감
-        externalInput = false;  // 입력을 받은 후, 상태를 초기화하여 재시도하지 않도록 함
-        currentState++;  // 다음 단계로 넘어감
-    }
-
-
-    private IEnumerator WaitForInputOrTimeout()
-    {
-        while (!externalInput && !timerManager.IsTimeUp())
         {
             yield return null;
         }
-
-        externalInput = false;
     }
 
-    private void HandleTimeoutMessage()
+    public void ReceiveInputResult(bool isPassed)
     {
-        Debug.Log($"🚨 {currentState} 단계에서 시간 초과! 조치 필요.");
-    }
+        if (!waitingForInput || externalInput) return;
 
-    private float GetStateTimeLimit(CPRState state)
-    {
-        switch (state)
+        if (checkIcon != null)
         {
-            case CPRState.CheckSafety: return 5f;
-            case CPRState.WearPPE: return 20f;
-            case CPRState.CheckConsciousness: return 5f;
-            case CPRState.Call119AndRequestAED: return 10f;
-            case CPRState.CheckBreathingAndPulse: return 7f;
-            case CPRState.ChestCompressions: return 15f;
-            case CPRState.OpenAirway: return 5f;
-            case CPRState.ProvideRescueBreaths: return 6f;
-            case CPRState.ContinueCPR: return 30f;
-            case CPRState.DirectAssistants: return 10f;
-            case CPRState.TurnOnAED: return 5f;
-            case CPRState.AttachPads: return 8f;
-            case CPRState.ClearArea: return 4f;
-            case CPRState.DeliverShock: return 3f;
-            case CPRState.ResumeChestCompressions: return 12f;
-            case CPRState.RecordDocuments: return 10f;
-            default: return 0f;
+            // 색상 설정
+            checkIcon.color = isPassed ? passColor : failColor;
+
+            // 기존 코루틴 중지
+            if (iconColorResetCoroutine != null)
+                StopCoroutine(iconColorResetCoroutine);
+
+            // 코루틴 실행: 색 유지 → 복귀 → 다음 단계 처리까지
+            iconColorResetCoroutine = StartCoroutine(HandleCheckIconFeedback(isPassed, 3f));
+        }
+
+        externalInput = true;
+        waitingForInput = false;
+    }
+
+    private IEnumerator HandleCheckIconFeedback(bool isPassed, float delay)
+    {
+        yield return new WaitForSeconds(delay); // ✅ 색 보여주는 시간
+
+        if (checkIcon != null)
+            checkIcon.color = idleColor;
+
+        if (isPassed)
+        {
+            currentState++;
+            UpdateStepUI();
+        }
+        else
+        {
+            // 실패면 상태 유지, 메시지만 갱신하고 다시 시도
+            UpdateStepUI();
         }
     }
+
+
+
+
+    //외부에서 호출 시 
+    public void UpdateCompressionCount(int count)
+    {
+        if (currentState == CPRState.ChestCompressions || currentState == CPRState.ResumeChestCompressions)
+        {
+            countTextDisplay.ShowCompressionCount(count);
+        }
+    }
+
+    public void UpdateBreathCount(int count)
+    {
+        countTextDisplay.ShowBreathCount(count);
+    }
+
+
+
 }
