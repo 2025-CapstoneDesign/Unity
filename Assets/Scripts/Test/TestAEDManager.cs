@@ -14,7 +14,8 @@ public class TestAEDManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI timerText;
 
     [SerializeField] private TextMeshProUGUI countTextDisplay;
-    [SerializeField] private CompressionUI compressionUI;
+    [SerializeField] private GradationBarUI compressionUI;
+    [SerializeField] private GradationBarUI breathUI;
     [SerializeField] private Image checkIcon; // 체크 아이콘 이미지
 
 
@@ -487,6 +488,8 @@ public class TestAEDManager : MonoBehaviour
                 {
                     bool success = breathValidator.TryAddBreath(value);
                     countTextDisplay.text = $"인공호흡 : {breathValidator.breathCount}회 / 2회";
+                    breathUI.SetForce(breathValidator.breathFlow);
+                    
                     if (success)
                     {
                         Debug.Log("🌬 인공호흡 2회 성공!");
@@ -513,6 +516,7 @@ public class TestAEDManager : MonoBehaviour
                 {
                     bool success = breathValidator.TryAddBreath(value);
                     countTextDisplay.text =  $"인공호흡 : {breathValidator.breathCount}회 / 2회";
+                    breathUI.SetForce(breathValidator.LastBreathValue);
                     if (success)
                     {
                         Debug.Log("🌬 인공호흡 2회 성공!");

@@ -6,8 +6,8 @@ public class CPRValidator
     public List<float> compressionTimestamps = new();
     private float lastValidPressTime = -1f;
 
-    private const float minPressure = 40f;
-    private const float maxPressure = 100f;
+    public const float minPressure = 40f;
+    public const float maxPressure = 100f;
     private const int requiredCount = 5;
     private const float minInterval = 0.1f;
     private const float maxInterval = 0.2f;
