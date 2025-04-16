@@ -45,6 +45,8 @@ public class MarkerFollower : MonoBehaviour
 
             if (objectRenderer != null && !objectRenderer.enabled)
                 objectRenderer.enabled = true;
+
+            
         }
         else
         {

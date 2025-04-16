@@ -4,9 +4,9 @@ public static class AEDMessageManager
 {
     private static readonly Dictionary<CPRState, string> messages = new Dictionary<CPRState, string>
     {
-        { CPRState.CheckSafety, "현장의 안전을 확인하세요!" },
-        { CPRState.WearPPE, "감염 방지를 위해 개인보호장구를 착용하세요." },
-        { CPRState.CheckConsciousness, "환자의 의식을 확인하세요." },
+        { CPRState.CheckSafety, "현장의 안전을 확인하세요!" }, //  타이머
+        { CPRState.WearPPE, "감염 방지를 위해 개인보호장구를 착용하세요." }, //색깔, 타이머 - 장갑
+        { CPRState.CheckConsciousness, "환자의 의식을 확인하세요." }, 
         { CPRState.Call119AndRequestAED, "119에 신고하고 AED를 요청하세요." },
         { CPRState.CheckBreathingAndPulse, "환자의 호흡과 맥박을 동시에 확인하세요." },
         { CPRState.ChestCompressions, "가슴압박을 30회 실시하세요." },
