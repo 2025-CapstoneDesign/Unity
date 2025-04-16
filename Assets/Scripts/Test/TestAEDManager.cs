@@ -221,9 +221,32 @@ private void OnServerResultReceivedHandler(int score)
                     break;
 
                 case CPRState.Call119AndRequestAED:
+                    // 이전 단계 로직에 통과 시 사람이 나오게 호출해야해요! (추후에)
+                    if (!voicePassed) // 1. 음성인식 안되면 패스
+                    {
+                        break;
+                    }
+                    initPlag();
+                    setState(CPRState.CheckBreathingAndPulse);
+                    // 2. 다음단계에 필요한 손 인식 코드입니다.
+                    handValidator.BeginVerification(1, new Vector3(0f, 0.25f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
+                    break;
+
+                case CPRState.CheckBreathingAndPulse:
+                    // 1. 손 인식 먼저 기다리기
+                    if (!handTrackingPassed)
+                    {
+                        voicePassed = false; // 이전 음성 평가 초기화
+                        Debug.Log("✋ 손 위치 인식 대기 중...");
+                        break;
+                    }
+
+                    // 2. 손 인식 통과 후 음성 평가 기다림
+                   
                   
                     if (!voicePassed) break;
                     uiManager.ShowCheckIconPass(this);
+
                     initPlag();
                     setState(CPRState.ChestCompressions);
                     handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0f), 0.2f, 2f, setHandTrackingPassed);
