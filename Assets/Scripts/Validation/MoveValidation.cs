@@ -72,7 +72,6 @@ public class MoveValidation : MonoBehaviour
         if (activeEffect == null && targetEffectPrefab != null)
         {
             activeEffect = Instantiate(targetEffectPrefab, expectedWorldPos, Quaternion.identity);
-            activeEffect.transform.localScale = Vector3.one * (tolerance * 0.5f);
 
             effectRenderer = activeEffect.GetComponentInChildren<Renderer>();
             if (effectRenderer != null)

@@ -167,6 +167,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2589450799121188610, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
+      propertyPath: targetEffectPrefab
+      value: 
+      objectReference: {fileID: 386429798221030844, guid: 61ebe3f9d07a340418ba2ae29b609447, type: 3}
     - target: {fileID: 3441588641224638036, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
       propertyPath: m_Name
       value: Validation
@@ -177,11 +181,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4317899360990830105, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4317899360990830105, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4317899360990830105, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
       propertyPath: m_LocalRotation.w
@@ -211,6 +215,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7556519058532241766, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
+      propertyPath: targetEffectPrefab
+      value: 
+      objectReference: {fileID: 386429798221030844, guid: 61ebe3f9d07a340418ba2ae29b609447, type: 3}
+    - target: {fileID: 7967878666603339636, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
+      propertyPath: targetEffectPrefab
+      value: 
+      objectReference: {fileID: 386429798221030844, guid: 61ebe3f9d07a340418ba2ae29b609447, type: 3}
+    - target: {fileID: 8847811401738153613, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
+      propertyPath: targetEffectPrefab
+      value: 
+      objectReference: {fileID: 386429798221030844, guid: 61ebe3f9d07a340418ba2ae29b609447, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1547,7 +1563,6 @@ MonoBehaviour:
   timerText: {fileID: 1432063598}
   handValidator: {fileID: 527435240}
   markerPositionValidator: {fileID: 1471164842}
-  testPositionPlacer: {fileID: 0}
 --- !u!4 &1840606857
 Transform:
   m_ObjectHideFlags: 0
@@ -2012,11 +2027,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5391519067006067315, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverAddress
-      value: ws://192.168.131.17:10049
+      value: ws://192.168.1.182:10049
       objectReference: {fileID: 0}
     - target: {fileID: 7556774523085063354, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverUrl
-      value: ws://192.168.131.17:10050
+      value: ws://192.168.1.182:10050
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

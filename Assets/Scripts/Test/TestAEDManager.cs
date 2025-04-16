@@ -206,7 +206,7 @@ public class TestAEDManager : MonoBehaviour
                     initPlag();
                     setState(CPRState.CheckBreathingAndPulse);
                     // 2. 다음단계에 필요한 손 인식 코드입니다.
-                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0f), 0.2f, 2f, setHandTrackingPassed);
+                    handValidator.BeginVerification(1, new Vector3(0f, 0.25f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case CPRState.CheckBreathingAndPulse:

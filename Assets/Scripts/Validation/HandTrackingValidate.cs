@@ -82,8 +82,7 @@ public class HandTrackingValidate : MonoBehaviour
         // 오브젝트가 없으면 생성
         if (activeEffect == null && targetEffectPrefab != null)
         {
-            activeEffect = Instantiate(targetEffectPrefab, targetWorldPos, Quaternion.identity);
-            activeEffect.transform.localScale = Vector3.one * (radius * 0.5f);
+            activeEffect = Instantiate(targetEffectPrefab, targetWorldPos, marker.rotation); // 🔁 회전 반영
 
             effectRenderer = activeEffect.GetComponentInChildren<Renderer>();
             if (effectRenderer != null)
@@ -93,12 +92,14 @@ public class HandTrackingValidate : MonoBehaviour
             }
         }
 
-        // 위치 갱신
+        // 위치 + 회전 갱신
         if (activeEffect != null)
         {
             activeEffect.transform.position = targetWorldPos;
-            activeEffect.SetActive(true); // 혹시 비활성화돼 있었으면 활성화
+            activeEffect.transform.rotation = marker.rotation; // 🔁 마커의 회전 따라감
+            activeEffect.SetActive(true);
         }
+
 
         // 손 위치 체크
         if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Palm, Handedness.Right, out MixedRealityPose pose))
