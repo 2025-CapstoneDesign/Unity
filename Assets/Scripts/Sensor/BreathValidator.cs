@@ -2,24 +2,43 @@ using UnityEngine;
 
 public class BreathValidator
 {
-    public int breathCount = 0;
+    private AEDUIManager ui;
 
-    private const float requiredFlow = 3.0f;    // 성공 기준 유량
-    private const int requiredCount = 2;        // 2회 인공호흡
+    public int breathCount = 0;
+    public float breathFlow = 0.0f;
+
+    public const float requiredFlow = 3.0f;
+    private const int requiredCount = 2;
+
+    public BreathValidator(AEDUIManager uiManager)
+    {
+        ui = uiManager;
+    }
 
     public bool TryAddBreath(float flow)
+{
+    ui.ShowBreathUI(true);
+    breathFlow = flow;
+    ui.SetBreathForce(flow);
+
+    if (flow >= requiredFlow)
     {
-        if (flow >= requiredFlow)
+        breathCount++;
+        ui.ShowCountText(true);
+        ui.UpdateCountText($"인공호흡 : {breathCount}회");
+        Debug.Log($"🌬 인공호흡 누적: {breathCount}/{requiredCount}");
+
+        if (breathCount >= requiredCount)
         {
-            breathCount++;
-            Debug.Log($"🌬 인공호흡 누적: {breathCount}/{requiredCount}");
-
-            if (breathCount >= requiredCount)
-                return true;
+            ui.StartCoroutine(ui.HideBreathUIWithDelay(3f)); // ✅ 2초 후 UI 자동 숨김
+          
+            return true;
         }
-
-        return false;
     }
+
+    return false;
+}
+
 
     public void Reset()
     {
