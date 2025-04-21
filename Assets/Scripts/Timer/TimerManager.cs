@@ -16,7 +16,7 @@ public class TimerManager : MonoBehaviour
     [Header("타이머 설정")]
     public float totalTime = 10f;
 
-    private float elapsedTime = 0f;
+    public float elapsedTime = 0f;
     private bool isRunning = false;
 
     public void StartTimer(float duration)
