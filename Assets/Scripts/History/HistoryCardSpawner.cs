@@ -1,62 +1,40 @@
-using UnityEngine;
-using UnityEngine.UI;
+ï»¿using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
+using System.Collections;
 
 public class HistoryCardSpawner : MonoBehaviour
 {
-    public GameObject cardPrefab; // Ä«µå ÇÁ¸®ÆÕ
-    public Transform gridParent;  // HistoryGrid¿¡ ¿¬°á
+    public GameObject cardPrefab; // ì¹´ë“œ í”„ë¦¬íŒ¹
+    public Transform gridParent;  // HistoryGridì— ì—°ê²°
+    public ResultHistoryManager historyManager; // ì¸ìŠ¤í™í„°ì— ì—°ê²°í•˜ê±°ë‚˜ GetComponentë¡œ
 
-    [System.Serializable]
-    public class HistoryData
+    IEnumerator Start()
     {
-        public string title;
-        public int score;
-        public string date;
-    }
+        if (historyManager == null)
+            historyManager = FindObjectOfType<ResultHistoryManager>();
 
-    void Start()
-    {
-        List<HistoryData> histories = GetDummyData();
-        Debug.Log(histories.Count);
+        // ë¶ˆëŸ¬ì˜¤ê¸° ì™„ë£Œê¹Œì§€ ëŒ€ê¸°
+        yield return new WaitUntil(() => historyManager.GetResults().Count > 0);
 
-        foreach (var data in histories)
+        List<TrainingResult> results = historyManager.GetResults();
+        Debug.Log("ğŸ“¦ ì‹¤ì œ ë¶ˆëŸ¬ì˜¨ ê¸°ë¡ ìˆ˜: " + results.Count);
+
+        foreach (var data in results)
         {
-            Debug.Log(data.title);
             GameObject card = Instantiate(cardPrefab, gridParent);
-
             TextMeshProUGUI titleText = card.transform.Find("StageName")?.GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI scoreText = card.transform.Find("Score")?.GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI dateText = card.transform.Find("Date")?.GetComponent<TextMeshProUGUI>();
 
-            // µğ¹ö±ë ·Î±× (¾øÀ¸¸é nullÀÎ »óÅÂ!)
-            if (titleText == null) Debug.LogError("StageName ÅØ½ºÆ® ¸ø Ã£À½");
-            if (scoreText == null) Debug.LogError("Score ÅØ½ºÆ® ¸ø Ã£À½");
-            if (dateText == null) Debug.LogError("Date ÅØ½ºÆ® ¸ø Ã£À½");
+            if (titleText == null) Debug.LogError("StageName í…ìŠ¤íŠ¸ ëª» ì°¾ìŒ");
+            if (scoreText == null) Debug.LogError("Score í…ìŠ¤íŠ¸ ëª» ì°¾ìŒ");
+            if (dateText == null) Debug.LogError("Date í…ìŠ¤íŠ¸ ëª» ì°¾ìŒ");
 
-            // °ª ³Ö±â
-            if (titleText != null) titleText.text = data.title;
-            if (scoreText != null) scoreText.text = $"Á¡¼ö: {data.score}Á¡";
+            if (titleText != null) titleText.text = data.protocolName;
+            if (scoreText != null) scoreText.text = $"ì ìˆ˜: {data.score}ì ";
             if (dateText != null) dateText.text = data.date;
-
         }
     }
 
-    List<HistoryData> GetDummyData()
-    {
-        return new List<HistoryData>
-        {
-            new HistoryData{ title="ÀÚµ¿Á¦¼¼µ¿±â", score=67, date="2025/04/02"},
-            new HistoryData{ title="ÀÇ½ÉÈ¯ÀÚ Æò°¡", score=88, date="2025/04/01"},
-            new HistoryData{ title="Áø°øºÎ¸ñ Àû¿ë", score=77, date="2025/03/24"},
-            new HistoryData{ title="Áø°øºÎ¸ñ Àû¿ë", score=77, date="2025/03/24"},
-            new HistoryData{ title="ÀÚµ¿Á¦¼¼µ¿±â", score=43, date="2025/03/22"},
-            new HistoryData{ title="Áø°øºÎ¸ñ Àû¿ë", score=75, date="2025/03/20"},
-            new HistoryData{ title="ÀÇ½ÉÈ¯ÀÚ Æò°¡", score=91, date="2025/03/15"},
-            new HistoryData{ title="Áø°øºÎ¸ñ Àû¿ë", score=72, date="2025/03/11"},
-            new HistoryData{ title="ÀÇ½ÉÈ¯ÀÚ Æò°¡", score=87, date="2025/03/05"},
-            new HistoryData{ title="Áø°øºÎ¸ñ Àû¿ë", score=79, date="2025/03/02"},
-        };
-    }
 }

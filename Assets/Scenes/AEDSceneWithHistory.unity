@@ -721,6 +721,7 @@ MonoBehaviour:
   fillImage: {fileID: 1086274641}
   fillParent: {fileID: 1316636336}
   totalTime: 10
+  elapsedTime: 0
 --- !u!4 &529229145
 Transform:
   m_ObjectHideFlags: 0
@@ -1667,6 +1668,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1372244946}
   - component: {fileID: 1372244947}
+  - component: {fileID: 1372244948}
   m_Layer: 0
   m_Name: AEDManager
   m_TagString: Untagged
@@ -1702,16 +1704,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timerManager: {fileID: 529229144}
-  aedMessageText: {fileID: 1632906547}
-  progressBar: {fileID: 974490117}
-  fillMaskImage: {fileID: 1316636338}
-  timerText: {fileID: 1432063598}
-  countTextDisplay: {fileID: 2103236147}
-  compressionUI: {fileID: 469977729}
-  breathUI: {fileID: 337893806}
-  checkIcon: {fileID: 1262764602}
+  uiManager: {fileID: 1682817845}
   handValidator: {fileID: 527435240}
   markerPositionValidator: {fileID: 1471164842}
+  score: 100
+  feedback: "\uD14C\uC2A4\uD2B8."
+--- !u!114 &1372244948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1372244945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4172b9a3ba2c8b84ab3c83e3ebc654b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1412083693
 GameObject:
   m_ObjectHideFlags: 0
@@ -2386,6 +2395,57 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1632906545}
   m_CullTransparentMesh: 1
+--- !u!1 &1682817844
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1682817846}
+  - component: {fileID: 1682817845}
+  m_Layer: 0
+  m_Name: UIManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1682817845
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682817844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7dcb42aa374aaea4badb6869ad6cfca0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  aedMessageText: {fileID: 1632906547}
+  countTextDisplay: {fileID: 2103236147}
+  checkIcon: {fileID: 1262764602}
+  progressBar: {fileID: 974490117}
+  fillMaskImage: {fileID: 2142505201}
+  compressionUI: {fileID: 469977729}
+  breathUI: {fileID: 337893806}
+--- !u!4 &1682817846
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682817844}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 417.53485, y: 426.4928, z: 0.06208694}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1697235722
 GameObject:
   m_ObjectHideFlags: 0
@@ -3287,3 +3347,4 @@ SceneRoots:
   - {fileID: 2046635104}
   - {fileID: 1697235724}
   - {fileID: 1921163981}
+  - {fileID: 1682817846}

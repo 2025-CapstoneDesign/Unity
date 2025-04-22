@@ -1,6 +1,8 @@
 using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
+using System;
 
 public class ResultHistoryManager : MonoBehaviour
 {
@@ -11,6 +13,17 @@ public class ResultHistoryManager : MonoBehaviour
     {
         filePath = Path.Combine(Application.persistentDataPath, "result.json");
         LoadAllResults(); // 시작 시 기존 기록 불러오기
+    }
+
+    void Awake()
+    {
+        if (FindObjectsOfType<ResultHistoryManager>().Length > 1)
+        {
+            Destroy(gameObject); // 이미 있다면 제거
+            return;
+        }
+
+        DontDestroyOnLoad(gameObject);
     }
 
     public void SaveNewResult(TrainingResult newResult)
@@ -37,6 +50,16 @@ public class ResultHistoryManager : MonoBehaviour
 
     public List<TrainingResult> GetResults()
     {
-        return allResults.results;
+        return allResults.results
+            .OrderByDescending(r =>
+            {
+                DateTime date;
+                if (DateTime.TryParse(r.date, out date))
+                    return date;
+                else
+                    return DateTime.MinValue; // 날짜 파싱 실패 시 가장 오래된 걸로 취급
+            })
+            .Take(10)
+            .ToList();
     }
 }
