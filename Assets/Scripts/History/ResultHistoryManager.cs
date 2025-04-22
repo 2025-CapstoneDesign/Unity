@@ -15,6 +15,17 @@ public class ResultHistoryManager : MonoBehaviour
         LoadAllResults(); // 시작 시 기존 기록 불러오기
     }
 
+    void Awake()
+    {
+        if (FindObjectsOfType<ResultHistoryManager>().Length > 1)
+        {
+            Destroy(gameObject); // 이미 있다면 제거
+            return;
+        }
+
+        DontDestroyOnLoad(gameObject);
+    }
+
     public void SaveNewResult(TrainingResult newResult)
     {
         allResults.results.Add(newResult); // 새 결과 추가

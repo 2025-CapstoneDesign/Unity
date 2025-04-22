@@ -1,41 +1,40 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
+using System.Collections;
 
 public class HistoryCardSpawner : MonoBehaviour
 {
-    public GameObject cardPrefab; // Ä«µå ÇÁ¸®ÆÕ
-    public Transform gridParent;  // HistoryGrid¿¡ ¿¬°á
-    public ResultHistoryManager historyManager; // ÀÎ½ºÆåÅÍ¿¡ ¿¬°áÇÏ°Å³ª GetComponent·Î
+    public GameObject cardPrefab; // ì¹´ë“œ í”„ë¦¬íŒ¹
+    public Transform gridParent;  // HistoryGridì— ì—°ê²°
+    public ResultHistoryManager historyManager; // ì¸ìŠ¤í™í„°ì— ì—°ê²°í•˜ê±°ë‚˜ GetComponentë¡œ
 
-    void Start()
+    IEnumerator Start()
     {
-        // historyManager ¿¬°á (Á÷Á¢ ¿¬°áµµ °¡´É)
         if (historyManager == null)
             historyManager = FindObjectOfType<ResultHistoryManager>();
 
+        // ë¶ˆëŸ¬ì˜¤ê¸° ì™„ë£Œê¹Œì§€ ëŒ€ê¸°
+        yield return new WaitUntil(() => historyManager.GetResults().Count > 0);
+
         List<TrainingResult> results = historyManager.GetResults();
-        Debug.Log("ºÒ·¯¿Â ±â·Ï ¼ö: " + results.Count);
+        Debug.Log("ğŸ“¦ ì‹¤ì œ ë¶ˆëŸ¬ì˜¨ ê¸°ë¡ ìˆ˜: " + results.Count);
 
         foreach (var data in results)
         {
-            Debug.Log("Ä«µå »ı¼º");
             GameObject card = Instantiate(cardPrefab, gridParent);
-           
-            Debug.Log("Ä«µå »ı¼ºµÊ: " + card.name);
-
-
             TextMeshProUGUI titleText = card.transform.Find("StageName")?.GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI scoreText = card.transform.Find("Score")?.GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI dateText = card.transform.Find("Date")?.GetComponent<TextMeshProUGUI>();
 
-            if (titleText == null) Debug.LogError("StageName ÅØ½ºÆ® ¸ø Ã£À½");
-            if (scoreText == null) Debug.LogError("Score ÅØ½ºÆ® ¸ø Ã£À½");
-            if (dateText == null) Debug.LogError("Date ÅØ½ºÆ® ¸ø Ã£À½");
+            if (titleText == null) Debug.LogError("StageName í…ìŠ¤íŠ¸ ëª» ì°¾ìŒ");
+            if (scoreText == null) Debug.LogError("Score í…ìŠ¤íŠ¸ ëª» ì°¾ìŒ");
+            if (dateText == null) Debug.LogError("Date í…ìŠ¤íŠ¸ ëª» ì°¾ìŒ");
 
             if (titleText != null) titleText.text = data.protocolName;
-            if (scoreText != null) scoreText.text = $"Á¡¼ö: {data.score}Á¡";
+            if (scoreText != null) scoreText.text = $"ì ìˆ˜: {data.score}ì ";
             if (dateText != null) dateText.text = data.date;
         }
     }
+
 }
