@@ -61,12 +61,19 @@ public class TestAEDManager : MonoBehaviour
         StartCoroutine(CPRProcedure());
     }
 
+
     void Update()
     {
         uiManager.UpdateTimerUI(timerManager, currentState);
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            Debug.Log("💾 저장 테스트 시작!");
+            StoreHistory(); // 👈 저장 함수 바로 호출
+        }
     }
 
-     private void HandleSensorData(string type, float value)
+
+    private void HandleSensorData(string type, float value)
     {
         switch (currentState)
         {
@@ -347,13 +354,12 @@ private void OnServerResultReceivedHandler(int score)
                     break;
             }
 
-            StoreHistory();
-
             yield return new WaitForSeconds(3f);
-        }
+        } 
         
 
         uiManager.ShowCompleteMessage();
+        StoreHistory();
     }
 
     private void setState(CPRState nextState)
