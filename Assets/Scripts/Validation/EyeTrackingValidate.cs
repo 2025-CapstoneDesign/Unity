@@ -27,6 +27,9 @@ public class EyeTrackingValidate : MonoBehaviour
     private int markerId;
     private Vector3 targetLocalOffset;
     private Vector3 targetWorldPos;
+    private Vector3 lastPosition;
+    private Quaternion lastRotation;
+    private bool isInitialized = false;
 
     public void BeginVerification(int markerId, Vector3 localOffset, float radius, float holdTime, Action onSuccess)
     {
@@ -39,8 +42,14 @@ public class EyeTrackingValidate : MonoBehaviour
         IsVerified = false;
         currentTime = 0f;
         isActive = true;
+        isInitialized = false;
 
-        // 🎯 마커가 없으면 나중에 Update에서 처리
+        if (activeEffect != null)
+        {
+            Destroy(activeEffect);
+            activeEffect = null;
+            effectRenderer = null;
+        }
     }
 
     public void StopVerification()
@@ -62,33 +71,62 @@ public class EyeTrackingValidate : MonoBehaviour
         if (!isActive || IsVerified || CoreServices.InputSystem?.EyeGazeProvider == null)
             return;
 
-        // ✅ 마커가 인식되었는지 확인
         if (!OptimizedArUcoMarkerDetection.markerMap.TryGetValue(markerId, out MarkerData marker))
+        {
+            if (activeEffect != null)
+                activeEffect.SetActive(false);
             return;
+        }
 
         Vector3 worldOffset = marker.rotation * targetLocalOffset;
-        targetWorldPos = marker.position + worldOffset;
+        Vector3 newTargetPos = marker.position + worldOffset;
 
-        // ✅ 오브젝트 지연 생성
-        if (activeEffect == null && targetEffectPrefab != null)
+        if (!isInitialized)
         {
-            activeEffect = Instantiate(targetEffectPrefab, targetWorldPos, marker.rotation);
-
-            effectRenderer = activeEffect.GetComponentInChildren<Renderer>();
-            if (effectRenderer != null)
+            if (activeEffect == null && targetEffectPrefab != null)
             {
-                effectRenderer.material = new Material(effectRenderer.material);
-                effectRenderer.material.color = defaultColor;
+                activeEffect = Instantiate(targetEffectPrefab, newTargetPos, marker.rotation);
+                effectRenderer = activeEffect.GetComponentInChildren<Renderer>();
+                if (effectRenderer != null)
+                {
+                    effectRenderer.material = new Material(effectRenderer.material);
+                    effectRenderer.material.color = defaultColor;
+                }
+            }
+            if (activeEffect != null)
+            {
+                activeEffect.transform.position = newTargetPos;
+                activeEffect.transform.rotation = marker.rotation;
+                activeEffect.SetActive(true);
+            }
+            isInitialized = true;
+            lastPosition = newTargetPos;
+            lastRotation = marker.rotation;
+            return;
+        }
+
+        float positionChange = Vector3.Distance(lastPosition, newTargetPos);
+        float rotationChange = Quaternion.Angle(lastRotation, marker.rotation);
+
+        if (positionChange > 0.1f || rotationChange > 30f)
+        {
+            if (activeEffect != null)
+            {
+                activeEffect.transform.position = newTargetPos;
+                activeEffect.transform.rotation = marker.rotation;
+            }
+        }
+        else
+        {
+            if (activeEffect != null)
+            {
+                activeEffect.transform.position = Vector3.Lerp(activeEffect.transform.position, newTargetPos, Time.deltaTime * 10f);
+                activeEffect.transform.rotation = Quaternion.Slerp(activeEffect.transform.rotation, marker.rotation, Time.deltaTime * 10f);
             }
         }
 
-        // ✅ 오브젝트 위치 갱신
-        if (activeEffect != null)
-        {
-            activeEffect.transform.position = targetWorldPos;
-            activeEffect.transform.rotation = marker.rotation;
-            activeEffect.SetActive(true);
-        }
+        lastPosition = newTargetPos;
+        lastRotation = marker.rotation;
 
         var gazeProvider = CoreServices.InputSystem.EyeGazeProvider;
         if (!gazeProvider.IsEyeTrackingEnabled)
@@ -127,7 +165,6 @@ public class EyeTrackingValidate : MonoBehaviour
             }
         }
 
-        // 🔁 시선 벗어났을 때 초기화
         if (effectRenderer != null)
         {
             if (hitTarget && !isLooking)

@@ -38,7 +38,7 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
 
     void Start()
     {
-
+        Debug.Log("[NS] : 마커 감지 시도");
         optimizationHelper = GetComponent<ImageOptimizationHelper>();
         camHelper = GetComponent<HLCameraStream2MatHelper>();
         camHelper.Initialize();
@@ -95,9 +95,10 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
 #if WINDOWS_UWP && !DISABLE_HOLOLENSCAMSTREAM_API
     private void OnFrameMatAcquired(Mat frame, Matrix4x4 proj, Matrix4x4 camToWorld, CameraIntrinsics intrinsics)
     {
+        Debug.Log("[NS] : 마커 감지 호출");
         if (isDetecting || frame == null || frame.empty()) return;
         isDetecting = true;
-
+        Debug.Log("[NS] : 마커 감지 시작");
         try
         {
             using (Mat frameCopy = frame.clone())
@@ -174,13 +175,14 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
 
         markerMap[markerId] = new MarkerData(pos, rot);
 
+        Debug.Log($"📌 마커 {markerId} 감지됨: 위치={pos}, 회전={rot.eulerAngles}");
+
         MainThreadDispatcher.Enqueue(() =>
         {
             float distance = Vector3.Distance(Camera.main.transform.position, pos);
+            Debug.Log($"📏 카메라와 마커 {markerId} 사이 거리: {distance}m");
         });
     }
-
-
 
     private void RecalculateCameraMatrix(float scale)
     {

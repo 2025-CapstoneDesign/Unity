@@ -21,6 +21,9 @@ public class MarkerPositionValidate : MonoBehaviour
         [NonSerialized] public Renderer renderer;
         [NonSerialized] public Vector3 targetWorldPos;
         [NonSerialized] public Coroutine hideCoroutine;
+        [NonSerialized] public Vector3 lastPosition;
+        [NonSerialized] public Quaternion lastRotation;
+        [NonSerialized] public bool isInitialized = false;
     }
 
     public bool IsAnyVerified => validations.Exists(v => v.isVerified);
@@ -41,8 +44,18 @@ public class MarkerPositionValidate : MonoBehaviour
             expectedOffset = expectedOffset,
             tolerance = tolerance,
             requiredStayTime = stayTime,
-            onVerifiedCallback = onSuccess
+            onVerifiedCallback = onSuccess,
+            isInitialized = false
         };
+
+        // 기존 이펙트가 있다면 제거
+        if (v.effect != null)
+        {
+            Destroy(v.effect);
+            v.effect = null;
+            v.renderer = null;
+        }
+
         validations.Add(v);
         isActive = true;
 
@@ -76,28 +89,61 @@ public class MarkerPositionValidate : MonoBehaviour
                 continue;
 
             if (!map.TryGetValue(v.baseMarkerId, out MarkerData baseMarker))
-                continue;
-
-            v.targetWorldPos = baseMarker.position + (baseMarker.rotation * v.expectedOffset);
-
-            if (v.effect == null && targetEffectPrefab != null)
             {
-                v.effect = Instantiate(targetEffectPrefab, v.targetWorldPos, baseMarker.rotation);
+                // 마커가 인식되지 않았을 때 이펙트 숨기기
+                if (v.effect != null)
+                    v.effect.SetActive(false);
+                continue;
+            }
 
-                v.renderer = v.effect.GetComponentInChildren<Renderer>();
-                if (v.renderer != null)
+            Vector3 newTargetPos = baseMarker.position + (baseMarker.rotation * v.expectedOffset);
+
+            if (!v.isInitialized)
+            {
+                if (v.effect == null && targetEffectPrefab != null)
                 {
-                    v.renderer.material = new Material(v.renderer.material);
-                    v.renderer.material.color = defaultColor;
+                    v.effect = Instantiate(targetEffectPrefab, newTargetPos, baseMarker.rotation);
+                    v.renderer = v.effect.GetComponentInChildren<Renderer>();
+                    if (v.renderer != null)
+                    {
+                        v.renderer.material = new Material(v.renderer.material);
+                        v.renderer.material.color = defaultColor;
+                    }
+                }
+                if (v.effect != null)
+                {
+                    v.effect.transform.position = newTargetPos;
+                    v.effect.transform.rotation = baseMarker.rotation;
+                    v.effect.SetActive(true);
+                }
+                v.isInitialized = true;
+                v.lastPosition = newTargetPos;
+                v.lastRotation = baseMarker.rotation;
+                continue;
+            }
+
+            float positionChange = Vector3.Distance(v.lastPosition, newTargetPos);
+            float rotationChange = Quaternion.Angle(v.lastRotation, baseMarker.rotation);
+
+            if (positionChange > 0.1f || rotationChange > 30f)
+            {
+                if (v.effect != null)
+                {
+                    v.effect.transform.position = newTargetPos;
+                    v.effect.transform.rotation = baseMarker.rotation;
+                }
+            }
+            else
+            {
+                if (v.effect != null)
+                {
+                    v.effect.transform.position = Vector3.Lerp(v.effect.transform.position, newTargetPos, Time.deltaTime * 10f);
+                    v.effect.transform.rotation = Quaternion.Slerp(v.effect.transform.rotation, baseMarker.rotation, Time.deltaTime * 10f);
                 }
             }
 
-            if (v.effect != null)
-            {
-                v.effect.transform.position = v.targetWorldPos;
-                v.effect.transform.rotation = baseMarker.rotation;
-                v.effect.SetActive(true);
-            }
+            v.lastPosition = newTargetPos;
+            v.lastRotation = baseMarker.rotation;
 
             if (!map.TryGetValue(v.targetMarkerId, out MarkerData targetMarker))
                 continue;
