@@ -73,7 +73,6 @@ public class EyeTrackingValidate : MonoBehaviour
         if (activeEffect == null && targetEffectPrefab != null)
         {
             activeEffect = Instantiate(targetEffectPrefab, targetWorldPos, marker.rotation);
-            activeEffect.transform.localScale = Vector3.one * (radius * 0.5f);
 
             effectRenderer = activeEffect.GetComponentInChildren<Renderer>();
             if (effectRenderer != null)

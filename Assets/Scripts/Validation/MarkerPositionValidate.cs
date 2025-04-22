@@ -83,7 +83,6 @@ public class MarkerPositionValidate : MonoBehaviour
             if (v.effect == null && targetEffectPrefab != null)
             {
                 v.effect = Instantiate(targetEffectPrefab, v.targetWorldPos, baseMarker.rotation);
-                v.effect.transform.localScale = Vector3.one * (v.tolerance * 0.5f);
 
                 v.renderer = v.effect.GetComponentInChildren<Renderer>();
                 if (v.renderer != null)
