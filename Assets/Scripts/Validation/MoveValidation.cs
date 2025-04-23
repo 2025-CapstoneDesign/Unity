@@ -25,6 +25,9 @@ public class MoveValidation : MonoBehaviour
     private Coroutine hideCoroutine;
 
     private Vector3 expectedWorldPos;
+    private Vector3 lastPosition;
+    private Quaternion lastRotation;
+    private bool isInitialized = false;
 
     public void BeginValidation(int markerId, Vector3 targetOffset, float tolerance, float stayTime, Action onSuccess)
     {
@@ -37,6 +40,15 @@ public class MoveValidation : MonoBehaviour
         currentStayTime = 0f;
         IsVerified = false;
         isActive = true;
+        isInitialized = false;
+
+        // 기존 이펙트가 있다면 제거
+        if (activeEffect != null)
+        {
+            Destroy(activeEffect);
+            activeEffect = null;
+            effectRenderer = null;
+        }
 
         // 마커는 이후 Update에서 찾음
         Debug.Log($"📌 이동 검증 시작: 마커 {markerId}, 목표 오프셋 {targetOffset:F3}, 오차 ±{tolerance:F3}, 유지시간 {stayTime}s");
@@ -60,33 +72,58 @@ public class MoveValidation : MonoBehaviour
             return;
 
         if (!OptimizedArUcoMarkerDetection.markerMap.TryGetValue(markerId, out MarkerData marker))
+        {
+            // 마커가 인식되지 않았을 때 이펙트 숨기기
+            if (activeEffect != null)
+                activeEffect.SetActive(false);
             return;
+        }
 
-        // 시작 위치 저장 (처음만)
         if (startPos == Vector3.zero)
             startPos = marker.position;
 
-        expectedWorldPos = startPos + expectedOffset;
+        Vector3 newTargetPos = startPos + expectedOffset;
 
-        // 이펙트가 아직 없으면 생성
-        if (activeEffect == null && targetEffectPrefab != null)
+        if (!isInitialized)
         {
-            activeEffect = Instantiate(targetEffectPrefab, expectedWorldPos, Quaternion.identity);
-
-            effectRenderer = activeEffect.GetComponentInChildren<Renderer>();
-            if (effectRenderer != null)
+            if (activeEffect == null && targetEffectPrefab != null)
             {
-                effectRenderer.material = new Material(effectRenderer.material);
-                effectRenderer.material.color = defaultColor;
+                activeEffect = Instantiate(targetEffectPrefab, newTargetPos, Quaternion.identity);
+                effectRenderer = activeEffect.GetComponentInChildren<Renderer>();
+                if (effectRenderer != null)
+                {
+                    effectRenderer.material = new Material(effectRenderer.material);
+                    effectRenderer.material.color = defaultColor;
+                }
+            }
+            if (activeEffect != null)
+            {
+                activeEffect.transform.position = newTargetPos;
+                activeEffect.SetActive(true);
+            }
+            isInitialized = true;
+            lastPosition = newTargetPos;
+            return;
+        }
+
+        float positionChange = Vector3.Distance(lastPosition, newTargetPos);
+
+        if (positionChange > 0.1f)
+        {
+            if (activeEffect != null)
+            {
+                activeEffect.transform.position = newTargetPos;
+            }
+        }
+        else
+        {
+            if (activeEffect != null)
+            {
+                activeEffect.transform.position = Vector3.Lerp(activeEffect.transform.position, newTargetPos, Time.deltaTime * 10f);
             }
         }
 
-        // 실시간 위치 업데이트
-        if (activeEffect != null)
-        {
-            activeEffect.transform.position = expectedWorldPos;
-            activeEffect.SetActive(true);
-        }
+        lastPosition = newTargetPos;
 
         Vector3 currentPos = marker.position;
         Vector3 moved = currentPos - startPos;

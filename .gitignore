@@ -71,3 +71,9 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+/[Aa]ssets/[Cc]onfig/*.json
+
+# Ignore APIConfig in StreamingAssets
+/[Aa]ssets/[Ss]treamingAssets/APIConfig.json
+/[Aa]ssets/[Ss]treamingAssets/APIConfig.json.meta
+

@@ -25,6 +25,9 @@ public class HandTrackingValidate : MonoBehaviour
     private Coroutine hideCoroutine;
 
     private int markerId;
+    private Vector3 lastPosition;
+    private Quaternion lastRotation;
+    private bool isInitialized = false;
 
     private readonly Color defaultColor = Color.red;
     private readonly Color successColor = Color.green;
@@ -40,8 +43,14 @@ public class HandTrackingValidate : MonoBehaviour
         IsVerified = false;
         currentTime = 0f;
         isActive = true;
+        isInitialized = false;
 
-        // 오브젝트는 마커 인식되었을 때 Update()에서 생성하도록 함
+        if (activeEffect != null)
+        {
+            Destroy(activeEffect);
+            activeEffect = null;
+            effectRenderer = null;
+        }
     }
 
     public void StopVerification()
@@ -68,44 +77,83 @@ public class HandTrackingValidate : MonoBehaviour
         if (!isActive || IsVerified)
             return;
 
-        // 마커 인식 여부 확인 후 effect 생성 시도
-        if (!OptimizedArUcoMarkerDetection.markerMap.TryGetValue(markerId, out MarkerData marker))
+        // 디버깅: 마커 인식 상태 확인
+        bool isMarkerDetected = OptimizedArUcoMarkerDetection.markerMap.TryGetValue(markerId, out MarkerData marker);
+        Debug.Log($"마커 {markerId} 인식됨: {isMarkerDetected}");
+        
+        if (!isMarkerDetected)
         {
-            // 마커 인식 안됐으면 다음 프레임에 재시도
+            Debug.Log("마커가 인식되지 않아 효과를 표시할 수 없습니다.");
+            if (activeEffect != null)
+                activeEffect.SetActive(false);
             return;
         }
 
-        // 마커 인식 성공 → 위치 계산
+        // 디버깅: 타겟 위치 정보
         Vector3 worldOffset = marker.rotation * targetLocalOffset;
-        targetWorldPos = marker.position + worldOffset;
+        Vector3 newTargetPos = marker.position + worldOffset;
+        Debug.Log($"타겟 위치: {newTargetPos}, 마커 위치: {marker.position}, 오프셋: {worldOffset}");
 
-        // 오브젝트가 없으면 생성
-        if (activeEffect == null && targetEffectPrefab != null)
+        if (!isInitialized)
         {
-            activeEffect = Instantiate(targetEffectPrefab, targetWorldPos, marker.rotation); // 🔁 회전 반영
-
-            effectRenderer = activeEffect.GetComponentInChildren<Renderer>();
-            if (effectRenderer != null)
+            Debug.Log($"isInitialized: {isInitialized}, targetEffectPrefab: {(targetEffectPrefab != null ? "있음" : "없음")}");
+            
+            if (activeEffect == null && targetEffectPrefab != null)
             {
-                effectRenderer.material = new Material(effectRenderer.material);
-                effectRenderer.material.color = defaultColor;
+                activeEffect = Instantiate(targetEffectPrefab, newTargetPos, marker.rotation);
+                Debug.Log($"효과 생성됨: {activeEffect != null}, 위치: {newTargetPos}");
+                
+                effectRenderer = activeEffect.GetComponentInChildren<Renderer>();
+                if (effectRenderer != null)
+                {
+                    effectRenderer.material = new Material(effectRenderer.material);
+                    effectRenderer.material.color = defaultColor;
+                    Debug.Log("렌더러 및 재질 설정 완료");
+                }
+                else
+                {
+                    Debug.LogError("렌더러를 찾을 수 없습니다!");
+                }
+            }
+            if (activeEffect != null)
+            {
+                activeEffect.transform.position = newTargetPos;
+                activeEffect.transform.rotation = marker.rotation;
+                activeEffect.SetActive(true);
+            }
+            isInitialized = true;
+            lastPosition = newTargetPos;
+            lastRotation = marker.rotation;
+            return;
+        }
+
+        float positionChange = Vector3.Distance(lastPosition, newTargetPos);
+        float rotationChange = Quaternion.Angle(lastRotation, marker.rotation);
+
+        if (positionChange > 0.1f || rotationChange > 30f)
+        {
+            if (activeEffect != null)
+            {
+                activeEffect.transform.position = newTargetPos;
+                activeEffect.transform.rotation = marker.rotation;
+            }
+        }
+        else
+        {
+            if (activeEffect != null)
+            {
+                activeEffect.transform.position = Vector3.Lerp(activeEffect.transform.position, newTargetPos, Time.deltaTime * 10f);
+                activeEffect.transform.rotation = Quaternion.Slerp(activeEffect.transform.rotation, marker.rotation, Time.deltaTime * 10f);
             }
         }
 
-        // 위치 + 회전 갱신
-        if (activeEffect != null)
-        {
-            activeEffect.transform.position = targetWorldPos;
-            activeEffect.transform.rotation = marker.rotation; // 🔁 마커의 회전 따라감
-            activeEffect.SetActive(true);
-        }
+        lastPosition = newTargetPos;
+        lastRotation = marker.rotation;
 
-
-        // 손 위치 체크
         if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Palm, Handedness.Right, out MixedRealityPose pose))
         {
             Vector3 handPos = pose.Position;
-            float dist = Vector3.Distance(handPos, targetWorldPos);
+            float dist = Vector3.Distance(handPos, newTargetPos);
 
             if (dist <= radius)
             {
