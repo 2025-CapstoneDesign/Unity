@@ -72,3 +72,9 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 /[Aa]ssets/[Cc]onfig/*.json
+
+# Ignore all .json files in Assets/Config
+/Assets/Config/*.json
+
+# BUT don't ignore the corresponding meta file for APIConfig.json
+!/Assets/Config/APIConfig.json.meta
