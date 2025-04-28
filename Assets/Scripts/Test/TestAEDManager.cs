@@ -3,11 +3,17 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
+using System;
+using UnityEngine.SocialPlatforms.Impl;
+using UnityEngine.SceneManagement;
 
 public class TestAEDManager : MonoBehaviour
 {
     [SerializeField] private TimerManager timerManager;
     [SerializeField] private AEDUIManager uiManager;
+    [SerializeField] private CPRFeedbackGenerator feedbackGenerator;
+
 
     private CPRState currentState;
     private bool externalInput = false;
@@ -33,8 +39,9 @@ public class TestAEDManager : MonoBehaviour
     private CPRValidator cprValidator;
     private BreathValidator breathValidator;
 
-    public int score = 100;
-    public string feedback = "테스트.";
+    private int score = 100;
+    private Dictionary<string, int> checkScore = new Dictionary<string, int>();
+    String feedback = "wait";
 
     void Start()
     {
@@ -48,6 +55,7 @@ public class TestAEDManager : MonoBehaviour
         StartCoroutine(InitSequence());
         score = 100;
         uiManager.InitializeUI();
+      
     }
 
     private IEnumerator InitSequence()
@@ -359,7 +367,21 @@ private void OnServerResultReceivedHandler(int score)
         
 
         uiManager.ShowCompleteMessage();
+        // (1) 피드백 먼저 생성한다
+        yield return StartCoroutine(GenerateTrainingSummary());
+
+        SaveResultToGameManager();
         StoreHistory();
+        SceneManager.LoadScene("FeedbackScene"); // 결과 씬 이름으로 이동
+    }
+
+    private IEnumerator GenerateTrainingSummary()
+    {
+        yield return StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, (result) => {
+            feedback = result;
+            Debug.Log($"📝 CPR 훈련 요약:\n{feedback}");
+            // TODO: UI에 피드백 표시 로직 추가
+        }));
     }
 
     private void setState(CPRState nextState)
@@ -453,6 +475,80 @@ private void OnServerResultReceivedHandler(int score)
     {
         SensorEvents.OnSensorDataReceived -= HandleSensorData;
         SensorEvents.OnGyroDataReceived -= HandleGyroData;
+    }
+
+    private void GenerateFeedback()
+    {
+        StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, (result) =>
+        {
+            feedback = result;
+            Debug.Log($"📝 CPR 피드백:\n{feedback}");
+            // TODO: UI 업데이트 등 필요 시
+        }));
+    }
+
+    private void AddError(string errorType)
+    {
+        if (checkScore.ContainsKey(errorType))
+        {
+            checkScore[errorType]++;
+        }
+        else
+        {
+            checkScore[errorType] = 1;
+        }
+    }
+
+    // 예시: 압박 깊이가 부족할 때
+    public void OnCompressionDepthError()
+    {
+        AddError("가슴압박 깊이 부족");
+    }
+
+    // 예시: 압박 속도가 불규칙할 때
+    public void OnCompressionRateError()
+    {
+        AddError("압박 속도 불규칙");
+    }
+
+    // 예시: 인공호흡이 부족할 때
+    public void OnBreathingError()
+    {
+        AddError("인공호흡 부족");
+    }
+
+    // 수동으로 피드백 생성을 호출하고 싶을 때
+    public void GenerateFeedbackNow()
+    {
+        StartCoroutine(GenerateTrainingSummary());
+    }
+
+    void SaveResultToGameManager()
+    {
+        // 오늘 날짜를 yyyy-MM-dd 형식으로
+        string today = System.DateTime.Now.ToString("yyyy-MM-dd");
+
+        // 경과 시간(초)을 분으로 변환하고 소수점 없이 정수로 표현
+        float elapsedSeconds = timerManager.elapsedTime;
+        int minutes = Mathf.FloorToInt(elapsedSeconds / 60f);
+        int seconds = Mathf.FloorToInt(elapsedSeconds % 60f);
+
+        string durationString = "";
+
+        if (minutes >= 1)
+        {
+            durationString = $"{minutes}분 {seconds}초";
+        }
+        else
+        {
+            durationString = $"{seconds}초";
+        }
+
+
+        GameManager.Instance.protocolName = "자동제세동기 사용";
+        GameManager.Instance.duration = durationString;
+        GameManager.Instance.score = score;
+        GameManager.Instance.feedback = feedback;
     }
 
     void StoreHistory()
