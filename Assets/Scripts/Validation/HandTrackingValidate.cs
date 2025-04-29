@@ -79,11 +79,9 @@ public class HandTrackingValidate : MonoBehaviour
 
         // 디버깅: 마커 인식 상태 확인
         bool isMarkerDetected = OptimizedArUcoMarkerDetection.markerMap.TryGetValue(markerId, out MarkerData marker);
-        Debug.Log($"마커 {markerId} 인식됨: {isMarkerDetected}");
         
         if (!isMarkerDetected)
         {
-            Debug.Log("마커가 인식되지 않아 효과를 표시할 수 없습니다.");
             if (activeEffect != null)
                 activeEffect.SetActive(false);
             return;
