@@ -1,0 +1,23 @@
+public enum TraumaPatientAssessment // 외상환자 평가
+{
+    EnsureSceneSafety,
+    WearPPE,
+    StabilizeHeadAndDelegateToAssistant,
+    CheckConsciousness,
+    CheckAirwayForObstruction,
+    AssessBreathingAndPattern,
+    CheckCirculatoryStatus,
+    AssessLevelOfConsciousnessUsingAVPU,
+    InspectHeadUsingDCAPBLSTIC,
+    InspectNeckUsingDCAPBLSTICJVDTD,
+    ApplyCervicalCollar,
+    ExposeUpperBody,
+    InspectChestUsingDCAPBLSTICAndAuscultate,
+    InspectAbdomenUsingDCAPBTLS,
+    ExposeLowerBody,
+    InspectPelvisUsingDCAPBLSTIC,
+    InspectExtremitiesUsingDCAPBLSTICPMS,
+    PerformLogRoll,
+    InspectBackUsingDCAPBLSTIC,
+    RecordOnMedicalChart
+}

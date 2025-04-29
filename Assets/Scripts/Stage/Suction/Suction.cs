@@ -1,0 +1,23 @@
+public enum SuctionAndOxygenAdministration //흡인 및 산소투여
+{
+    EnsureSceneSafety,
+    WearPPE,
+    CheckEquipmentAndSupplies,
+    TurnOnSuctionDevice,
+    CheckSuctionPressure,
+    TestSuctionWithSaline,
+    PerformOralSuction,
+    FlushSuctionTipWithSaline,
+    TurnOffSuctionDevice,
+    AssembleOxygenTankAndRegulator,
+    OpenOxygenTankValve,
+    CheckForLeaksAndStateNoLeaks,
+    CheckOxygenGaugeAndStateRemainingPressure,
+    ConnectNonRebreatherMask,
+    SetOxygenFlowRate,
+    FillReservoirBagAndApplyMask,
+    MonitorPatientRespiration,
+    RemoveMaskUponInstruction,
+    TurnOffFlowMeterAndTank,
+    RecordOnMedicalChart
+}
