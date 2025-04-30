@@ -737,6 +737,7 @@ MonoBehaviour:
   fillImage: {fileID: 1086274641}
   fillParent: {fileID: 1316636336}
   totalTime: 10
+  elapsedTime: 0
 --- !u!4 &529229145
 Transform:
   m_ObjectHideFlags: 0
@@ -3320,11 +3321,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5391519067006067315, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverAddress
-      value: ws://192.168.130.160:10049
+      value: ws://localhost:10049
       objectReference: {fileID: 0}
     - target: {fileID: 7556774523085063354, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverUrl
-      value: ws://192.168.130.160:10050
+      value: ws://localhost:10050
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

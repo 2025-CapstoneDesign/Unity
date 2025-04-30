@@ -18,7 +18,6 @@ public class TestAEDManager : MonoBehaviour
     private CPRState currentState;
     private bool externalInput = false;
     private int totalSteps;
-
     private bool wearPassed = false;
     private bool voicePassed = false;
     private bool sensorPassed = false;
@@ -42,6 +41,15 @@ public class TestAEDManager : MonoBehaviour
     private int score = 100;
     private Dictionary<string, int> checkScore = new Dictionary<string, int>();
     String feedback = "wait";
+    
+    // 각 단계별 제한 시간 (초)
+    private Dictionary<CPRState, float> stageTimeLimit = new Dictionary<CPRState, float>();
+    
+    // 현재 단계 시작 시간
+    private float currentStageStartTime = 0f;
+    
+    // 점수 차감 관련 설정
+    private const int TIME_PENALTY_PER_SECOND = 1;  // 초과 시간당 차감할 점수
 
     void Start()
     {
@@ -49,13 +57,36 @@ public class TestAEDManager : MonoBehaviour
         breathValidator = new BreathValidator(uiManager);
         currentState = CPRState.CheckSafety;
         totalSteps = System.Enum.GetValues(typeof(CPRState)).Length - 1;
-
         setState(CPRState.CheckSafety);
         ResetValidationFlags();
         StartCoroutine(InitSequence());
         score = 100;
         uiManager.InitializeUI();
-      
+        
+        // 각 단계별 제한 시간 설정 (초 단위)
+        InitializeTimeLimits();
+        currentStageStartTime = Time.time;
+        
+    }
+    
+    private void InitializeTimeLimits()
+    {
+        // 각 단계별 제한시간 설정 (초 단위)
+        stageTimeLimit[CPRState.CheckSafety] = 10f;
+        stageTimeLimit[CPRState.WearPPE] = 15f;
+        stageTimeLimit[CPRState.CheckConsciousness] = 10f; 
+        stageTimeLimit[CPRState.Call119AndRequestAED] = 15f;
+        stageTimeLimit[CPRState.CheckBreathingAndPulse] = 10f;
+        stageTimeLimit[CPRState.ChestCompressions] = 20f;
+        stageTimeLimit[CPRState.OpenAirway] = 10f;
+        stageTimeLimit[CPRState.ProvideRescueBreaths] = 10f;
+        stageTimeLimit[CPRState.ContinueCPR] = 120f; // 5사이클 수행 시간
+        stageTimeLimit[CPRState.DirectAssistants] = 10f;
+        stageTimeLimit[CPRState.TurnOnAED] = 15f;
+        stageTimeLimit[CPRState.AttachPads] = 20f;
+        stageTimeLimit[CPRState.ClearArea] = 10f;
+        stageTimeLimit[CPRState.DeliverShock] = 10f;
+        stageTimeLimit[CPRState.ResumeChestCompressions] = 20f;
     }
 
     private IEnumerator InitSequence()
@@ -88,6 +119,9 @@ public class TestAEDManager : MonoBehaviour
             case CPRState.ChestCompressions:
                 if (type == "압력 센서" && !pressurePassed)
                 {
+                    if(value < CPRValidator.minPressure){
+                        AddError("심폐소생술 흉부 압박 약함");
+                    }
                     bool complete = cprValidator.TryAddCompression(value);
                     Debug.Log($"압력 센서 : {cprValidator.compressionTimestamps.Count} 횟수 입니다.");
                     if (complete)
@@ -102,6 +136,9 @@ public class TestAEDManager : MonoBehaviour
             case CPRState.ProvideRescueBreaths:
                 if (type == "유량 센서" && !flowPassed)
                 {
+                    if(value < 1000){
+                        AddError("인공호흡 호흡량 약함");
+                    }
                     bool success = breathValidator.TryAddBreath(value);
                     if (success)
                     {
@@ -117,7 +154,9 @@ public class TestAEDManager : MonoBehaviour
                 {
                     
                     bool complete = cprValidator.TryAddCompression(value);
-                   
+                   if(value < 1000){
+                        AddError("심폐소생술 흉부 압박 약함");
+                    }
                     if (complete)
                     {
                        
@@ -192,6 +231,8 @@ private void OnServerResultReceivedHandler(int score)
     }
     else if (score == 1)
     {
+        // 단계 + 음성 오답 형태로 기록
+        AddError($"{currentState} 단계 음성 오답", 1);
         uiManager.ShowCheckIconFail(this);
         Debug.Log("🟡 음성 평가 : 오답");
     }
@@ -205,6 +246,7 @@ private void OnServerResultReceivedHandler(int score)
 
     private IEnumerator CPRProcedure()
     {
+        
         while (currentState != CPRState.Completed)
         {
             Debug.Log($"🧭 현재 단계: {currentState}");
@@ -362,7 +404,7 @@ private void OnServerResultReceivedHandler(int score)
                     break;
             }
 
-            yield return new WaitForSeconds(3f);
+            yield return new WaitForSeconds(1f); // 반응성을 위해 더 짧은 주기로 체크
         } 
         
 
@@ -374,7 +416,7 @@ private void OnServerResultReceivedHandler(int score)
         StoreHistory();
         SceneManager.LoadScene("FeedbackScene"); // 결과 씬 이름으로 이동
     }
-
+    
     private IEnumerator GenerateTrainingSummary()
     {
         yield return StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, (result) => {
@@ -386,6 +428,31 @@ private void OnServerResultReceivedHandler(int score)
 
     private void setState(CPRState nextState)
     {
+        // 이전 단계의 시간 초과 여부 확인 및 점수 차감
+        if (stageTimeLimit.ContainsKey(currentState))
+        {
+            float elapsedTime = Time.time - currentStageStartTime;
+            float timeLimit = stageTimeLimit[currentState];
+            
+            if (elapsedTime > timeLimit)
+            {
+                // 초과한 초 단위로 점수 차감 (1초당 1점)
+                int penaltySeconds = Mathf.FloorToInt(elapsedTime - timeLimit);
+                if (penaltySeconds > 0)
+                {
+                    int penalty = penaltySeconds * TIME_PENALTY_PER_SECOND;
+                    
+                    // 에러 기록
+                    string errorKey = $"{currentState} 단계 시간 초과";
+                    AddError(errorKey, penalty);
+                    
+                    Debug.Log($"⏰ 시간 초과 패널티: -{penalty}점 (현재 점수: {score})");
+                }
+            }
+        }
+        
+        // 새 단계로 상태 변경 및 시작 시간 기록
+        currentStageStartTime = Time.time;
         currentState = nextState;
         VoiceSender.Instance.CurrentStageTag = nextState.ToVoiceTag();
         Debug.Log($"➡️ 상태 전환: {currentState}");
@@ -487,16 +554,22 @@ private void OnServerResultReceivedHandler(int score)
         }));
     }
 
-    private void AddError(string errorType)
+    private void AddError(string errorType, int penaltyPoints = 1)
     {
         if (checkScore.ContainsKey(errorType))
         {
-            checkScore[errorType]++;
+            checkScore[errorType] += penaltyPoints;
         }
         else
         {
-            checkScore[errorType] = 1;
+            checkScore[errorType] = penaltyPoints;
         }
+        
+        // 점수 차감
+        score -= penaltyPoints;
+        score = Mathf.Max(0, score); // 최소 0점
+        
+        Debug.Log($"❌ 오류: {errorType} (-{penaltyPoints}점, 현재 점수: {score})");
     }
 
     // 예시: 압박 깊이가 부족할 때
