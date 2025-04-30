@@ -95,7 +95,7 @@ public class TestAEDManager : MonoBehaviour
         TrainingEvaluator.Instance.OnServerResultReceived -= OnServerResultReceivedHandler;
         TrainingEvaluator.Instance.OnServerResultReceived += OnServerResultReceivedHandler;
 
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(5f);
         timerManager.StartTimer(300f);
         StartCoroutine(CPRProcedure());
     }

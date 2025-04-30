@@ -1,11 +1,16 @@
 using System.Collections;
 using UnityEngine;
+using TMPro; // TMP 전용 네임스페이스 추가!
 
 public class SceneStartGuide : MonoBehaviour
 {
+    [Header("UI Elements")]
     public CanvasGroup guideMessageGroup; // 간단한 메시지용 패널
+    public TextMeshProUGUI guideText;     // 메시지를 보여줄 TMP 텍스트
     public GameObject noticeCanvas;       // 본격 안내 UI
 
+    [Header("Settings")]
+    public string messageText = "훈련을 시작합니다."; // 인스펙터에서 입력할 메시지
     public float fadeDuration = 1f;
     public float messageDisplayTime = 2f;
 
@@ -17,6 +22,7 @@ public class SceneStartGuide : MonoBehaviour
     IEnumerator ShowGuideThenNotice()
     {
         // 초기 설정
+        guideText.text = messageText;
         guideMessageGroup.alpha = 0f;
         guideMessageGroup.gameObject.SetActive(true);
         noticeCanvas.SetActive(false);
