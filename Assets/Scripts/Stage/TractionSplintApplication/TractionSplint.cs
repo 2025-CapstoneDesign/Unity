@@ -1,4 +1,4 @@
-public enum TractionSplintApplication // °ßÀÎ ºÎ¸ñ Àû¿ë
+public enum TractionSplint // ï¿½ï¿½ï¿½ï¿½ ï¿½Î¸ï¿½ ï¿½ï¿½ï¿½ï¿½
 {
     EnsureSceneSafety,
     WearPPE,

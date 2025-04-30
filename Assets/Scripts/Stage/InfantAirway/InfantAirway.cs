@@ -1,4 +1,4 @@
-enum InfantAirwayObstructionTreatment //¿µ¾Æ ±âµµÆó¼âÃ³Ä¡¹ý
+public enum InfantAirway
 {
     EnsureSceneSafety,
     WearPPE,

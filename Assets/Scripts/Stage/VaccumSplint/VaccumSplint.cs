@@ -1,4 +1,4 @@
-public enum VacuumSplintApplication //Áø°øºÎ¸ñ Àû¿ë
+public enum VacuumSplint //ï¿½ï¿½ï¿½ï¿½ï¿½Î¸ï¿½ ï¿½ï¿½ï¿½ï¿½
 {
     EnsureSceneSafety,
     WearPPE,
