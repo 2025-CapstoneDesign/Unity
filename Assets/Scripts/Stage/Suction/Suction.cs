@@ -1,4 +1,4 @@
-public enum SuctionAndOxygenAdministration //ÈíÀÎ ¹× »ê¼ÒÅõ¿©
+public enum Suction //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 {
     EnsureSceneSafety,
     WearPPE,
