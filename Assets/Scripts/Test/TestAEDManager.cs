@@ -12,7 +12,7 @@ public class TestAEDManager : MonoBehaviour
 {
     [SerializeField] private TimerManager timerManager;
     [SerializeField] private AEDUIManager uiManager;
-    [SerializeField] private CPRFeedbackGenerator feedbackGenerator;
+    [SerializeField] private GPTFeedbackGenerator feedbackGenerator;
 
 
     private CPRState currentState;
@@ -97,7 +97,7 @@ public class TestAEDManager : MonoBehaviour
 
         yield return new WaitForSeconds(5f);
         timerManager.StartTimer(300f);
-        StartCoroutine(CPRProcedure());
+        StartCoroutine(Procedure());
     }
 
 
@@ -232,19 +232,18 @@ private void OnServerResultReceivedHandler(int score)
     else if (score == 1)
     {
         // 단계 + 음성 오답 형태로 기록
-        AddError($"{AEDStateToErrorType.GetLabel(currentState)} 단계 음성 오답", 1);
-        uiManager.ShowCheckIconFail(this);
+        AddError($"{AdapterErrorType.GetLabel(currentState)} 단계 음성 오답", 1);
         Debug.Log("🟡 음성 평가 : 오답");
     }
     else
     {
-        uiManager.ShowCheckIconFail(this);
         Debug.Log("🔴 음성 평가 : 헛소리");
+           
     }
 }
 
 
-    private IEnumerator CPRProcedure()
+    private IEnumerator Procedure()
     {
         
         while (currentState != CPRState.Completed)
@@ -286,6 +285,7 @@ private void OnServerResultReceivedHandler(int score)
                     {
                         break;
                     }
+                    uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(CPRState.CheckBreathingAndPulse);
                     // 2. 다음단계에 필요한 손 인식 코드입니다.
@@ -309,7 +309,7 @@ private void OnServerResultReceivedHandler(int score)
 
                     initPlag();
                     setState(CPRState.ChestCompressions);
-                    break;
+                    break; 
 
                 case CPRState.ChestCompressions:
                  
@@ -352,6 +352,7 @@ private void OnServerResultReceivedHandler(int score)
                         }
                         break;
                     }
+                    uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(CPRState.DirectAssistants);
                     break;
@@ -377,6 +378,7 @@ private void OnServerResultReceivedHandler(int score)
 
                 case CPRState.AttachPads:
                     if (!markerPositionFirstPassed || !markerPositionSecondPassed) break;
+                    uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(CPRState.ClearArea);
                     break;
@@ -384,6 +386,7 @@ private void OnServerResultReceivedHandler(int score)
                 case CPRState.ClearArea:
                     
                     if (!voicePassed) break;
+                    uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(CPRState.DeliverShock);
                     handValidator.BeginVerification(10, new Vector3(0.05f, 0f, 0.05f), 0.2f, 1f, setHandTrackingPassed);
@@ -391,6 +394,7 @@ private void OnServerResultReceivedHandler(int score)
 
                 case CPRState.DeliverShock:
                     if (!handTrackingPassed) break;
+                    uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(CPRState.ResumeChestCompressions);
                     break;
@@ -398,15 +402,15 @@ private void OnServerResultReceivedHandler(int score)
                 case CPRState.ResumeChestCompressions:
                     
                     if (!pressurePassed) break;
+                    uiManager.ShowCheckIconPass(this);  
                     initPlag();
                     setState(CPRState.Completed);
                     break;
             }
 
-            yield return new WaitForSeconds(1f); // 반응성을 위해 더 짧은 주기로 체크
+            yield return new WaitForSeconds(2f); // 반응성을 위해 더 짧은 주기로 체크
         } 
         
-
         uiManager.ShowCompleteMessage();
         // (1) 피드백 먼저 생성한다
         yield return StartCoroutine(GenerateTrainingSummary());
@@ -418,7 +422,7 @@ private void OnServerResultReceivedHandler(int score)
     
     private IEnumerator GenerateTrainingSummary()
     {
-        yield return StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, (result) => {
+        yield return StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "자동제세동기(AED) 사용법 단계 훈련", (result) => {
             feedback = result;
             Debug.Log($"📝 CPR 훈련 요약:\n{feedback}");
             // TODO: UI에 피드백 표시 로직 추가
@@ -545,7 +549,7 @@ private void OnServerResultReceivedHandler(int score)
 
     private void GenerateFeedback()
     {
-        StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, (result) =>
+        StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "자동제세동기(AED) 사용법 단계 훈련", (result) =>
         {
             feedback = result;
             Debug.Log($"📝 CPR 피드백:\n{feedback}");

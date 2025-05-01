@@ -33,7 +33,7 @@ public class AEDManager : MonoBehaviour
     private bool externalInput = false;
     private bool waitingForInput = false;
     private int totalSteps;
-   
+
     void Start()
     {
         currentState = CPRState.CheckSafety;
