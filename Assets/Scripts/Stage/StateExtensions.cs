@@ -9,37 +9,37 @@ public static class StateExtensions
         return $"AED_{state}";
     }
 
-    public static string ToVoiceTag(this InfantAirway state)
+    public static string ToVoiceTag(this InfantAirwayState state)
     {
         return $"InfantAirway_{state}";
     }
 
-    public static string ToVoiceTag(this InfantCPR state)
+    public static string ToVoiceTag(this InfantCPRState state)
     {
         return $"InfantCPR_{state}";
     }
 
-    public static string ToVoiceTag(this SpinalMotionRestriction state)
+    public static string ToVoiceTag(this SpinalMotionRestrictionState state)
     {
         return $"SpinialMotionRestriction_{state}";
     }
 
-    public static string ToVoiceTag(this Suction state)
+    public static string ToVoiceTag(this SuctionState state)
     {
         return $"Suction_{state}";
     }
 
-    public static string ToVoiceTag(this TractionSplint state)
+    public static string ToVoiceTag(this TractionSplintState state)
     {
         return $"TractionSplint_{state}";
     }
 
-    public static string ToVoiceTag(this TraumaPatientAssessment state)
+    public static string ToVoiceTag(this TraumaPatientAssessmentState state)
     {
         return $"TraumaPatientAssessment_{state}";
     }
 
-    public static string ToVoiceTag(this VacuumSplint state)
+    public static string ToVoiceTag(this VacuumSplintState state)
     {
         return $"VacuumSplint_{state}";
     }

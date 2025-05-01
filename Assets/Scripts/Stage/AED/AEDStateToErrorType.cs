@@ -29,6 +29,6 @@ public static class AEDStateToErrorType
         {
             return label;
         }
-        return "UNKNOWN";
+        return "PASS";
     }
 }

@@ -97,7 +97,13 @@ public class AEDUIManager : MonoBehaviour
 
     public void SetMessage(CPRState state)
     {
-        aedMessageText.text = AEDMessageManager.GetMessage(state);
+        aedMessageText.text = AdapterMessageManager.GetMessage(state);
+        aedMessageText.color = Color.white;
+    }
+
+    public void SetMessage(object state)
+    {
+        aedMessageText.text = AdapterMessageManager.GetMessage(state);
         aedMessageText.color = Color.white;
     }
 

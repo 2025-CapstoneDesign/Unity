@@ -1,4 +1,4 @@
-public enum TractionSplint // ���� �θ� ����
+public enum TractionSplintState // 견인 부목 적용
 {
     EnsureSceneSafety,
     WearPPE,

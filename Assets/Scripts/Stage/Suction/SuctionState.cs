@@ -1,4 +1,4 @@
-public enum Suction //���� �� �������
+public enum SuctionState //흡인 및 산소공급
 {
     EnsureSceneSafety,
     WearPPE,

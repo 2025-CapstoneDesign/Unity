@@ -1,4 +1,4 @@
-public enum SpinalMotionRestriction //¹Ù·Î´©¿îÈ¯ÀÚÀÇ Ã´Ãß¿îµ¿Á¦ÇÑÇÏ±â
+public enum SpinalMotionRestrictionState //ì²™ì¶”ê³ ì •í™˜ì ì²™ì¶”ê³ ì •í•˜ê¸°
 {
     EnsureSceneSafety,
     WearPPE,
