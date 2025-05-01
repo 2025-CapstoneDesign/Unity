@@ -347,6 +347,7 @@ GameObject:
   - component: {fileID: 145968361}
   - component: {fileID: 145968363}
   - component: {fileID: 145968362}
+  - component: {fileID: 145968364}
   m_Layer: 0
   m_Name: CompressionBar
   m_TagString: Untagged
@@ -412,6 +413,26 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 145968360}
   m_CullTransparentMesh: 1
+--- !u!114 &145968364
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 145968360}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a7d5bc873e021042b3e45d019ae2e65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  indicator: {fileID: 1412083694}
+  gradientBar: {fileID: 145968361}
+  gradientImage: {fileID: 145968362}
+  minForce: 40
+  maxForce: 100
+  minAlpha: 0.3
+  maxAlpha: 1
+  smoothSpeed: 5
 --- !u!1 &303989536
 GameObject:
   m_ObjectHideFlags: 0
@@ -2108,6 +2129,7 @@ GameObject:
   - component: {fileID: 1461778265}
   - component: {fileID: 1461778267}
   - component: {fileID: 1461778266}
+  - component: {fileID: 1461778268}
   m_Layer: 0
   m_Name: BreathBar
   m_TagString: Untagged
@@ -2173,6 +2195,26 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1461778264}
   m_CullTransparentMesh: 1
+--- !u!114 &1461778268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1461778264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a7d5bc873e021042b3e45d019ae2e65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  indicator: {fileID: 1008763526}
+  gradientBar: {fileID: 1461778265}
+  gradientImage: {fileID: 1461778266}
+  minForce: 40
+  maxForce: 100
+  minAlpha: 0.3
+  maxAlpha: 1
+  smoothSpeed: 5
 --- !u!114 &1471164842 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8847811401738153613, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
@@ -2596,8 +2638,8 @@ MonoBehaviour:
   checkIcon: {fileID: 1262764602}
   progressBar: {fileID: 974490117}
   fillMaskImage: {fileID: 2142505201}
-  compressionUI: {fileID: 0}
-  breathUI: {fileID: 0}
+  compressionUI: {fileID: 145968364}
+  breathUI: {fileID: 1461778268}
 --- !u!4 &1687033913
 Transform:
   m_ObjectHideFlags: 0
