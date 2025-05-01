@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class CPRValidator
 {
-    private AEDUIManager ui;
+    private IUIManager ui;
     public List<float> compressionTimestamps = new();
     private float lastValidPressTime = -1f;
 
@@ -15,7 +15,7 @@ public class CPRValidator
 
     public float LastPressureValue { get; private set; }
 
-    public CPRValidator(AEDUIManager uiManager)
+    public CPRValidator(IUIManager uiManager)
     {
         ui = uiManager;
     }
@@ -48,7 +48,7 @@ public class CPRValidator
     {
         Debug.Log($"💪 압박 완료");
         
-        ui.StartCoroutine(ui.HideCompressionUIWithDelay(3.5f)); // ✅ 3초 후 UI 자동 숨김
+        ui.StartHideCompressionUICoroutine(3.5f); // ✅ 3초 후 UI 자동 숨김
        
         return true;
     }

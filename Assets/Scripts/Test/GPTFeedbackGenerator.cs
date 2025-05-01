@@ -6,7 +6,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class CPRFeedbackGenerator : MonoBehaviour
+public class GPTFeedbackGenerator : MonoBehaviour
 {
     private string apiKey;
     private string apiUrl;
@@ -77,9 +77,9 @@ public class CPRFeedbackGenerator : MonoBehaviour
         public Message message;
     }
 
-    public IEnumerator GenerateFeedback(Dictionary<string, int> checkScore, Action<string> onComplete)
+    public IEnumerator GenerateFeedback(Dictionary<string, int> checkScore, String Stage, Action<string> onComplete)
     {
-        string prompt = CreatePrompt(checkScore);
+        string prompt = CreatePrompt(checkScore, Stage);
         yield return StartCoroutine(SendRequest(prompt, onComplete));
     }
 
@@ -140,9 +140,9 @@ public class CPRFeedbackGenerator : MonoBehaviour
         }
     }
 
-    private string CreatePrompt(Dictionary<string, int> checkScore)
+    private string CreatePrompt(Dictionary<string, int> checkScore, String Stage)
     {
-        string prompt = "당신은 응급구조사 2급 실기시험 평가관입니다. 아래는 한 훈련자가 자동제세동기(AED) 사용법 단계계 훈련 중 범한 실수 목록입니다. 이 훈련자는 자격증 시험을 준비 중이며, 실전 상황에 가까운 피드백을 원합니다. 현실적인 개선 방향을 제시하고, 실제 시험에서 도움이 될 수 있는 조언을 **하나의 자연스러운 문단**으로 작성해주세요.\n\n";
+        string prompt = $"당신은 응급구조사 2급 실기시험 평가관입니다. 아래는 한 훈련자가 {Stage} 훈련 중 범한 실수 목록입니다. 이 훈련자는 자격증 시험을 준비 중이며, 실전 상황에 가까운 피드백을 원합니다. 현실적인 개선 방향을 제시하고, 실제 시험에서 도움이 될 수 있는 조언을 **하나의 자연스러운 문단**으로 작성해주세요.\n\n";
 
         prompt += "📋 훈련 중 오류:\n";
         foreach (var item in checkScore)
