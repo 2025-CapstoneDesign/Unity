@@ -233,13 +233,12 @@ private void OnServerResultReceivedHandler(int score)
     {
         // 단계 + 음성 오답 형태로 기록
         AddError($"{AdapterErrorType.GetLabel(currentState)} 단계 음성 오답", 1);
-        uiManager.ShowCheckIconFail(this);
         Debug.Log("🟡 음성 평가 : 오답");
     }
     else
     {
-        uiManager.ShowCheckIconFail(this);
         Debug.Log("🔴 음성 평가 : 헛소리");
+           
     }
 }
 
@@ -286,6 +285,7 @@ private void OnServerResultReceivedHandler(int score)
                     {
                         break;
                     }
+                    uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(CPRState.CheckBreathingAndPulse);
                     // 2. 다음단계에 필요한 손 인식 코드입니다.
@@ -309,7 +309,7 @@ private void OnServerResultReceivedHandler(int score)
 
                     initPlag();
                     setState(CPRState.ChestCompressions);
-                    break;
+                    break; 
 
                 case CPRState.ChestCompressions:
                  
@@ -352,6 +352,7 @@ private void OnServerResultReceivedHandler(int score)
                         }
                         break;
                     }
+                    uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(CPRState.DirectAssistants);
                     break;
@@ -377,6 +378,7 @@ private void OnServerResultReceivedHandler(int score)
 
                 case CPRState.AttachPads:
                     if (!markerPositionFirstPassed || !markerPositionSecondPassed) break;
+                    uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(CPRState.ClearArea);
                     break;
@@ -384,6 +386,7 @@ private void OnServerResultReceivedHandler(int score)
                 case CPRState.ClearArea:
                     
                     if (!voicePassed) break;
+                    uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(CPRState.DeliverShock);
                     handValidator.BeginVerification(10, new Vector3(0.05f, 0f, 0.05f), 0.2f, 1f, setHandTrackingPassed);
@@ -391,6 +394,7 @@ private void OnServerResultReceivedHandler(int score)
 
                 case CPRState.DeliverShock:
                     if (!handTrackingPassed) break;
+                    uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(CPRState.ResumeChestCompressions);
                     break;
@@ -398,12 +402,13 @@ private void OnServerResultReceivedHandler(int score)
                 case CPRState.ResumeChestCompressions:
                     
                     if (!pressurePassed) break;
+                    uiManager.ShowCheckIconPass(this);  
                     initPlag();
                     setState(CPRState.Completed);
                     break;
             }
 
-            yield return new WaitForSeconds(1f); // 반응성을 위해 더 짧은 주기로 체크
+            yield return new WaitForSeconds(2f); // 반응성을 위해 더 짧은 주기로 체크
         } 
         
 

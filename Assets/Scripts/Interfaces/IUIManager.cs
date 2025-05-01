@@ -28,6 +28,10 @@ public interface IUIManager
     // 코루틴 시작 메서드 추가
     void StartHideCompressionUICoroutine(float seconds);
     void StartHideBreathUICoroutine(float seconds);
+
+    void SwitchToCompressionUI();
+    void SwitchToBreathUI();
+
     // 지연된 UI 숨기기
     IEnumerator HideCompressionUIWithDelay(float seconds);
     IEnumerator HideBreathUIWithDelay(float seconds);

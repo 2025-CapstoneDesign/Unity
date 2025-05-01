@@ -58,14 +58,14 @@ public abstract class BaseUIManager : MonoBehaviour, IUIManager
     {
         checkIcon.color = passColor;
         if (iconResetCoroutine != null) context.StopCoroutine(iconResetCoroutine);
-        iconResetCoroutine = context.StartCoroutine(ResetCheckIcon(2f));
+        iconResetCoroutine = context.StartCoroutine(ResetCheckIcon(1f));
     }
 
     public void ShowCheckIconFail(MonoBehaviour context)
     {
         checkIcon.color = failColor;
         if (iconResetCoroutine != null) context.StopCoroutine(iconResetCoroutine);
-        iconResetCoroutine = context.StartCoroutine(ResetCheckIcon(2f));
+        iconResetCoroutine = context.StartCoroutine(ResetCheckIcon(1f));
     }
 
     protected IEnumerator ResetCheckIcon(float delay)
@@ -131,4 +131,29 @@ public abstract class BaseUIManager : MonoBehaviour, IUIManager
     {
         StartCoroutine(HideBreathUIWithDelay(seconds));
     }
+
+    public void SwitchToCompressionUI()
+    {
+        StartCoroutine(SwitchToCompressionUICoroutine());
+    }
+
+    public void SwitchToBreathUI()
+    {
+        StartCoroutine(SwitchToBreathUICoroutine());
+    }
+
+    private IEnumerator SwitchToCompressionUICoroutine()
+    {
+        ShowBreathUI(false); // 먼저 숨기고
+        yield return new WaitForSeconds(0.2f); // 약간의 대기 시간
+        ShowCompressionUI(true); // 그다음 보이게
+    }
+
+    private IEnumerator SwitchToBreathUICoroutine()
+    {
+        ShowCompressionUI(false); // 먼저 숨기고
+        yield return new WaitForSeconds(0.2f); // 약간의 대기 시간
+        ShowBreathUI(true); // 그다음 보이게
+    }
+
 }

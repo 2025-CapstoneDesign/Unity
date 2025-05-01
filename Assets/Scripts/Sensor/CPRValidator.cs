@@ -28,9 +28,9 @@ public class CPRValidator
         return false;
 
     LastPressureValue = value;
-    ui.ShowCompressionUI(true);
-    
-    if (lastValidPressTime > 0f)
+    ui.SwitchToCompressionUI();
+
+        if (lastValidPressTime > 0f)
     {
         float interval = now - lastValidPressTime;
         if (interval >= minInterval && interval <= maxInterval)
@@ -48,7 +48,6 @@ public class CPRValidator
     {
         Debug.Log($"💪 압박 완료");
         
-        ui.StartHideCompressionUICoroutine(3.5f); // ✅ 3초 후 UI 자동 숨김
        
         return true;
     }

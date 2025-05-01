@@ -17,8 +17,8 @@ public class BreathValidator
 
     public bool TryAddBreath(float flow)
 {
-    ui.ShowBreathUI(true);
-    breathFlow = flow;
+    ui.SwitchToBreathUI();
+     breathFlow = flow;
     ui.SetBreathForce(flow);
 
     if (flow >= requiredFlow)
@@ -30,8 +30,7 @@ public class BreathValidator
 
         if (breathCount >= requiredCount)
         {
-            ui.StartHideBreathUICoroutine(3f); // ✅ 2초 후 UI 자동 숨김
-          
+        
             return true;
         }
     }
