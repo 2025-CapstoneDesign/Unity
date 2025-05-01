@@ -12,7 +12,7 @@ public class TestAEDManager : MonoBehaviour
 {
     [SerializeField] private TimerManager timerManager;
     [SerializeField] private AEDUIManager uiManager;
-    [SerializeField] private CPRFeedbackGenerator feedbackGenerator;
+    [SerializeField] private GPTFeedbackGenerator feedbackGenerator;
 
 
     private CPRState currentState;
@@ -97,7 +97,7 @@ public class TestAEDManager : MonoBehaviour
 
         yield return new WaitForSeconds(5f);
         timerManager.StartTimer(300f);
-        StartCoroutine(CPRProcedure());
+        StartCoroutine(Procedure());
     }
 
 
@@ -244,7 +244,7 @@ private void OnServerResultReceivedHandler(int score)
 }
 
 
-    private IEnumerator CPRProcedure()
+    private IEnumerator Procedure()
     {
         
         while (currentState != CPRState.Completed)
@@ -418,7 +418,7 @@ private void OnServerResultReceivedHandler(int score)
     
     private IEnumerator GenerateTrainingSummary()
     {
-        yield return StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, (result) => {
+        yield return StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "자동제세동기(AED) 사용법 단계 훈련", (result) => {
             feedback = result;
             Debug.Log($"📝 CPR 훈련 요약:\n{feedback}");
             // TODO: UI에 피드백 표시 로직 추가
@@ -545,7 +545,7 @@ private void OnServerResultReceivedHandler(int score)
 
     private void GenerateFeedback()
     {
-        StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, (result) =>
+        StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "자동제세동기(AED) 사용법 단계 훈련", (result) =>
         {
             feedback = result;
             Debug.Log($"📝 CPR 피드백:\n{feedback}");
