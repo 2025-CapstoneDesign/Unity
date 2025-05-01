@@ -154,7 +154,7 @@ CanvasGroup:
   m_GameObject: {fileID: 3525007}
   m_Enabled: 1
   m_Alpha: 1
-  m_Interactable: 1
+  m_Interactable: 0
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
 --- !u!114 &3525009
@@ -1501,7 +1501,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guideMessageGroup: {fileID: 3525008}
   guideText: {fileID: 1456096290}
-  noticeCanvas: {fileID: 0}
+  noticeCanvas: {fileID: 1589435727}
   messageText: "\uD6C8\uB828\uC744 \uC2DC\uC791\uD569\uB2C8\uB2E4."
   fadeDuration: 1
   messageDisplayTime: 2
@@ -2274,7 +2274,7 @@ GameObject:
   - component: {fileID: 1589435733}
   - component: {fileID: 1589435732}
   - component: {fileID: 1589435731}
-  - component: {fileID: 1589435730}
+  - component: {fileID: 1589435735}
   - component: {fileID: 1589435734}
   m_Layer: 0
   m_Name: UIWrapper
@@ -2304,30 +2304,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -0.3, y: 0.2}
+  m_AnchoredPosition: {x: -0.5, y: 0.2}
   m_SizeDelta: {x: 650, y: 400}
   m_Pivot: {x: 0, y: 1}
---- !u!114 &1589435730
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1589435727}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3986155c7a728454f8bbbabd2e274601, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  leftInteractor: {fileID: 0}
-  rightInteractor: {fileID: 0}
-  trackedTargetType: 0
-  trackedHandedness: 3
-  trackedHandJoint: 0
-  transformOverride: {fileID: 0}
-  additionalOffset: {x: 0, y: 0, z: 0}
-  additionalRotation: {x: 0, y: 0, z: 0}
-  updateSolvers: 1
 --- !u!114 &1589435731
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2400,17 +2379,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 1589435727}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 07606d041cd57684c85e7122ad8e3897, type: 3}
+  m_Script: {fileID: 11500000, guid: 4479a0bd44d822241a4c5f4890c481c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  updateLinkedTransform: 1
+  updateLinkedTransform: 0
   moveLerpTime: 0.1
   rotateLerpTime: 0.1
   scaleLerpTime: 0
   maintainScaleOnInitialization: 1
   smoothing: 1
   lifetime: 0
-  orientationType: 2
+  orientationType: 1
   faceTrackedObjectWhileClamped: 1
   faceUserDefinedTargetTransform: 0
   targetToFace: {fileID: 0}
@@ -2418,18 +2397,37 @@ MonoBehaviour:
   minDistance: 0.6
   maxDistance: 0.9
   defaultDistance: 0.7
-  maxViewHorizontalDegrees: 90
-  maxViewVerticalDegrees: 90
+  maxViewHorizontalDegrees: 30
+  maxViewVerticalDegrees: 20
   reorientWhenOutsideParameters: 1
-  orientToControllerDeadZoneDegrees: 20
+  orientToControllerDeadzoneDegrees: 60
   ignoreAngleClamp: 0
   ignoreDistanceClamp: 0
-  ignoreReferencePitchAndRoll: 1
-  pitchOffset: 30
-  verticalMaxDistance: 10
+  ignoreReferencePitchAndRoll: 0
+  pitchOffset: 0
+  verticalMaxDistance: 0
   angularClampMode: 0
   tetherAngleSteps: 6
   boundsScaler: 1
+--- !u!114 &1589435735
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1589435727}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b55691ad5b034fe6966763a6e23818d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trackedTargetType: 0
+  trackedHandedness: 3
+  trackedHandJoint: 2
+  transformOverride: {fileID: 0}
+  additionalOffset: {x: -0.3, y: 0.2, z: 0}
+  additionalRotation: {x: 0, y: 0, z: 0}
+  updateSolvers: 1
 --- !u!1 &1632906545
 GameObject:
   m_ObjectHideFlags: 0
