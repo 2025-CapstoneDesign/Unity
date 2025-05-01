@@ -183,7 +183,11 @@ public class MarkerPositionValidate : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);
         if (v.effect != null)
-            v.effect.SetActive(false);
+        {
+            Destroy(v.effect);
+            v.effect = null;
+            v.renderer = null;
+        }
         v.hideCoroutine = null;
     }
 

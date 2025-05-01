@@ -2938,6 +2938,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1543615003825515830, guid: e06a420b3573afd4dae55bf3287c8ea1, type: 3}
+      propertyPath: markerLength
+      value: 0.025
+      objectReference: {fileID: 0}
     - target: {fileID: 1979345816391612889, guid: e06a420b3573afd4dae55bf3287c8ea1, type: 3}
       propertyPath: _requestedFPS
       value: 15
@@ -3468,11 +3472,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5391519067006067315, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverAddress
-      value: ws://localhost:10049
+      value: ws://192.168.1.4:10049
       objectReference: {fileID: 0}
     - target: {fileID: 7556774523085063354, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverUrl
-      value: ws://localhost:10050
+      value: ws://192.168.1.4:10050
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

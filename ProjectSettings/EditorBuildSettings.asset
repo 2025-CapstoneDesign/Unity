@@ -8,9 +8,12 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Test/NSAEDScene.unity
     guid: 0b0dbe5f5c0844648a40e46c0b5f5d85
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/AEDScene.unity
     guid: 93b1b5d13bcda8b4ab37edf175431bdd
+  - enabled: 1
+    path: Assets/Scenes/Test/RefactorAEDScene.unity
+    guid: 8853aaab63ec4004c852b4758633482a
   - enabled: 1
     path: Assets/Scenes/FeedbackScene.unity
     guid: 7a6ecde8018e1ed4b9df268b5de44050
