@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028331, g: 0.2257133, b: 0.3069217, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -781,9 +781,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timerText: {fileID: 1432063598}
+  fillParent: {fileID: 1316636336}
   fillTransform: {fileID: 1086274640}
   fillImage: {fileID: 1086274641}
-  fillParent: {fileID: 1316636336}
   totalTime: 10
   elapsedTime: 0
 --- !u!4 &529229145
@@ -1556,7 +1556,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   guideMessageGroup: {fileID: 0}
+  guideText: {fileID: 0}
   noticeCanvas: {fileID: 1962018176}
+  messageText: "\uD6C8\uB828\uC744 \uC2DC\uC791\uD569\uB2C8\uB2E4."
   fadeDuration: 1
   messageDisplayTime: 2
 --- !u!4 &1315927773
