@@ -30,7 +30,6 @@ public class BreathValidator
 
         if (breathCount >= requiredCount)
         {
-        
             return true;
         }
     }

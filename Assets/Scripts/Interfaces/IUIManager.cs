@@ -31,7 +31,6 @@ public interface IUIManager
 
     void SwitchToCompressionUI();
     void SwitchToBreathUI();
-
     // 지연된 UI 숨기기
     IEnumerator HideCompressionUIWithDelay(float seconds);
     IEnumerator HideBreathUIWithDelay(float seconds);

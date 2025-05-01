@@ -411,7 +411,6 @@ private void OnServerResultReceivedHandler(int score)
             yield return new WaitForSeconds(2f); // 반응성을 위해 더 짧은 주기로 체크
         } 
         
-
         uiManager.ShowCompleteMessage();
         // (1) 피드백 먼저 생성한다
         yield return StartCoroutine(GenerateTrainingSummary());

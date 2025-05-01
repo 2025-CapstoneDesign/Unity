@@ -131,7 +131,6 @@ public abstract class BaseUIManager : MonoBehaviour, IUIManager
     {
         StartCoroutine(HideBreathUIWithDelay(seconds));
     }
-
     public void SwitchToCompressionUI()
     {
         StartCoroutine(SwitchToCompressionUICoroutine());
@@ -155,5 +154,4 @@ public abstract class BaseUIManager : MonoBehaviour, IUIManager
         yield return new WaitForSeconds(0.2f); // 약간의 대기 시간
         ShowBreathUI(true); // 그다음 보이게
     }
-
 }
