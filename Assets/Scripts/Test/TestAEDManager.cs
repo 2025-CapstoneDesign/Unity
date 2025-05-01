@@ -232,7 +232,7 @@ private void OnServerResultReceivedHandler(int score)
     else if (score == 1)
     {
         // 단계 + 음성 오답 형태로 기록
-        AddError($"{currentState} 단계 음성 오답", 1);
+        AddError($"{AEDStateToErrorType.GetLabel(currentState)} 단계 음성 오답", 1);
         uiManager.ShowCheckIconFail(this);
         Debug.Log("🟡 음성 평가 : 오답");
     }
@@ -289,7 +289,7 @@ private void OnServerResultReceivedHandler(int score)
                     initPlag();
                     setState(CPRState.CheckBreathingAndPulse);
                     // 2. 다음단계에 필요한 손 인식 코드입니다.
-                    handValidator.BeginVerification(1, new Vector3(0f, 0.25f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
+                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case CPRState.CheckBreathingAndPulse:
@@ -309,7 +309,6 @@ private void OnServerResultReceivedHandler(int score)
 
                     initPlag();
                     setState(CPRState.ChestCompressions);
-                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case CPRState.ChestCompressions:
@@ -363,7 +362,7 @@ private void OnServerResultReceivedHandler(int score)
                     initPlag();
                     uiManager.ShowCheckIconPass(this);
                     setState(CPRState.TurnOnAED);
-                    handValidator.BeginVerification(12, new Vector3(0f, 0.0f, 0f), 0.2f, 1f, setHandTrackingPassed);
+                    handValidator.BeginVerification(10, new Vector3(0.05f, 0f, 0.05f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
                 case CPRState.TurnOnAED:
@@ -387,7 +386,7 @@ private void OnServerResultReceivedHandler(int score)
                     if (!voicePassed) break;
                     initPlag();
                     setState(CPRState.DeliverShock);
-                    handValidator.BeginVerification(12, new Vector3(0f, 0f, 0f), 0.2f, 1f, setHandTrackingPassed);
+                    handValidator.BeginVerification(10, new Vector3(0.05f, 0f, 0.05f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
                 case CPRState.DeliverShock:

@@ -17,6 +17,16 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
     public float markerLength = 0.05f;
     public bool enableDownScaling = true;
     public bool useFlippedZ = true;
+    
+    // 마커 위치 안정화를 위한 설정
+    [Header("마커 안정화 설정")]
+    public bool enableSmoothing = true;
+    [Range(1, 30)]
+    public int smoothingFrameCount = 10;
+    [Range(0.0f, 1.0f)]
+    public float positionSmoothFactor = 0.8f;
+    [Range(0.0f, 1.0f)]
+    public float rotationSmoothFactor = 0.5f;
 
     private HLCameraStream2MatHelper camHelper;
     private ArucoDetector detector;
@@ -173,7 +183,21 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
         Vector3 worldOffset = camToWorld.MultiplyVector(eyeOffset);
         pos += worldOffset;
 
-        markerMap[markerId] = new MarkerData(pos, rot);
+        // 마커 데이터 업데이트 또는 생성
+        if (markerMap.ContainsKey(markerId) && enableSmoothing)
+        {
+            // 기존 마커 데이터에 새 위치/회전 정보 추가하고 평활화 적용
+            markerMap[markerId].UpdatePosition(pos, positionSmoothFactor, smoothingFrameCount);
+            markerMap[markerId].UpdateRotation(rot, rotationSmoothFactor, smoothingFrameCount);
+            
+            pos = markerMap[markerId].position;    // 평활화된 위치 사용
+            rot = markerMap[markerId].rotation;    // 평활화된 회전 사용
+        }
+        else
+        {
+            // 새 마커 생성
+            markerMap[markerId] = new MarkerData(pos, rot);
+        }
 
         Debug.Log($"📌 마커 {markerId} 감지됨: 위치={pos}, 회전={rot.eulerAngles}");
 

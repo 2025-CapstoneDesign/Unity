@@ -12,8 +12,8 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
-  productName: Capstone_Desgin_V2
+  companyName: NS_Capstone
+  productName: NS_Capstone
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -136,12 +136,7 @@ PlayerSettings:
   vulkanEnableCommandBufferRecycling: 1
   loadStoreDebugModeEnabled: 0
   bundleVersion: 0.1
-  preloadedAssets:
-  - {fileID: 11400000, guid: c677e5c4eb85b7849a8da406775c299d, type: 2}
-  - {fileID: -3149001548050369741, guid: 1b90db878dfa15b4a881aaa47d22e72a, type: 2}
-  - {fileID: 11400000, guid: 0fcb81375c03b974e9ff0d216548492b, type: 2}
-  - {fileID: 11400000, guid: dddc7d64e5389e4459680f88ba84a33a, type: 2}
-  - {fileID: 2949546407628007368, guid: 3f1b7826fdbf1c94ba6fdecdc57dc5bf, type: 2}
+  preloadedAssets: []
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -780,14 +775,14 @@ PlayerSettings:
   apiCompatibilityLevelPerPlatform: {}
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: CapstoneDesginV2
+  metroPackageName: NSCapstone
   metroPackageVersion: 1.0.0.0
   metroCertificatePath: Assets/WSATestCertificate.pfx
   metroCertificatePassword: 
   metroCertificateSubject: DefaultCompany
   metroCertificateIssuer: DefaultCompany
   metroCertificateNotAfter: 80def7ba2ba3dc01
-  metroApplicationDescription: Capstone_Desgin_V2
+  metroApplicationDescription: NS_Capstone
   wsaImages: {}
   metroTileShortName: Capstone_Desgin_V2
   metroTileShowName: 0

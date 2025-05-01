@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit;
@@ -7,50 +8,75 @@ using Microsoft.MixedReality.Toolkit.Utilities;
 
 public class HandTrackingValidate : MonoBehaviour
 {
-    public bool IsVerified { get; private set; } = false;
+    [Serializable]
+    public class HandValidation
+    {
+        public int markerId;
+        public Vector3 targetLocalOffset;
+        public float radius;
+        public float requiredTime;
+        public Action onVerifiedCallback;
+
+        [NonSerialized] public float currentTime = 0f;
+        [NonSerialized] public bool isVerified = false;
+        [NonSerialized] public GameObject effect;
+        [NonSerialized] public Renderer effectRenderer;
+        [NonSerialized] public Vector3 lastPosition;
+        [NonSerialized] public Quaternion lastRotation;
+        [NonSerialized] public bool isInitialized = false;
+        [NonSerialized] public Coroutine hideCoroutine;
+    }
 
     [SerializeField] private GameObject targetEffectPrefab;
-    private GameObject activeEffect;
-    private Renderer effectRenderer;
-
-    private Vector3 targetLocalOffset;
-    private Vector3 targetWorldPos;
-
-    private float radius;
-    private float requiredTime;
-    private float currentTime = 0f;
-
-    private bool isActive = false;
-    private Action onVerifiedCallback;
-    private Coroutine hideCoroutine;
-
-    private int markerId;
-    private Vector3 lastPosition;
-    private Quaternion lastRotation;
-    private bool isInitialized = false;
-
+    private List<HandValidation> validations = new List<HandValidation>();
+    
     private readonly Color defaultColor = Color.red;
     private readonly Color successColor = Color.green;
 
+    private bool isActive = true;
+
     public void BeginVerification(int markerId, Vector3 localOffset, float radius, float holdTime, Action onSuccess)
     {
-        this.markerId = markerId;
-        this.targetLocalOffset = localOffset;
-        this.radius = radius;
-        this.requiredTime = holdTime;
-        this.onVerifiedCallback = onSuccess;
-
-        IsVerified = false;
-        currentTime = 0f;
-        isActive = true;
-        isInitialized = false;
-
-        if (activeEffect != null)
+        // 동일한 마커 ID로 이미 검증이 진행 중인지 확인
+        HandValidation existingValidation = validations.Find(v => v.markerId == markerId);
+        
+        // 이미 존재하는 검증이 있다면 정리
+        if (existingValidation != null)
         {
-            Destroy(activeEffect);
-            activeEffect = null;
-            effectRenderer = null;
+            // 코루틴이 실행 중이라면 중지
+            if (existingValidation.hideCoroutine != null)
+            {
+                StopCoroutine(existingValidation.hideCoroutine);
+                existingValidation.hideCoroutine = null;
+            }
+            
+            // 이펙트가 있다면 제거
+            if (existingValidation.effect != null)
+            {
+                Destroy(existingValidation.effect);
+                existingValidation.effect = null;
+                existingValidation.effectRenderer = null;
+            }
+            
+            // 리스트에서 제거
+            validations.Remove(existingValidation);
         }
+        
+        // 새 검증 생성
+        HandValidation validation = new HandValidation
+        {
+            markerId = markerId,
+            targetLocalOffset = localOffset,
+            radius = radius,
+            requiredTime = holdTime,
+            onVerifiedCallback = onSuccess,
+            isVerified = false,
+            currentTime = 0f,
+            isInitialized = false
+        };
+        
+        validations.Add(validation);
+        isActive = true;
     }
 
     public void StopVerification()
@@ -60,138 +86,146 @@ public class HandTrackingValidate : MonoBehaviour
 
     public void ResetVerification()
     {
-        IsVerified = false;
-        isActive = false;
-        currentTime = 0f;
-
-        if (activeEffect != null)
+        foreach (var validation in validations)
         {
-            activeEffect.SetActive(false);
-            if (effectRenderer != null)
-                effectRenderer.material.color = defaultColor;
+            validation.isVerified = false;
+            validation.currentTime = 0f;
+
+            if (validation.effect != null)
+            {
+                validation.effect.SetActive(false);
+                if (validation.effectRenderer != null)
+                    validation.effectRenderer.material.color = defaultColor;
+            }
         }
+        isActive = false;
     }
 
     void Update()
     {
-        if (!isActive || IsVerified)
+        if (!isActive)
             return;
 
-        // 디버깅: 마커 인식 상태 확인
-        bool isMarkerDetected = OptimizedArUcoMarkerDetection.markerMap.TryGetValue(markerId, out MarkerData marker);
-        
-        if (!isMarkerDetected)
+        for (int i = 0; i < validations.Count; i++)
         {
-            if (activeEffect != null)
-                activeEffect.SetActive(false);
-            return;
-        }
-
-        // 디버깅: 타겟 위치 정보
-        Vector3 worldOffset = marker.rotation * targetLocalOffset;
-        Vector3 newTargetPos = marker.position + worldOffset;
-        Debug.Log($"타겟 위치: {newTargetPos}, 마커 위치: {marker.position}, 오프셋: {worldOffset}");
-
-        if (!isInitialized)
-        {
-            Debug.Log($"isInitialized: {isInitialized}, targetEffectPrefab: {(targetEffectPrefab != null ? "있음" : "없음")}");
+            var validation = validations[i];
             
-            if (activeEffect == null && targetEffectPrefab != null)
+            if (validation.isVerified)
+                continue;
+
+            // 마커 인식 상태 확인
+            bool isMarkerDetected = OptimizedArUcoMarkerDetection.markerMap.TryGetValue(validation.markerId, out MarkerData marker);
+            
+            if (!isMarkerDetected)
             {
-                activeEffect = Instantiate(targetEffectPrefab, newTargetPos, marker.rotation);
-                Debug.Log($"효과 생성됨: {activeEffect != null}, 위치: {newTargetPos}");
+                if (validation.effect != null)
+                    validation.effect.SetActive(false);
+                continue;
+            }
+
+            // 타겟 위치 계산
+            Vector3 worldOffset = marker.rotation * validation.targetLocalOffset;
+            Vector3 newTargetPos = marker.position + worldOffset;
+
+            if (!validation.isInitialized)
+            {
+                if (validation.effect == null && targetEffectPrefab != null)
+                {
+                    validation.effect = Instantiate(targetEffectPrefab, newTargetPos, marker.rotation);
+                    
+                    validation.effectRenderer = validation.effect.GetComponentInChildren<Renderer>();
+                    if (validation.effectRenderer != null)
+                    {
+                        validation.effectRenderer.material = new Material(validation.effectRenderer.material);
+                        validation.effectRenderer.material.color = defaultColor;
+                    }
+                }
                 
-                effectRenderer = activeEffect.GetComponentInChildren<Renderer>();
-                if (effectRenderer != null)
+                if (validation.effect != null)
                 {
-                    effectRenderer.material = new Material(effectRenderer.material);
-                    effectRenderer.material.color = defaultColor;
-                    Debug.Log("렌더러 및 재질 설정 완료");
+                    validation.effect.transform.position = newTargetPos;
+                    validation.effect.transform.rotation = marker.rotation;
+                    validation.effect.SetActive(true);
                 }
-                else
+                
+                validation.isInitialized = true;
+                validation.lastPosition = newTargetPos;
+                validation.lastRotation = marker.rotation;
+                continue;
+            }
+
+            float positionChange = Vector3.Distance(validation.lastPosition, newTargetPos);
+            float rotationChange = Quaternion.Angle(validation.lastRotation, marker.rotation);
+
+            if (positionChange > 0.1f || rotationChange > 30f)
+            {
+                if (validation.effect != null)
                 {
-                    Debug.LogError("렌더러를 찾을 수 없습니다!");
-                }
-            }
-            if (activeEffect != null)
-            {
-                activeEffect.transform.position = newTargetPos;
-                activeEffect.transform.rotation = marker.rotation;
-                activeEffect.SetActive(true);
-            }
-            isInitialized = true;
-            lastPosition = newTargetPos;
-            lastRotation = marker.rotation;
-            return;
-        }
-
-        float positionChange = Vector3.Distance(lastPosition, newTargetPos);
-        float rotationChange = Quaternion.Angle(lastRotation, marker.rotation);
-
-        if (positionChange > 0.1f || rotationChange > 30f)
-        {
-            if (activeEffect != null)
-            {
-                activeEffect.transform.position = newTargetPos;
-                activeEffect.transform.rotation = marker.rotation;
-            }
-        }
-        else
-        {
-            if (activeEffect != null)
-            {
-                activeEffect.transform.position = Vector3.Lerp(activeEffect.transform.position, newTargetPos, Time.deltaTime * 10f);
-                activeEffect.transform.rotation = Quaternion.Slerp(activeEffect.transform.rotation, marker.rotation, Time.deltaTime * 10f);
-            }
-        }
-
-        lastPosition = newTargetPos;
-        lastRotation = marker.rotation;
-
-        if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Palm, Handedness.Right, out MixedRealityPose pose))
-        {
-            Vector3 handPos = pose.Position;
-            float dist = Vector3.Distance(handPos, newTargetPos);
-
-            if (dist <= radius)
-            {
-                currentTime += Time.deltaTime;
-
-                if (effectRenderer != null)
-                    effectRenderer.material.color = Color.Lerp(effectRenderer.material.color, successColor, Time.deltaTime * 8f);
-
-                if (currentTime >= requiredTime)
-                {
-                    IsVerified = true;
-                    isActive = false;
-                    onVerifiedCallback?.Invoke();
-                    HideEffectAfterDelay(0.5f);
+                    validation.effect.transform.position = newTargetPos;
+                    validation.effect.transform.rotation = marker.rotation;
                 }
             }
             else
             {
-                currentTime = 0f;
+                if (validation.effect != null)
+                {
+                    validation.effect.transform.position = Vector3.Lerp(validation.effect.transform.position, newTargetPos, Time.deltaTime * 10f);
+                    validation.effect.transform.rotation = Quaternion.Slerp(validation.effect.transform.rotation, marker.rotation, Time.deltaTime * 10f);
+                }
+            }
 
-                if (effectRenderer != null)
-                    effectRenderer.material.color = Color.Lerp(effectRenderer.material.color, defaultColor, Time.deltaTime * 8f);
+            validation.lastPosition = newTargetPos;
+            validation.lastRotation = marker.rotation;
+
+            if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Palm, Handedness.Right, out MixedRealityPose pose))
+            {
+                Vector3 handPos = pose.Position;
+                float dist = Vector3.Distance(handPos, newTargetPos);
+
+                if (dist <= validation.radius)
+                {
+                    validation.currentTime += Time.deltaTime;
+
+                    if (validation.effectRenderer != null)
+                        validation.effectRenderer.material.color = Color.Lerp(validation.effectRenderer.material.color, successColor, Time.deltaTime * 8f);
+
+                    if (validation.currentTime >= validation.requiredTime)
+                    {
+                        validation.isVerified = true;
+                        HideEffectAfterDelay(validation, 0.5f);
+                        validation.onVerifiedCallback?.Invoke();
+                    }
+                }
+                else
+                {
+                    validation.currentTime = 0f;
+
+                    if (validation.effectRenderer != null)
+                        validation.effectRenderer.material.color = Color.Lerp(validation.effectRenderer.material.color, defaultColor, Time.deltaTime * 8f);
+                }
             }
         }
     }
 
-    private void HideEffectAfterDelay(float delay)
+    private void HideEffectAfterDelay(HandValidation validation, float delay)
     {
-        if (activeEffect == null) return;
+        if (validation.effect == null) return;
 
-        if (hideCoroutine != null)
-            StopCoroutine(hideCoroutine);
+        if (validation.hideCoroutine != null)
+            StopCoroutine(validation.hideCoroutine);
 
-        hideCoroutine = StartCoroutine(HideEffectCoroutine(delay));
+        validation.hideCoroutine = StartCoroutine(HideEffectCoroutine(validation, delay));
     }
 
-    private IEnumerator HideEffectCoroutine(float delay)
+    private IEnumerator HideEffectCoroutine(HandValidation validation, float delay)
     {
         yield return new WaitForSeconds(delay);
-        if (activeEffect != null)
-            activeEffect.SetActive(false);
+        if (validation.effect != null)
+        {
+            Destroy(validation.effect);
+            validation.effect = null;
+            validation.effectRenderer = null;
+        }
+        validation.hideCoroutine = null;
     }
 }
