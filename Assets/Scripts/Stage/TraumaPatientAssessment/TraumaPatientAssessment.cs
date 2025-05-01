@@ -1,4 +1,4 @@
-public enum TraumaPatientAssessment // ¿Ü»óÈ¯ÀÚ Æò°¡
+public enum TraumaPatientAssessmentState // ì™¸ìƒí™˜ì í‰ê°€
 {
     EnsureSceneSafety,
     WearPPE,

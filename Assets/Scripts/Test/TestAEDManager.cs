@@ -232,7 +232,7 @@ private void OnServerResultReceivedHandler(int score)
     else if (score == 1)
     {
         // 단계 + 음성 오답 형태로 기록
-        AddError($"{AEDStateToErrorType.GetLabel(currentState)} 단계 음성 오답", 1);
+        AddError($"{AdapterErrorType.GetLabel(currentState)} 단계 음성 오답", 1);
         uiManager.ShowCheckIconFail(this);
         Debug.Log("🟡 음성 평가 : 오답");
     }

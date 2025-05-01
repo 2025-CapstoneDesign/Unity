@@ -1,4 +1,4 @@
-public enum InfantAirway
+public enum InfantAirwayState
 {
     EnsureSceneSafety,
     WearPPE,

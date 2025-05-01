@@ -1,4 +1,4 @@
-public enum InfantCPR //¿µ¾Æ ½ÉÆó¼Ò»ı¼ú
+public enum InfantCPRState //ì˜ìœ  ì‹¬íì†Œìƒìˆ 
 {
     EnsureSceneSafety,
     WearPPE,

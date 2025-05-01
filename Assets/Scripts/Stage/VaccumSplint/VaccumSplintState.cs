@@ -1,4 +1,4 @@
-public enum VacuumSplint //�����θ� ����
+public enum VacuumSplintState //진공부목 적용
 {
     EnsureSceneSafety,
     WearPPE,
