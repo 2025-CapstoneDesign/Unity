@@ -26,12 +26,17 @@ public class SuctionManager : MonoBehaviour
     private bool gyroPassed = false;
     private bool flowPassed = false;
     private bool pressurePassed = false;
+    
+    private int fiveCycleCount = 0;
 
     public EyeTrackingValidate eyeTrackingValidator;
     public HandTrackingValidate handValidator;
     public MarkerPositionValidate markerPositionValidator;
     public MarkerDistanceValidate markerDistanceValidator;
     public MoveValidation moveValidator;
+    
+    private CPRValidator cprValidator;
+    private BreathValidator breathValidator;
 
     private int score = 100;
     private Dictionary<string, int> checkScore = new Dictionary<string, int>();
@@ -48,6 +53,8 @@ public class SuctionManager : MonoBehaviour
 
     void Start()
     {
+        cprValidator = new CPRValidator(uiManager);
+        breathValidator = new BreathValidator(uiManager);
         currentState = SuctionState.EnsureSceneSafety;
         totalSteps = System.Enum.GetValues(typeof(SuctionState)).Length - 1;
         setState(SuctionState.EnsureSceneSafety);
@@ -297,6 +304,10 @@ public class SuctionManager : MonoBehaviour
     private void ResetValidationFlags()
     {
         initPlag();
+        
+        fiveCycleCount = 0;
+        cprValidator.Reset();
+        breathValidator.Reset();
     }
 
     public void setVoicePassed()
@@ -377,6 +388,30 @@ public class SuctionManager : MonoBehaviour
         score = Mathf.Max(0, score); // 최소 0점
 
         Debug.Log($"❌ 오류: {errorType} (-{penaltyPoints}점, 현재 점수: {score})");
+    }
+
+    // 예시: 압박 깊이가 부족할 때
+    public void OnCompressionDepthError()
+    {
+        AddError("가슴압박 깊이 부족");
+    }
+
+    // 예시: 압박 속도가 불규칙할 때
+    public void OnCompressionRateError()
+    {
+        AddError("압박 속도 불규칙");
+    }
+
+    // 예시: 인공호흡이 부족할 때
+    public void OnBreathingError()
+    {
+        AddError("인공호흡 부족");
+    }
+
+    // 수동으로 피드백 생성을 호출하고 싶을 때
+    public void GenerateFeedbackNow()
+    {
+        StartCoroutine(GenerateTrainingSummary());
     }
 
     void SaveResultToGameManager()

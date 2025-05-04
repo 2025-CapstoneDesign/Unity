@@ -236,7 +236,8 @@ public class SpinialMotionRestrictionManager : MonoBehaviour
         // 새 단계로 상태 변경 및 시작 시간 기록
         currentStageStartTime = Time.time;
         currentState = nextState;
-        // VoiceSender에 현재 상태 전달 (필요한 경우 구현)
+        // VoiceSender에 현재 상태 전달
+        VoiceSender.Instance.CurrentStageTag = nextState.ToVoiceTag();
         Debug.Log($"➡️ 상태 전환: {currentState}");
     }
 
@@ -345,6 +346,30 @@ public class SpinialMotionRestrictionManager : MonoBehaviour
         score = Mathf.Max(0, score); // 최소 0점
 
         Debug.Log($"❌ 오류: {errorType} (-{penaltyPoints}점, 현재 점수: {score})");
+    }
+
+    // 예시: 압박 깊이가 부족할 때
+    public void OnCompressionDepthError()
+    {
+        AddError("가슴압박 깊이 부족");
+    }
+
+    // 예시: 압박 속도가 불규칙할 때
+    public void OnCompressionRateError()
+    {
+        AddError("압박 속도 불규칙");
+    }
+
+    // 예시: 인공호흡이 부족할 때
+    public void OnBreathingError()
+    {
+        AddError("인공호흡 부족");
+    }
+
+    // 수동으로 피드백 생성을 호출하고 싶을 때
+    public void GenerateFeedbackNow()
+    {
+        StartCoroutine(GenerateTrainingSummary());
     }
 
     void SaveResultToGameManager()

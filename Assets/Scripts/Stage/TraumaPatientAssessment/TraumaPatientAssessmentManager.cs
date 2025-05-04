@@ -636,7 +636,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
         }
 
 
-        GameManager.Instance.protocolName = "자동제세동기 사용";
+        GameManager.Instance.protocolName = "외상환자 평가";
         GameManager.Instance.duration = durationString;
         GameManager.Instance.score = score;
         GameManager.Instance.feedback = feedback;
@@ -653,7 +653,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
 
         TrainingResult newResult = new TrainingResult
         {
-            protocolName = "자동제세동기 사용",
+            protocolName = "외상환자 평가",
             date = today,
             duration = durationString,
             score = score,

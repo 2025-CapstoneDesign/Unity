@@ -172,30 +172,80 @@ public class InfantCPRManager : MonoBehaviour
             switch (currentState)
             {
                 case InfantCPRState.EnsureSceneSafety:
+                    if (!voicePassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(InfantCPRState.WearPPE);
                     break;
 
                 case InfantCPRState.WearPPE:
+                    if (!voicePassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(InfantCPRState.CheckConsciousness);
                     break;
 
                 case InfantCPRState.CheckConsciousness:
+                    if (!gyroPassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(InfantCPRState.Call119AndRequestAED);
                     break;
 
                 case InfantCPRState.Call119AndRequestAED:
+                    if (!voicePassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(InfantCPRState.CheckBreathingAndPulse);
                     break;
 
                 case InfantCPRState.CheckBreathingAndPulse:
+                    if (!handTrackingPassed) 
+                    {
+                        handValidator.BeginVerification(1, new Vector3(0f, 0.2f, 0.05f), 0.15f, 2f, setHandTrackingPassed);
+                        break;
+                    }
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(InfantCPRState.Perform30ChestCompressions);
                     break;
 
                 case InfantCPRState.Perform30ChestCompressions:
+                    // 압박 30회 확인 로직
+                    if (!sensorPassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(InfantCPRState.OpenAirway);
                     break;
 
                 case InfantCPRState.OpenAirway:
+                    if (!gyroPassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(InfantCPRState.Perform2RescueBreathsWithPocketMask);
                     break;
 
                 case InfantCPRState.Perform2RescueBreathsWithPocketMask:
+                    if (!flowPassed)
+                    {
+                        // 호흡 센서 확인 로직
+                        break;
+                    }
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(InfantCPRState.Perform5CyclesOf30To2CPR);
                     break;
 
                 case InfantCPRState.Perform5CyclesOf30To2CPR:
+                    if (fiveCycleCount < 5)
+                    {
+                        // 5회 사이클 카운트 로직
+                        // 예시: 압박 30회 + 인공호흡 2회가 완료되면 fiveCycleCount++
+                        break;
+                    }
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(InfantCPRState.RecordOnMedicalChart);
                     break;
 
                 case InfantCPRState.RecordOnMedicalChart:

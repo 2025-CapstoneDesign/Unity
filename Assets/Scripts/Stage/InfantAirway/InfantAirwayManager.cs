@@ -26,6 +26,8 @@ public class InfantAirwayManager : MonoBehaviour
     private bool gyroPassed = false;
     private bool flowPassed = false;
     private bool pressurePassed = false;
+    
+    private int fiveCycleCount = 0;
 
     public EyeTrackingValidate eyeTrackingValidator;
     public HandTrackingValidate handValidator;
@@ -86,7 +88,12 @@ public class InfantAirwayManager : MonoBehaviour
 
     private IEnumerator InitSequence()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitUntil(() => TrainingEvaluator.Instance != null);
+        TrainingEvaluator.Instance.OnServerResultReceived -= OnServerResultReceivedHandler;
+        TrainingEvaluator.Instance.OnServerResultReceived += OnServerResultReceivedHandler;
+
+        yield return new WaitForSeconds(2f);
+        timerManager.StartTimer(300f);
         StartCoroutine(Procedure());
     }
 
@@ -132,7 +139,7 @@ public class InfantAirwayManager : MonoBehaviour
         }
     }
 
-    private void AddError(string errorMessage, int penaltyPoints)
+    private void AddError(string errorMessage, int penaltyPoints = 1)
     {
         if (!checkScore.ContainsKey(errorMessage))
         {
@@ -198,8 +205,64 @@ public class InfantAirwayManager : MonoBehaviour
 
     private IEnumerator GenerateTrainingSummary()
     {
-        // 훈련 요약 생성 로직
-        yield return null;
+        yield return StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "영아 기도폐쇄 훈련 평가 단계", (result) =>
+        {
+            feedback = result;
+            Debug.Log($"📝 영아 기도폐쇄 훈련 요약:\n{feedback}");
+            // TODO: UI에 피드백 표시 로직 추가
+        }));
+
+        SaveResultToGameManager();
+        StoreHistory();
+        SceneManager.LoadScene("FeedbackScene"); // 결과 씬 이름으로 이동
+    }
+
+    void SaveResultToGameManager()
+    {
+        // 오늘 날짜를 yyyy-MM-dd 형식으로
+        string today = System.DateTime.Now.ToString("yyyy-MM-dd");
+
+        // 경과 시간(초)을 분으로 변환하고 소수점 없이 정수로 표현
+        float elapsedSeconds = timerManager.elapsedTime;
+        int minutes = Mathf.FloorToInt(elapsedSeconds / 60f);
+        int seconds = Mathf.FloorToInt(elapsedSeconds % 60f);
+
+        string durationString = "";
+
+        if (minutes >= 1)
+        {
+            durationString = $"{minutes}분 {seconds}초";
+        }
+        else
+        {
+            durationString = $"{seconds}초";
+        }
+
+        GameManager.Instance.protocolName = "영아 기도폐쇄";
+        GameManager.Instance.duration = durationString;
+        GameManager.Instance.score = score;
+        GameManager.Instance.feedback = feedback;
+    }
+
+    void StoreHistory()
+    {
+        // 오늘 날짜를 yyyy-MM-dd 형식으로
+        string today = System.DateTime.Now.ToString("yyyy-MM-dd");
+
+        // 경과 시간(초)을 분으로 변환하고 소수점 없이 정수로 표현
+        int minutes = Mathf.FloorToInt(timerManager.elapsedTime / 60f);
+        string durationString = minutes + "분";
+
+        TrainingResult newResult = new TrainingResult
+        {
+            protocolName = "영아 기도폐쇄",
+            date = today,
+            duration = durationString,
+            score = score,
+            feedback = feedback
+        };
+
+        GetComponent<ResultHistoryManager>().SaveNewResult(newResult);
     }
 
     private void setState(InfantAirwayState nextState)
@@ -226,6 +289,8 @@ public class InfantAirwayManager : MonoBehaviour
         }
 
         currentState = nextState;
+        VoiceSender.Instance.CurrentStageTag = nextState.ToString();
+        Debug.Log($"➡️ 상태 전환: {currentState}");
     }
 
     private void initPlag()
@@ -245,17 +310,97 @@ public class InfantAirwayManager : MonoBehaviour
     private void ResetValidationFlags()
     {
         initPlag();
+        
+        fiveCycleCount = 0;
+        cprValidator.Reset();
+        breathValidator.Reset();
     }
 
-    // 상태 설정 콜백 메서드들
-    public void setVoicePassed(bool passed) { voicePassed = passed; }
-    public void setSensorPassed(bool passed) { sensorPassed = passed; }
-    public void setHandTrackingPassed(bool passed) { handTrackingPassed = passed; }
-    public void setEyeTrackingPassed(bool passed) { eyeTrackingPassed = passed; }
-    public void setMarkerPostionFristPassed(bool passed) { markerPositionFirstPassed = passed; }
-    public void setMarkerPostionSecondPassed(bool passed) { markerPositionSecondPassed = passed; }
-    public void setMarkerDistancePassed(bool passed) { markerDistancePassed = passed; }
-    public void setGyroPassed(bool passed) { gyroPassed = passed; }
-    public void setFlowPassed(bool passed) { flowPassed = passed; }
-    public void setPressurePassed(bool passed) { pressurePassed = passed; }
+    // 상태 설정 무매개변수 메서드 추가
+    public void setVoicePassed()
+    {
+        voicePassed = true;
+    }
+
+    public void setSensorPassed()
+    {
+        sensorPassed = true;
+    }
+
+    public void setHandTrackingPassed()
+    {
+        handTrackingPassed = true;
+    }
+
+    public void setEyeTrackingPassed()
+    {
+        eyeTrackingPassed = true;
+    }
+
+    public void setMarkerPostionFristPassed()
+    {
+        markerPositionFirstPassed = true;
+    }
+
+    public void setMarkerPositionSecondPassed()
+    {
+        markerPositionSecondPassed = true;
+    }
+
+    public void setGyroPassed()
+    {
+        gyroPassed = true;
+    }
+
+    public void setFlowPassed()
+    {
+        flowPassed = true;
+    }
+
+    public void setPressurePassed()
+    {
+        pressurePassed = true;
+    }
+
+    public void setMarkerDistancePassed()
+    {
+        markerDistancePassed = true;
+    }
+
+    // 이벤트 등록 및 해제
+    void OnEnable()
+    {
+        SensorEvents.OnSensorDataReceived += HandleSensorData;
+        SensorEvents.OnGyroDataReceived += HandleGyroData;
+    }
+
+    void OnDisable()
+    {
+        SensorEvents.OnSensorDataReceived -= HandleSensorData;
+        SensorEvents.OnGyroDataReceived -= HandleGyroData;
+    }
+
+    // 예시: 압박 깊이가 부족할 때
+    public void OnCompressionDepthError()
+    {
+        AddError("가슴압박 깊이 부족", 1);
+    }
+
+    // 예시: 압박 속도가 불규칙할 때
+    public void OnCompressionRateError()
+    {
+        AddError("압박 속도 불규칙", 1);
+    }
+
+    // 예시: 인공호흡이 부족할 때
+    public void OnBreathingError()
+    {
+        AddError("인공호흡 부족", 1);
+    }
+
+    // 수동으로 피드백 생성을 호출하고 싶을 때
+    public void GenerateFeedbackNow()
+    {
+        StartCoroutine(GenerateTrainingSummary());
+    }
 }
