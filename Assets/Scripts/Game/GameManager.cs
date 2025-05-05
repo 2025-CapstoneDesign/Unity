@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     public string duration;
     public int score;
     public string feedback;
+    public string sceneName;
 
     void Awake()
     {

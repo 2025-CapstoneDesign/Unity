@@ -620,7 +620,7 @@ private void OnServerResultReceivedHandler(int score)
             durationString = $"{seconds}초";
         }
 
-
+        GameManager.Instance.sceneName = "AEDScene";
         GameManager.Instance.protocolName = "자동제세동기 사용";
         GameManager.Instance.duration = durationString;
         GameManager.Instance.score = score;
