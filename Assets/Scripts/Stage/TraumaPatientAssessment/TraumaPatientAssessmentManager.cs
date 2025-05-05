@@ -215,6 +215,8 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
+
+
                 case TraumaPatientAssessmentState.CheckAirwayForObstruction:
 
                     if (!handTrackingPassed)
