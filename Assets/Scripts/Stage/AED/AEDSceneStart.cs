@@ -2,22 +2,15 @@ using UnityEngine;
 
 public class AEDSceneStart : MonoBehaviour
 {
-    public SceneStartGuide sceneStartGuide;
+    public SceneStartGuide guide;
 
     void Awake()
     {
-        var info = new SceneStartInfo("자동제세동기(AED) 훈련을 시작합니다.", null);
-        sceneStartGuide.SetSceneInfo(info);
+        var info = new SceneStartInfo(
+            "자동제세동기 훈련을 시작하겠습니다.",
+            "Voice_Stage1"
+        );
 
-        if (AudioManager.Instance == null)
-        {
-            Debug.LogError("AudioManager.Instance is NULL! AudioManager가 씬에 없거나 초기화되지 않았습니다.");
-        }
-        else
-        {
-            Debug.Log("AudioManager.Instance 접근 성공");
-            AudioManager.Instance.PlayVoice("Voice_Stage1");
-        }
+        guide.SetSceneInfo(info);
     }
-
 }

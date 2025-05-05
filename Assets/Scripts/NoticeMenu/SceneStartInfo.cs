@@ -1,13 +1,11 @@
-using UnityEngine;
-
 public class SceneStartInfo
 {
     public string guideMessage;
-    public AudioClip guideAudio;
+    public string guideAudioFileName;  // <-- 폴더 제외, 순수 파일명만
 
-    public SceneStartInfo(string message, AudioClip audio)
+    public SceneStartInfo(string message, string audioFileName)
     {
         guideMessage = message;
-        guideAudio = audio;
+        guideAudioFileName = audioFileName;
     }
 }

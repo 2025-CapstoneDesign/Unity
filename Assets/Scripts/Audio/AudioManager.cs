@@ -25,7 +25,7 @@ public class AudioManager : MonoBehaviour
     public void PlayVoice(string relativePath)
     {
         Debug.Log("PlayVoice() 실행 시작"); // 최상단에 넣어보기
-
+        Debug.Log($"[AudioManager] PlayVoice() 호출됨: {relativePath}");
         string fullPath = $"{audioFolderPath}/{relativePath}";
         Debug.Log($"[AudioManager] Trying to load: {fullPath}");
 

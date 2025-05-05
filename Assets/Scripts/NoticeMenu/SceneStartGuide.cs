@@ -13,10 +13,10 @@ public class SceneStartGuide : MonoBehaviour
     public float fadeDuration = 1f;
     public float messageDisplayTime = 2f;
 
-    [Header("Audio")]
-    public AudioSource audioSource;
+    [Header("Audio Settings")]
+    public string voiceFolder = "Audio/VoiceResources"; // 상위 폴더만 설정
 
-    // 외부에서 설정될 정보
+    // 씬별로 설정되는 정보
     private SceneStartInfo currentInfo;
 
     public void SetSceneInfo(SceneStartInfo info)
@@ -31,15 +31,17 @@ public class SceneStartGuide : MonoBehaviour
 
     IEnumerator ShowGuideThenNotice()
     {
-        // 기본 메시지
+        // 텍스트 설정
         guideText.text = currentInfo?.guideMessage ?? "훈련을 시작합니다.";
 
-        if (audioSource != null && currentInfo?.guideAudio != null)
+        // 음성 재생
+        if (!string.IsNullOrEmpty(currentInfo?.guideAudioFileName))
         {
-            audioSource.clip = currentInfo.guideAudio;
-            audioSource.Play();
+            string fullPath = $"{currentInfo.guideAudioFileName}";
+            AudioManager.Instance.PlayVoice(fullPath);
         }
 
+        // UI 표시
         guideMessageGroup.alpha = 0f;
         guideMessageGroup.gameObject.SetActive(true);
         noticeCanvas.SetActive(false);
