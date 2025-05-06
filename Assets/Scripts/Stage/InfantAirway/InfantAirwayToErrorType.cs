@@ -8,15 +8,15 @@ public static class InfantAirwayToErrorType
 {
     private static readonly Dictionary<InfantAirwayState, string> stateToLabel = new Dictionary<InfantAirwayState, string>
     {
-        { InfantAirwayState.EnsureSceneSafety,                  "PASS" },
-        { InfantAirwayState.WearPPE,                            "PASS" },
-        { InfantAirwayState.Call119AndRequestAED,               "PASS" },
+        { InfantAirwayState.EnsureSceneSafety,                  "현장 안전 확인" },
+        { InfantAirwayState.WearPPE,                            "보호장비 착용" },
+        { InfantAirwayState.Call119AndRequestAED,               "AED 요청" },
         { InfantAirwayState.Perform5BackBlows,                  "PASS" },
         { InfantAirwayState.Perform5ChestThrusts,               "PASS" },
         { InfantAirwayState.RepeatBackBlowsAndChestThrusts,     "PASS" },
         { InfantAirwayState.IfUnconsciousPlaceSupine,           "PASS" },
         { InfantAirwayState.Perform30ChestCompressions,         "PASS" },
-        { InfantAirwayState.OpenAirwayAndCheckForObstruction,   "PASS" },
+        { InfantAirwayState.OpenAirwayAndCheckForObstruction,   "기도 개방 및 이물질 확인" },
         { InfantAirwayState.Perform1RescueBreath,               "PASS" },
         { InfantAirwayState.ReopenAirwayAndPerform1RescueBreath, "PASS" },
         { InfantAirwayState.Perform30To2CPRCycle,               "PASS" },

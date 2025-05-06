@@ -107,9 +107,70 @@ public class InfantCPRManager : MonoBehaviour
 
     private void HandleSensorData(string type, float value)
     {
+        Debug.Log($"📊 센서 데이터 수신 - 타입: {type}, 값: {value}");
+        
         switch (currentState)
         {
-            default:
+            case InfantCPRState.Perform30ChestCompressions:
+                if (type == "압력 센서" && !pressurePassed)
+                {
+                    if(value < CPRValidator.minPressure){
+                        AddError("영유아 가슴압박 압력 부족");
+                    }
+                    bool complete = cprValidator.TryAddCompression(value);
+                    Debug.Log($"압력 센서 : {cprValidator.compressionTimestamps.Count} 횟수 입니다.");
+                    if (complete)
+                    {
+                        Debug.Log("🫀 CPR 30회 성공!");
+                        setPressurePassed();
+                        cprValidator.Reset();
+                    }
+                }
+                break;
+
+            case InfantCPRState.Perform2RescueBreathsWithPocketMask:
+                if (type == "유량 센서" && !flowPassed)
+                {
+                    if(value < BreathValidator.requiredFlow){
+                        AddError("인공호흡 호흡량 부족");
+                    }
+                    bool success = breathValidator.TryAddBreath(value);
+                    if (success)
+                    {
+                        Debug.Log("🌬 인공호흡 2회 성공!");
+                        setFlowPassed();
+                        breathValidator.Reset();
+                    }
+                }
+                break;
+
+            case InfantCPRState.Perform5CyclesOf30To2CPR:
+                if (fiveCycleCount % 2 == 0 && type == "압력 센서" && !pressurePassed)
+                {
+                    if(value < CPRValidator.minPressure){
+                        AddError("영유아 가슴압박 압력 부족");
+                    }
+                    bool complete = cprValidator.TryAddCompression(value);
+                    if (complete)
+                    {
+                        Debug.Log("🫀 CPR 30회 성공!");
+                        setPressurePassed();
+                        cprValidator.Reset();
+                    }
+                }
+                else if (fiveCycleCount % 2 == 1 && type == "유량 센서" && !flowPassed)
+                {
+                    if(value < BreathValidator.requiredFlow){
+                        AddError("인공호흡 호흡량 부족");
+                    }
+                    bool success = breathValidator.TryAddBreath(value);
+                    if (success)
+                    {
+                        Debug.Log("🌬 인공호흡 2회 성공!");
+                        setFlowPassed();
+                        breathValidator.Reset();
+                    }
+                }
                 break;
         }
     }
@@ -121,9 +182,9 @@ public class InfantCPRManager : MonoBehaviour
         switch (currentState)
         {
             case InfantCPRState.CheckConsciousness:
-                if (!gyroPassed && Mathf.Abs(pitch) > 50f)
+                if (!gyroPassed && Mathf.Abs(pitch) > 45f)
                 {
-                    Debug.Log("🌀 영유아 확인 성공!");
+                    Debug.Log("🌀 영유아 의식확인 성공!");
                     setGyroPassed();
                 }
                 break;
@@ -131,12 +192,10 @@ public class InfantCPRManager : MonoBehaviour
             case InfantCPRState.OpenAirway:
                 if (!gyroPassed && Mathf.Abs(pitch) > 30f)
                 {
-                    Debug.Log("🌀 기도 개방 성공!");
+                    Debug.Log("🌀 기도 열기 성공!");
                     setGyroPassed();
                 }
                 break;
-            default:
-                break;  
         }
     }
 
@@ -173,6 +232,7 @@ public class InfantCPRManager : MonoBehaviour
             {
                 case InfantCPRState.EnsureSceneSafety:
                     if (!voicePassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(InfantCPRState.WearPPE);
@@ -180,6 +240,7 @@ public class InfantCPRManager : MonoBehaviour
 
                 case InfantCPRState.WearPPE:
                     if (!voicePassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(InfantCPRState.CheckConsciousness);
@@ -187,6 +248,7 @@ public class InfantCPRManager : MonoBehaviour
 
                 case InfantCPRState.CheckConsciousness:
                     if (!gyroPassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(InfantCPRState.Call119AndRequestAED);
@@ -194,25 +256,33 @@ public class InfantCPRManager : MonoBehaviour
 
                 case InfantCPRState.Call119AndRequestAED:
                     if (!voicePassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(InfantCPRState.CheckBreathingAndPulse);
+                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case InfantCPRState.CheckBreathingAndPulse:
-                    if (!handTrackingPassed) 
+                    // 1. 손 인식 먼저 기다리기
+                    if (!handTrackingPassed)
                     {
-                        handValidator.BeginVerification(1, new Vector3(0f, 0.2f, 0.05f), 0.15f, 2f, setHandTrackingPassed);
+                        voicePassed = false; // 이전 음성 평가 초기화
+                        Debug.Log("✋ 손 위치 인식 대기 중...");
                         break;
                     }
+
+                    // 2. 손 인식 통과 후 음성 평가 기다림
+                    if (!voicePassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(InfantCPRState.Perform30ChestCompressions);
                     break;
 
                 case InfantCPRState.Perform30ChestCompressions:
-                    // 압박 30회 확인 로직
-                    if (!sensorPassed) break;
+                    if (!pressurePassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(InfantCPRState.OpenAirway);
@@ -220,6 +290,7 @@ public class InfantCPRManager : MonoBehaviour
 
                 case InfantCPRState.OpenAirway:
                     if (!gyroPassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(InfantCPRState.Perform2RescueBreathsWithPocketMask);
@@ -231,24 +302,31 @@ public class InfantCPRManager : MonoBehaviour
                         // 호흡 센서 확인 로직
                         break;
                     }
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(InfantCPRState.Perform5CyclesOf30To2CPR);
                     break;
 
                 case InfantCPRState.Perform5CyclesOf30To2CPR:
-                    if (fiveCycleCount < 5)
+                    if (fiveCycleCount < 10)
                     {
-                        // 5회 사이클 카운트 로직
-                        // 예시: 압박 30회 + 인공호흡 2회가 완료되면 fiveCycleCount++
+                        if (fiveCycleCount % 2 == 0 && pressurePassed)
+                        {
+                            fiveCycleCount++;
+                            flowPassed = false;
+                        }
+                        else if (fiveCycleCount % 2 == 1 && flowPassed)
+                        {
+                            fiveCycleCount++;
+                            pressurePassed = false;
+                        }
                         break;
                     }
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(InfantCPRState.RecordOnMedicalChart);
-                    break;
-
-                case InfantCPRState.RecordOnMedicalChart:
                     break;
             }
 
@@ -266,10 +344,10 @@ public class InfantCPRManager : MonoBehaviour
 
     private IEnumerator GenerateTrainingSummary()
     {
-        yield return StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "영유아 심폐소생술 훈련 평가 단계",(result) =>
+        yield return StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "영아 심폐소생술 훈련 평가 단계",(result) =>
         {
             feedback = result;
-            Debug.Log($"📝 영유아 심폐소생술 훈련 요약:\n{feedback}");
+            Debug.Log($"📝 영아 심폐소생술 훈련 요약:\n{feedback}");
             // TODO: UI에 피드백 표시 로직 추가
         }));
     }
@@ -394,10 +472,10 @@ public class InfantCPRManager : MonoBehaviour
 
     private void GenerateFeedback()
     {
-        StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "영유아 심폐소생술 훈련 평가 단계", (result) =>
+        StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "영아 심폐소생술 훈련 평가 단계", (result) =>
         {
             feedback = result;
-            Debug.Log($"📝 영유아 심폐소생술 피드백:\n{feedback}");
+            Debug.Log($"📝 영아 심폐소생술 피드백:\n{feedback}");
             // TODO: UI 업데이트 등 필요 시
         }));
     }
@@ -465,7 +543,7 @@ public class InfantCPRManager : MonoBehaviour
             durationString = $"{seconds}초";
         }
 
-        GameManager.Instance.protocolName = "영유아 심폐소생술";
+        GameManager.Instance.protocolName = "영아 심폐소생술";
         GameManager.Instance.duration = durationString;
         GameManager.Instance.score = score;
         GameManager.Instance.feedback = feedback;
@@ -482,7 +560,7 @@ public class InfantCPRManager : MonoBehaviour
 
         TrainingResult newResult = new TrainingResult
         {
-            protocolName = "영유아 심폐소생술",
+            protocolName = "영아 심폐소생술",
             date = today,
             duration = durationString,
             score = score,

@@ -119,19 +119,10 @@ public class TractionSplintManager : MonoBehaviour
 
     private void HandleGyroData(float roll, float pitch)
     {
-        Debug.Log($"📐 자이로 수신 - Roll: {roll}, Pitch: {pitch}");
-
         switch (currentState)
         {
-            case TractionSplintState.ExposeAndSupportFracture:
-                if (!gyroPassed && Mathf.Abs(pitch) > 30f)
-                {
-                    Debug.Log("🌀 골절부위 노출 성공!");
-                    setGyroPassed();
-                }
-                break;
             default:
-                break;  
+                break;
         }
     }
 
@@ -167,42 +158,115 @@ public class TractionSplintManager : MonoBehaviour
             switch (currentState)
             {
                 case TractionSplintState.EnsureSceneSafety:
+                    if (!voicePassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(TractionSplintState.WearPPE);
                     break;
 
                 case TractionSplintState.WearPPE:
+                    wearPassed = true;
+                    if (!wearPassed || !voicePassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(TractionSplintState.ExposeAndSupportFracture);
+                    // 다음 단계에 필요한 마커 검증 시작
+                    markerPositionValidator.BeginValidation(1, 11, new Vector3(0.1f, 0.1f, 0f), 0.1f, 1f, setMarkerPostionFristPassed);
                     break;
 
                 case TractionSplintState.ExposeAndSupportFracture:
+                    if (!markerPositionFirstPassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(TractionSplintState.AssessDistalPulseMotorSensation);
+                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case TractionSplintState.AssessDistalPulseMotorSensation:
+                    if (!handTrackingPassed) {
+                        break;
+                    }
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(TractionSplintState.ApplyManualTractionAndDelegate);
+                    handValidator.BeginVerification(2, new Vector3(0.1f, 0.1f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case TractionSplintState.ApplyManualTractionAndDelegate:
+                    if (!handTrackingPassed) {
+                        voicePassed = false;
+                        break;
+                    }
+                    if (!voicePassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(TractionSplintState.MeasureSplintLength);
+                    markerDistanceValidator.BeginValidation(2, 4, 0.2f, 0.3f, setMarkerDistancePassed);
                     break;
 
                 case TractionSplintState.MeasureSplintLength:
+                    if (!markerDistancePassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(TractionSplintState.ApplyTractionSplint);
+                    markerPositionValidator.BeginValidation(1, 12, new Vector3(0.2f, 0.15f, 0f), 0.1f, 1f, setMarkerPostionFristPassed);
                     break;
 
                 case TractionSplintState.ApplyTractionSplint:
+                    if (!markerPositionFirstPassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(TractionSplintState.ApplyIschialStrap);
+                    markerPositionValidator.BeginValidation(1, 13, new Vector3(0.3f, 0.2f, 0f), 0.1f, 1f, setMarkerPostionFristPassed);
                     break;
 
                 case TractionSplintState.ApplyIschialStrap:
+                    if (!markerPositionFirstPassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(TractionSplintState.ApplyAnkleHitch);
+                    markerPositionValidator.BeginValidation(1, 14, new Vector3(-0.1f, -0.15f, 0f), 0.1f, 1f, setMarkerPostionFristPassed);
                     break;
 
                 case TractionSplintState.ApplyAnkleHitch:
+                    if (!markerPositionFirstPassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(TractionSplintState.ConnectAndTightenAnkleTraction);
+                    markerPositionValidator.BeginValidation(1, 15, new Vector3(-0.2f, -0.1f, 0f), 0.1f, 1f, setMarkerPostionFristPassed);
                     break;
 
                 case TractionSplintState.ConnectAndTightenAnkleTraction:
+                    if (!markerPositionFirstPassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(TractionSplintState.ApplySupportStraps);
+                    markerPositionValidator.BeginValidation(1, 16, new Vector3(0.05f, 0.05f, 0f), 0.1f, 1f, setMarkerPostionFristPassed);
+                    handValidator.BeginVerification(3, new Vector3(0f, 0.1f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case TractionSplintState.ApplySupportStraps:
+                    if (!markerPositionFirstPassed || !handTrackingPassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(TractionSplintState.ReassessDistalPMS);
+                    handValidator.BeginVerification(4, new Vector3(0f, -0.1f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case TractionSplintState.ReassessDistalPMS:
+                    if (!handTrackingPassed) {
+                        break;
+                    }
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(TractionSplintState.StateLogRollTransferToSpineBoard);
                     break;
 
                 case TractionSplintState.StateLogRollTransferToSpineBoard:
+                    if (!voicePassed) break;
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(TractionSplintState.RecordOnMedicalChart);
                     break;
             }
 
@@ -210,12 +274,10 @@ public class TractionSplintManager : MonoBehaviour
         }
 
         uiManager.ShowCompleteMessage();
-        // (1) 피드백 먼저 생성한다
         yield return StartCoroutine(GenerateTrainingSummary());
-
         SaveResultToGameManager();
         StoreHistory();
-        SceneManager.LoadScene("FeedbackScene"); // 결과 씬 이름으로 이동
+        SceneManager.LoadScene("FeedbackScene");
     }
 
     private IEnumerator GenerateTrainingSummary()
