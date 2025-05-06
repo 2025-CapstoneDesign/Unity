@@ -136,7 +136,7 @@ public class TestAEDManager : MonoBehaviour
             case CPRState.ProvideRescueBreaths:
                 if (type == "유량 센서" && !flowPassed)
                 {
-                    if(value < 1000){
+                    if(value < BreathValidator.requiredFlow){
                         AddError("인공호흡 호흡량 약함");
                     }
                     bool success = breathValidator.TryAddBreath(value);
@@ -152,11 +152,10 @@ public class TestAEDManager : MonoBehaviour
             case CPRState.ContinueCPR:
                 if (fiveCycleCount % 2 == 0 && type == "압력 센서" && !pressurePassed)
                 {
-                    
-                    bool complete = cprValidator.TryAddCompression(value);
-                   if(value < 1000){
+                    if(value < CPRValidator.minPressure){
                         AddError("심폐소생술 흉부 압박 약함");
                     }
+                    bool complete = cprValidator.TryAddCompression(value);
                     if (complete)
                     {
                        
@@ -171,7 +170,9 @@ public class TestAEDManager : MonoBehaviour
                 {
               
                     bool success = breathValidator.TryAddBreath(value);
-
+                    if(value < BreathValidator.requiredFlow){
+                        AddError("인공호흡 호흡량 약함");
+                    }
                     if (success)
                     {
                         Debug.Log("🌬 인공호흡 2회 성공!");
@@ -185,6 +186,9 @@ public class TestAEDManager : MonoBehaviour
             case CPRState.ResumeChestCompressions:
                 if (type == "압력 센서" && !pressurePassed)
                 {
+                    if(value < CPRValidator.minPressure){
+                        AddError("심폐소생술 흉부 압박 약함");
+                    }
                     bool complete = cprValidator.TryAddCompression(value);
                   
                     if (complete)
