@@ -111,6 +111,8 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
 
     void Update()
     {
+        if (uiManager == null || timerManager == null) return;
+
         uiManager.UpdateTimerUI(timerManager, currentState);
         if (Input.GetKeyDown(KeyCode.S))
         {
@@ -214,6 +216,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     setState(TraumaPatientAssessmentState.CheckAirwayForObstruction);
                     handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
+
 
                 case TraumaPatientAssessmentState.CheckAirwayForObstruction:
 
@@ -418,7 +421,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.RecordOnMedicalChart);
-                    break;
+                    break; 
             }
 
             yield return new WaitForSeconds(1f); // 반응성을 위해 더 짧은 주기로 체크
@@ -635,8 +638,8 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
             durationString = $"{seconds}초";
         }
 
-
-        GameManager.Instance.protocolName = "자동제세동기 사용";
+        GameManager.Instance.sceneName = "TraumaPatientAssessment";
+        GameManager.Instance.protocolName = "외상환자 평가";
         GameManager.Instance.duration = durationString;
         GameManager.Instance.score = score;
         GameManager.Instance.feedback = feedback;
@@ -653,7 +656,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
 
         TrainingResult newResult = new TrainingResult
         {
-            protocolName = "자동제세동기 사용",
+            protocolName = "외상환자 평가",
             date = today,
             duration = durationString,
             score = score,
