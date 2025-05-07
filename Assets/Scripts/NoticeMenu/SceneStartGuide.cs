@@ -1,18 +1,28 @@
 using System.Collections;
 using UnityEngine;
-using TMPro; // TMP 전용 네임스페이스 추가!
+using TMPro;
 
 public class SceneStartGuide : MonoBehaviour
 {
     [Header("UI Elements")]
-    public CanvasGroup guideMessageGroup; // 간단한 메시지용 패널
-    public TextMeshProUGUI guideText;     // 메시지를 보여줄 TMP 텍스트
-    public GameObject noticeCanvas;       // 본격 안내 UI
+    public CanvasGroup guideMessageGroup;
+    public TextMeshProUGUI guideText;
+    public GameObject noticeCanvas;
 
     [Header("Settings")]
-    public string messageText = "훈련을 시작합니다."; // 인스펙터에서 입력할 메시지
     public float fadeDuration = 1f;
     public float messageDisplayTime = 2f;
+
+    [Header("Audio")]
+    public AudioSource audioSource;
+
+    // 외부에서 설정될 정보
+    private SceneStartInfo currentInfo;
+
+    public void SetSceneInfo(SceneStartInfo info)
+    {
+        currentInfo = info;
+    }
 
     void Start()
     {
@@ -21,23 +31,24 @@ public class SceneStartGuide : MonoBehaviour
 
     IEnumerator ShowGuideThenNotice()
     {
-        // 초기 설정
-        guideText.text = messageText;
+        // 기본 메시지
+        guideText.text = currentInfo?.guideMessage ?? "훈련을 시작합니다.";
+
+        if (audioSource != null && currentInfo?.guideAudio != null)
+        {
+            audioSource.clip = currentInfo.guideAudio;
+            audioSource.Play();
+        }
+
         guideMessageGroup.alpha = 0f;
         guideMessageGroup.gameObject.SetActive(true);
         noticeCanvas.SetActive(false);
 
-        // 1. 페이드 인
         yield return StartCoroutine(FadeCanvasGroup(guideMessageGroup, 0f, 1f));
-
-        // 2. 유지 시간
         yield return new WaitForSeconds(messageDisplayTime);
-
-        // 3. 페이드 아웃
         yield return StartCoroutine(FadeCanvasGroup(guideMessageGroup, 1f, 0f));
-        guideMessageGroup.gameObject.SetActive(false);
 
-        // 4. 본격 UI 켜기
+        guideMessageGroup.gameObject.SetActive(false);
         noticeCanvas.SetActive(true);
     }
 
