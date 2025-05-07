@@ -4,7 +4,7 @@ public class AEDSceneStart : MonoBehaviour
 {
     public SceneStartGuide sceneStartGuide;
 
-    void Awake()
+    void Start()
     {
         var info = new SceneStartInfo("자동제세동기(AED) 훈련을 시작합니다.", null);
         sceneStartGuide.SetSceneInfo(info);
@@ -19,5 +19,6 @@ public class AEDSceneStart : MonoBehaviour
             AudioManager.Instance.PlayVoice("SceneStart/Voice_Stage1");
         }
     }
+
 
 }

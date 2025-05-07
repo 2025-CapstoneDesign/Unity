@@ -1893,8 +1893,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1372244946}
-  - component: {fileID: 1372244947}
   - component: {fileID: 1372244948}
+  - component: {fileID: 1372244949}
   m_Layer: 0
   m_Name: AEDManager
   m_TagString: Untagged
@@ -1917,23 +1917,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1372244947
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1372244945}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d855f9d8881654439b75a44cf3c477a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  timerManager: {fileID: 529229144}
-  uiManager: {fileID: 1687033912}
-  feedbackGenerator: {fileID: 2065896491}
-  handValidator: {fileID: 527435240}
-  markerPositionValidator: {fileID: 1471164842}
 --- !u!114 &1372244948
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1946,6 +1929,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4172b9a3ba2c8b84ab3c83e3ebc654b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1372244949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1372244945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe7baa97794928a419362b81983bcd43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  timerManager: {fileID: 529229144}
+  uiManager: {fileID: 1687033912}
+  feedbackGenerator: {fileID: 2065896491}
+  handValidator: {fileID: 527435240}
+  markerPositionValidator: {fileID: 1471164842}
 --- !u!1 &1412083693
 GameObject:
   m_ObjectHideFlags: 0
