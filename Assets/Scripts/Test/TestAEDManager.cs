@@ -29,6 +29,7 @@ public class TestAEDManager : MonoBehaviour
     private bool gyroPassed = false;
     private bool flowPassed = false;
     private bool pressurePassed = false;
+    private bool hasPlayedVoice = false;
 
     private int fiveCycleCount = 0;
 
@@ -249,7 +250,6 @@ private void OnServerResultReceivedHandler(int score)
 
     private IEnumerator Procedure()
     {
-        
         while (currentState != CPRState.Completed)
         {
             Debug.Log($"🧭 현재 단계: {currentState}");
@@ -259,89 +259,132 @@ private void OnServerResultReceivedHandler(int score)
             switch (currentState)
             {
                 case CPRState.CheckSafety:
-                    
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!voicePassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
+                    hasPlayedVoice = false;
                     setState(CPRState.WearPPE);
                     break;
 
                 case CPRState.WearPPE:
-                   
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     wearPassed = true;
                     if (!wearPassed || !voicePassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
+                    hasPlayedVoice = false;
                     setState(CPRState.CheckConsciousness);
                     break;
 
                 case CPRState.CheckConsciousness:
-                   
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!gyroPassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
+                    hasPlayedVoice = false;
                     setState(CPRState.Call119AndRequestAED);
                     break;
 
                 case CPRState.Call119AndRequestAED:
-                    // 이전 단계 로직에 통과 시 사람이 나오게 호출해야해요! (추후에)
-                    if (!voicePassed) // 1. 음성인식 안되면 패스
+                    if (!hasPlayedVoice)
                     {
-                        break;
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
                     }
+                    if (!voicePassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
+                    hasPlayedVoice = false;
                     setState(CPRState.CheckBreathingAndPulse);
-                    // 2. 다음단계에 필요한 손 인식 코드입니다.
                     handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case CPRState.CheckBreathingAndPulse:
-                    // 1. 손 인식 먼저 기다리기
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!handTrackingPassed)
                     {
-                        voicePassed = false; // 이전 음성 평가 초기화
+                        voicePassed = false;
                         Debug.Log("✋ 손 위치 인식 대기 중...");
                         break;
                     }
-
-                    // 2. 손 인식 통과 후 음성 평가 기다림
-                   
-                  
                     if (!voicePassed) break;
-                    uiManager.ShowCheckIconPass(this);
 
+                    uiManager.ShowCheckIconPass(this);
                     initPlag();
+                    hasPlayedVoice = false;
                     setState(CPRState.ChestCompressions);
-                    break; 
+                    break;
 
                 case CPRState.ChestCompressions:
-                 
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!pressurePassed) break;
+
                     initPlag();
                     uiManager.ShowCheckIconPass(this);
+                    hasPlayedVoice = false;
                     setState(CPRState.OpenAirway);
                     break;
 
                 case CPRState.OpenAirway:
-                   
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!gyroPassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     uiManager.ShowBreathUI(false);
+                    hasPlayedVoice = false;
                     setState(CPRState.ProvideRescueBreaths);
                     break;
 
                 case CPRState.ProvideRescueBreaths:
-                    
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!flowPassed) break;
+
                     initPlag();
                     uiManager.ShowCheckIconPass(this);
+                    hasPlayedVoice = false;
                     setState(CPRState.ContinueCPR);
                     break;
 
                 case CPRState.ContinueCPR:
-                   
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (fiveCycleCount < 10)
                     {
                         if (fiveCycleCount % 2 == 0 && pressurePassed)
@@ -356,74 +399,112 @@ private void OnServerResultReceivedHandler(int score)
                         }
                         break;
                     }
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
+                    hasPlayedVoice = false;
                     setState(CPRState.DirectAssistants);
                     break;
 
                 case CPRState.DirectAssistants:
-                    uiManager.ShowCountText(false);
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!voicePassed) break;
-                    initPlag();
+
                     uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    hasPlayedVoice = false;
                     setState(CPRState.TurnOnAED);
                     handValidator.BeginVerification(10, new Vector3(0.05f, 0f, 0.05f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
                 case CPRState.TurnOnAED:
-                    uiManager.ShowCountText(false);
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!handTrackingPassed) break;
+
                     initPlag();
                     uiManager.ShowCheckIconPass(this);
+                    hasPlayedVoice = false;
                     setState(CPRState.AttachPads);
                     markerPositionValidator.BeginValidation(1, 11, new Vector3(0.1f, 0.1f, 0f), 0.1f, 1f, setMarkerPostionFristPassed);
                     markerPositionValidator.BeginValidation(1, 12, new Vector3(-0.1f, -0.1f, 0f), 0.1f, 1f, setMarkerPositionSecondPassed);
                     break;
 
                 case CPRState.AttachPads:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!markerPositionFirstPassed || !markerPositionSecondPassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
+                    hasPlayedVoice = false;
                     setState(CPRState.ClearArea);
                     break;
 
                 case CPRState.ClearArea:
-                    
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!voicePassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
+                    hasPlayedVoice = false;
                     setState(CPRState.DeliverShock);
                     handValidator.BeginVerification(10, new Vector3(0.05f, 0f, 0.05f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
                 case CPRState.DeliverShock:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!handTrackingPassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
+                    hasPlayedVoice = false;
                     setState(CPRState.ResumeChestCompressions);
                     break;
 
                 case CPRState.ResumeChestCompressions:
-                    
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!pressurePassed) break;
-                    uiManager.ShowCheckIconPass(this);  
+
+                    uiManager.ShowCheckIconPass(this);
                     initPlag();
+                    hasPlayedVoice = false;
                     setState(CPRState.Completed);
                     break;
             }
 
-            yield return new WaitForSeconds(2f); // 반응성을 위해 더 짧은 주기로 체크
-        } 
-        
-        uiManager.ShowCompleteMessage();
-        // (1) 피드백 먼저 생성한다
-        yield return StartCoroutine(GenerateTrainingSummary());
+            yield return new WaitForSeconds(2f);
+        }
 
+        uiManager.ShowCompleteMessage();
+        yield return StartCoroutine(GenerateTrainingSummary());
         SaveResultToGameManager();
         StoreHistory();
-        SceneManager.LoadScene("FeedbackScene"); // 결과 씬 이름으로 이동
+        SceneManager.LoadScene("FeedbackScene");
     }
-    
+
     private IEnumerator GenerateTrainingSummary()
     {
         yield return StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "자동제세동기(AED) 사용법 단계 훈련", (result) => {
@@ -434,36 +515,34 @@ private void OnServerResultReceivedHandler(int score)
     }
 
     private void setState(CPRState nextState)
-    {
-        // 이전 단계의 시간 초과 여부 확인 및 점수 차감
+    { 
+
         if (stageTimeLimit.ContainsKey(currentState))
+    {
+        float elapsedTime = Time.time - currentStageStartTime;
+        float timeLimit = stageTimeLimit[currentState];
+        
+        if (elapsedTime > timeLimit)
         {
-            float elapsedTime = Time.time - currentStageStartTime;
-            float timeLimit = stageTimeLimit[currentState];
-            
-            if (elapsedTime > timeLimit)
+            int penaltySeconds = Mathf.FloorToInt(elapsedTime - timeLimit);
+            if (penaltySeconds > 0)
             {
-                // 초과한 초 단위로 점수 차감 (1초당 1점)
-                int penaltySeconds = Mathf.FloorToInt(elapsedTime - timeLimit);
-                if (penaltySeconds > 0)
-                {
-                    int penalty = penaltySeconds * TIME_PENALTY_PER_SECOND;
-                    
-                    // 에러 기록
-                    string errorKey = $"{currentState} 단계 시간 초과";
-                    AddError(errorKey, penalty);
-                    
-                    Debug.Log($"⏰ 시간 초과 패널티: -{penalty}점 (현재 점수: {score})");
-                }
+                int penalty = penaltySeconds * TIME_PENALTY_PER_SECOND;
+                string errorKey = $"{currentState} 단계 시간 초과";
+                AddError(errorKey, penalty);
+                Debug.Log($"⏰ 시간 초과 패널티: -{penalty}점 (현재 점수: {score})");
             }
         }
-        
-        // 새 단계로 상태 변경 및 시작 시간 기록
-        currentStageStartTime = Time.time;
-        currentState = nextState;
-        VoiceSender.Instance.CurrentStageTag = nextState.ToVoiceTag();
-        Debug.Log($"➡️ 상태 전환: {currentState}");
     }
+
+    currentStageStartTime = Time.time;
+    currentState = nextState;
+
+    // ✅ 단계별 오디오 재생 추가
+ 
+    Debug.Log($"➡️ 상태 전환: {currentState}");
+}
+
 
     
 
@@ -651,6 +730,22 @@ private void OnServerResultReceivedHandler(int score)
 
     GetComponent<ResultHistoryManager>().SaveNewResult(newResult);
 }
+
+    private void PlayVoiceForStage(CPRState state)
+    {
+        int stageNumber = (int)state;
+        string path = $"SceneStage/AED{stageNumber+1}";
+
+        if (AudioManager.Instance != null)
+        {
+            Debug.Log($"🔊 AED 단계 {stageNumber} 오디오 재생: {path}");
+            AudioManager.Instance.PlayVoice(path);
+        }
+        else
+        {
+            Debug.LogWarning("❗ AudioManager.Instance is NULL! 음성을 재생할 수 없습니다.");
+        }
+    }
 
 
 

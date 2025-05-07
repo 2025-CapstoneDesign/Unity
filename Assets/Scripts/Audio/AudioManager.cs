@@ -5,7 +5,7 @@ public class AudioManager : MonoBehaviour
     public static AudioManager Instance;
 
     [Header("????")]
-    public string audioFolderPath = "Audio";
+    public string audioFolderPath = "Audip";
     public AudioSource voiceAudioSource;
 
     void Awake()
@@ -40,6 +40,12 @@ public class AudioManager : MonoBehaviour
         voiceAudioSource.clip = clip;
         voiceAudioSource.Play();
     }
+
+    public bool IsVoicePlaying()
+    {
+        return voiceAudioSource != null && voiceAudioSource.isPlaying;
+    }
+
 
 
 }
