@@ -1,285 +1,758 @@
+// Refactored TestAEDManager with full UIManager integration
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
+using System;
+using UnityEngine.SocialPlatforms.Impl;
+using UnityEngine.SceneManagement;
 
 public class AEDManager : MonoBehaviour
 {
     [SerializeField] private TimerManager timerManager;
-
-    [Header("UI")]
-    [SerializeField] private TextMeshProUGUI aedMessageText;       // 단계 안내
-    [SerializeField] private Slider progressBar;                   // 진행률 바
-    [SerializeField] private Image fillMaskImage;
-    [SerializeField] private TextMeshProUGUI timerText;
-    [SerializeField] private CountTextDisplay countTextDisplay;
-
-    [SerializeField] private Image checkIcon; // 체크 아이콘 이미지
+    [SerializeField] private AEDUIManager uiManager;
+    [SerializeField] private GPTFeedbackGenerator feedbackGenerator;
 
 
-    // 테스트: 코드에서 직접 설정
-
-    private Coroutine iconColorResetCoroutine;
-
-    private Color passColor = new Color(0f, 1f, 0f, 1f); // 초록
-    private Color failColor = new Color(1f, 0f, 0f, 1f); // 빨강
-    private Color idleColor = new Color(0.5f, 0.5f, 0.5f, 1f); // 회색
-
-    private bool timeOverNotified = false;
-    private bool isFlashing = false;
-    private float flashTimer = 0f;
-    private float flashInterval = 0.5f; // 깜빡이는 속도 (초)
     private CPRState currentState;
     private bool externalInput = false;
-    private bool waitingForInput = false;
     private int totalSteps;
+    private bool wearPassed = false;
+    private bool voicePassed = false;
+    private bool sensorPassed = false;
+    private bool handTrackingPassed = false;
+    private bool eyeTrackingPassed = false;
+    private bool markerPositionFirstPassed = false;
+    private bool markerPositionSecondPassed = false;
+    private bool markerDistancePassed = false;
+    private bool gyroPassed = false;
+    private bool flowPassed = false;
+    private bool pressurePassed = false;
+    private bool hasPlayedVoice = false;
+
+    private int fiveCycleCount = 0;
+
+    public HandTrackingValidate handValidator;
+    public MarkerPositionValidate markerPositionValidator;
+
+    private CPRValidator cprValidator;
+    private BreathValidator breathValidator;
+
+    private int score = 100;
+    private Dictionary<string, int> checkScore = new Dictionary<string, int>();
+    String feedback = "wait";
+
+    // 각 단계별 제한 시간 (초)
+    private Dictionary<CPRState, float> stageTimeLimit = new Dictionary<CPRState, float>();
+
+    // 현재 단계 시작 시간
+    private float currentStageStartTime = 0f;
+
+    // 점수 차감 관련 설정
+    private const int TIME_PENALTY_PER_SECOND = 1;  // 초과 시간당 차감할 점수
 
     void Start()
     {
+        cprValidator = new CPRValidator(uiManager);
+        breathValidator = new BreathValidator(uiManager);
         currentState = CPRState.CheckSafety;
-        totalSteps = System.Enum.GetValues(typeof(CPRState)).Length - 1; // Completed 제외
+        totalSteps = System.Enum.GetValues(typeof(CPRState)).Length - 1;
+        setState(CPRState.CheckSafety);
+        ResetValidationFlags();
+        StartCoroutine(InitSequence());
+        score = 100;
+        uiManager.InitializeUI();
 
-        // 시작 시 재시도 메시지 숨기기
+        // 각 단계별 제한 시간 설정 (초 단위)
+        InitializeTimeLimits();
+        currentStageStartTime = Time.time;
 
-
-        StartCoroutine(StartWithDelay());
     }
+
+    private void InitializeTimeLimits()
+    {
+        // 각 단계별 제한시간 설정 (초 단위)
+        stageTimeLimit[CPRState.CheckSafety] = 10f;
+        stageTimeLimit[CPRState.WearPPE] = 15f;
+        stageTimeLimit[CPRState.CheckConsciousness] = 10f;
+        stageTimeLimit[CPRState.Call119AndRequestAED] = 15f;
+        stageTimeLimit[CPRState.CheckBreathingAndPulse] = 10f;
+        stageTimeLimit[CPRState.ChestCompressions] = 20f;
+        stageTimeLimit[CPRState.OpenAirway] = 10f;
+        stageTimeLimit[CPRState.ProvideRescueBreaths] = 10f;
+        stageTimeLimit[CPRState.ContinueCPR] = 120f; // 5사이클 수행 시간
+        stageTimeLimit[CPRState.DirectAssistants] = 10f;
+        stageTimeLimit[CPRState.TurnOnAED] = 15f;
+        stageTimeLimit[CPRState.AttachPads] = 20f;
+        stageTimeLimit[CPRState.ClearArea] = 10f;
+        stageTimeLimit[CPRState.DeliverShock] = 10f;
+        stageTimeLimit[CPRState.ResumeChestCompressions] = 20f;
+    }
+
+    private IEnumerator InitSequence()
+    {
+        yield return new WaitUntil(() => TrainingEvaluator.Instance != null);
+        TrainingEvaluator.Instance.OnServerResultReceived -= OnServerResultReceivedHandler;
+        TrainingEvaluator.Instance.OnServerResultReceived += OnServerResultReceivedHandler;
+
+        yield return new WaitForSeconds(5f);
+        timerManager.StartTimer(300f);
+        StartCoroutine(Procedure());
+    }
+
 
     void Update()
     {
-        if (timerManager.IsTimeUp() && currentState != CPRState.Completed)
+        uiManager.UpdateTimerUI(timerManager, currentState);
+        if (Input.GetKeyDown(KeyCode.S))
         {
-            float overtime = timerManager.GetOverTime();
-
-            // ✅ FillMask 색상을 빨간색으로 바꿈 (한 번만)
-            if (!timeOverNotified && fillMaskImage != null)
-            {
-                fillMaskImage.color = Color.red;
-                timeOverNotified = true;
-            }
-
-            // ✅ 초과 시간 표시
-            if (timerText != null)
-            {
-                int minutes = Mathf.FloorToInt(overtime / 60f);
-                int seconds = Mathf.FloorToInt(overtime % 60f);
-                timerText.text = $"+ {minutes}:{seconds:00}";
-            }
-
-            // ✅ 초과 시간이 10초 넘으면 FillMask 깜빡임
-            if (overtime >= 10f && fillMaskImage != null)
-            {
-                FlashFillMask();
-            }
-        }
-    }
-    private void FlashFillMask()
-    {
-        flashTimer += Time.deltaTime;
-
-        if (flashTimer >= flashInterval)
-        {
-            // 색이 빨강 ↔ 투명 반복
-            if (fillMaskImage.color.a > 0.9f)
-            {
-                fillMaskImage.color = new Color(1f, 0f, 0f, 0f); // 완전 투명
-            }
-            else
-            {
-                fillMaskImage.color = new Color(1f, 0f, 0f, 1f); // 불투명 빨강
-            }
-
-            flashTimer = 0f;
+            Debug.Log("💾 저장 테스트 시작!");
+            StoreHistory(); // 👈 저장 함수 바로 호출
         }
     }
 
-    private IEnumerator StartWithDelay()
-    {
-        yield return new WaitForSeconds(2f);
-        timerManager.StartTimer(300f);
-        StartCoroutine(CPRProcedure());
-    }
 
-    private IEnumerator CPRProcedure()
+    private void HandleSensorData(string type, float value)
     {
-        while (currentState != CPRState.Completed)
+        switch (currentState)
         {
-            UpdateStepUI();
-            // ✅ 각 단계에 따라 UI 업데이트
-            switch (currentState)
-            {
-                case CPRState.CheckSafety:
+            case CPRState.ChestCompressions:
+                if (type == "압력 센서" && !pressurePassed)
+                {
+                    if (value < CPRValidator.minPressure)
+                    {
+                        AddError("심폐소생술 흉부 압박 약함");
+                    }
+                    bool complete = cprValidator.TryAddCompression(value);
+                    Debug.Log($"압력 센서 : {cprValidator.compressionTimestamps.Count} 횟수 입니다.");
+                    if (complete)
+                    {
+                        Debug.Log("🫀 CPR 30회 성공!");
+                        setPressurePassed();
+                        cprValidator.Reset();
+                    }
+                }
+                break;
 
-                    break;
+            case CPRState.ProvideRescueBreaths:
+                if (type == "유량 센서" && !flowPassed)
+                {
+                    if (value < BreathValidator.requiredFlow)
+                    {
+                        AddError("인공호흡 호흡량 약함");
+                    }
+                    bool success = breathValidator.TryAddBreath(value);
+                    if (success)
+                    {
+                        Debug.Log("🌬 인공호흡 2회 성공!");
+                        setFlowPassed();
+                        breathValidator.Reset();
+                    }
+                }
+                break;
 
-                case CPRState.WearPPE:
-                    // 예: 장갑 착용 애니메이션 등
-                    break;
+            case CPRState.ContinueCPR:
+                if (fiveCycleCount % 2 == 0 && type == "압력 센서" && !pressurePassed)
+                {
+                    if (value < CPRValidator.minPressure)
+                    {
+                        AddError("심폐소생술 흉부 압박 약함");
+                    }
+                    bool complete = cprValidator.TryAddCompression(value);
+                    if (complete)
+                    {
 
-                case CPRState.CheckConsciousness:
-                    // 예: 환자에게 말걸기 애니메이션
-                    break;
+                        Debug.Log("🫀 CPR 30회 성공!");
+                        setPressurePassed();
+                        cprValidator.Reset();
+                        breathValidator.Reset();
+                    }
+                }
 
-                case CPRState.Call119AndRequestAED:
-                    // 예: 전화기 오브젝트 활성화 등
-                    break;
+                if (fiveCycleCount % 2 == 1 && type == "유량 센서" && !flowPassed)
+                {
 
-                case CPRState.CheckBreathingAndPulse:
-                    // 예: 손 위치 안내 표시
-                    break;
+                    bool success = breathValidator.TryAddBreath(value);
+                    if (value < BreathValidator.requiredFlow)
+                    {
+                        AddError("인공호흡 호흡량 약함");
+                    }
+                    if (success)
+                    {
+                        Debug.Log("🌬 인공호흡 2회 성공!");
+                        setFlowPassed();
+                        cprValidator.Reset();
+                        breathValidator.Reset();
+                    }
+                }
+                break;
 
-                case CPRState.ChestCompressions:
-                    // ✅ 강도 UI를 활성화하거나 압박 깊이 측정 시작
+            case CPRState.ResumeChestCompressions:
+                if (type == "압력 센서" && !pressurePassed)
+                {
+                    if (value < CPRValidator.minPressure)
+                    {
+                        AddError("심폐소생술 흉부 압박 약함");
+                    }
+                    bool complete = cprValidator.TryAddCompression(value);
 
-                    countTextDisplay.ShowCompressionCount(0);
-                    break;
-
-                case CPRState.OpenAirway:
-                    // 예: 머리 젖히는 동작 안내
-                    break;
-
-                case CPRState.ProvideRescueBreaths:
-                    // 예: 포켓마스크 애니메이션, 숨 불어넣기
-                    break;
-
-                case CPRState.ContinueCPR:
-
-                    break;
-
-                case CPRState.DirectAssistants:
-                    // 예: 손짓 애니메이션
-                    break;
-
-                case CPRState.TurnOnAED:
-                    // 예: AED 오브젝트 버튼 활성화
-                    break;
-
-                case CPRState.AttachPads:
-                    // 예: 패드 위치 가이드 표시
-                    break;
-
-                case CPRState.ClearArea:
-                    // 예: 주위 사람들 물러서게 하는 알림
-                    break;
-
-                case CPRState.DeliverShock:
-                    // 예: 버튼 누르면 이펙트 발생
-                    break;
-
-                case CPRState.ResumeChestCompressions:
-                    // ✅ 다시 압박 유도 시작
-                    break;
-
-                case CPRState.RecordDocuments:
-                    // 예: 기록지 작성 인터랙션
-                    break;
-            }
-
-            yield return StartCoroutine(WaitForInput());
-        }
-
-        aedMessageText.text = "🎉 훈련이 완료되었습니다!";
-        UpdateProgressBar();
-    }
-
-
-    private void UpdateStepUI()
-    {
-        aedMessageText.text = AEDMessageManager.GetMessage(currentState);
-        aedMessageText.color = Color.white;
-
-        countTextDisplay.Hide();
-
-        if (checkIcon != null)
-
-
-            UpdateProgressBar();
-    }
-
-
-    private void UpdateProgressBar()
-    {
-        float ratio = (float)(int)currentState / totalSteps;
-        if (progressBar != null)
-            progressBar.value = ratio;
-    }
-
-    private IEnumerator ResetCheckIconColorAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-
-        if (checkIcon != null)
-            checkIcon.color = idleColor;
-    }
-
-    private IEnumerator WaitForInput()
-    {
-        externalInput = false;
-        waitingForInput = true;
-
-        while (!externalInput)
-        {
-            yield return null;
+                    if (complete)
+                    {
+                        Debug.Log("🫀 재압박 30회 성공!");
+                        setPressurePassed();
+                        cprValidator.Reset();
+                    }
+                }
+                break;
         }
     }
 
-    public void ReceiveInputResult(bool isPassed)
+    private void HandleGyroData(float roll, float pitch)
     {
-        if (!waitingForInput || externalInput) return;
+        Debug.Log($"📐 자이로 수신 - Roll: {roll}, Pitch: {pitch}");
 
-        if (checkIcon != null)
+        switch (currentState)
         {
-            // 색상 설정
-            checkIcon.color = isPassed ? passColor : failColor;
+            case CPRState.CheckConsciousness:
+                if (!gyroPassed && Mathf.Abs(pitch) > 50f)
+                {
+                    Debug.Log("🌀 생존 확인 성공!");
+                    setGyroPassed();
+                }
+                break;
 
-            // 기존 코루틴 중지
-            if (iconColorResetCoroutine != null)
-                StopCoroutine(iconColorResetCoroutine);
-
-            // 코루틴 실행: 색 유지 → 복귀 → 다음 단계 처리까지
-            iconColorResetCoroutine = StartCoroutine(HandleCheckIconFeedback(isPassed, 3f));
+            case CPRState.OpenAirway:
+                if (!gyroPassed && Mathf.Abs(pitch) > 30f)
+                {
+                    Debug.Log("🌀 고개 기울이기 성공!");
+                    setGyroPassed();
+                }
+                break;
         }
-
-        externalInput = true;
-        waitingForInput = false;
     }
 
-    private IEnumerator HandleCheckIconFeedback(bool isPassed, float delay)
+    private void OnServerResultReceivedHandler(int score)
     {
-        yield return new WaitForSeconds(delay); // ✅ 색 보여주는 시간
-
-        if (checkIcon != null)
-            checkIcon.color = idleColor;
-
-        if (isPassed)
+        if (score >= 2)
         {
-            currentState++;
-            UpdateStepUI();
+            voicePassed = true;
+            Debug.Log("🟢 음성 평가 : 통과");
+        }
+        else if (score == 1)
+        {
+            // 단계 + 음성 오답 형태로 기록
+            AddError($"{AdapterErrorType.GetLabel(currentState)} 단계 음성 오답", 1);
+            Debug.Log("🟡 음성 평가 : 오답");
         }
         else
         {
-            // 실패면 상태 유지, 메시지만 갱신하고 다시 시도
-            UpdateStepUI();
+            Debug.Log("🔴 음성 평가 : 헛소리");
+
         }
     }
 
 
-
-
-    //외부에서 호출 시 
-    public void UpdateCompressionCount(int count)
+    private IEnumerator Procedure()
     {
-        if (currentState == CPRState.ChestCompressions || currentState == CPRState.ResumeChestCompressions)
+        while (currentState != CPRState.Completed)
         {
-            countTextDisplay.ShowCompressionCount(count);
+            Debug.Log($"🧭 현재 단계: {currentState}");
+            uiManager.SetMessage(currentState);
+            uiManager.SetProgress(currentState, totalSteps);
+
+            switch (currentState)
+            {
+                case CPRState.CheckSafety:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    hasPlayedVoice = false;
+                    setState(CPRState.WearPPE);
+                    break;
+
+                case CPRState.WearPPE:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    wearPassed = true;
+                    if (!wearPassed || !voicePassed) break;
+
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    hasPlayedVoice = false;
+                    setState(CPRState.CheckConsciousness);
+                    break;
+
+                case CPRState.CheckConsciousness:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!gyroPassed) break;
+
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    hasPlayedVoice = false;
+                    setState(CPRState.Call119AndRequestAED);
+                    break;
+
+                case CPRState.Call119AndRequestAED:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    hasPlayedVoice = false;
+                    setState(CPRState.CheckBreathingAndPulse);
+                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
+                    break;
+
+                case CPRState.CheckBreathingAndPulse:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!handTrackingPassed)
+                    {
+                        voicePassed = false;
+                        Debug.Log("✋ 손 위치 인식 대기 중...");
+                        break;
+                    }
+                    if (!voicePassed) break;
+
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    hasPlayedVoice = false;
+                    setState(CPRState.ChestCompressions);
+                    break;
+
+                case CPRState.ChestCompressions:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!pressurePassed) break;
+
+                    initPlag();
+                    uiManager.ShowCheckIconPass(this);
+                    hasPlayedVoice = false;
+                    setState(CPRState.OpenAirway);
+                    break;
+
+                case CPRState.OpenAirway:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!gyroPassed) break;
+
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    uiManager.ShowBreathUI(false);
+                    hasPlayedVoice = false;
+                    setState(CPRState.ProvideRescueBreaths);
+                    break;
+
+                case CPRState.ProvideRescueBreaths:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!flowPassed) break;
+
+                    initPlag();
+                    uiManager.ShowCheckIconPass(this);
+                    hasPlayedVoice = false;
+                    setState(CPRState.ContinueCPR);
+                    break;
+
+                case CPRState.ContinueCPR:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (fiveCycleCount < 10)
+                    {
+                        if (fiveCycleCount % 2 == 0 && pressurePassed)
+                        {
+                            fiveCycleCount++;
+                            flowPassed = false;
+                        }
+                        else if (fiveCycleCount % 2 == 1 && flowPassed)
+                        {
+                            fiveCycleCount++;
+                            pressurePassed = false;
+                        }
+                        break;
+                    }
+
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    hasPlayedVoice = false;
+                    setState(CPRState.DirectAssistants);
+                    break;
+
+                case CPRState.DirectAssistants:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    hasPlayedVoice = false;
+                    setState(CPRState.TurnOnAED);
+                    handValidator.BeginVerification(10, new Vector3(0.05f, 0f, 0.05f), 0.2f, 1f, setHandTrackingPassed);
+                    break;
+
+                case CPRState.TurnOnAED:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!handTrackingPassed) break;
+
+                    initPlag();
+                    uiManager.ShowCheckIconPass(this);
+                    hasPlayedVoice = false;
+                    setState(CPRState.AttachPads);
+                    markerPositionValidator.BeginValidation(1, 11, new Vector3(0.1f, 0.1f, 0f), 0.1f, 1f, setMarkerPostionFristPassed);
+                    markerPositionValidator.BeginValidation(1, 12, new Vector3(-0.1f, -0.1f, 0f), 0.1f, 1f, setMarkerPositionSecondPassed);
+                    break;
+
+                case CPRState.AttachPads:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!markerPositionFirstPassed || !markerPositionSecondPassed) break;
+
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    hasPlayedVoice = false;
+                    setState(CPRState.ClearArea);
+                    break;
+
+                case CPRState.ClearArea:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    hasPlayedVoice = false;
+                    setState(CPRState.DeliverShock);
+                    handValidator.BeginVerification(10, new Vector3(0.05f, 0f, 0.05f), 0.2f, 1f, setHandTrackingPassed);
+                    break;
+
+                case CPRState.DeliverShock:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!handTrackingPassed) break;
+
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    hasPlayedVoice = false;
+                    setState(CPRState.ResumeChestCompressions);
+                    break;
+
+                case CPRState.ResumeChestCompressions:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!pressurePassed) break;
+
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    hasPlayedVoice = false;
+                    setState(CPRState.Completed);
+                    break;
+            }
+
+            yield return new WaitForSeconds(2f);
+        }
+
+        uiManager.ShowCompleteMessage();
+        yield return StartCoroutine(GenerateTrainingSummary());
+        SaveResultToGameManager();
+        StoreHistory();
+        SceneManager.LoadScene("FeedbackScene");
+    }
+
+    private IEnumerator GenerateTrainingSummary()
+    {
+        yield return StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "자동제세동기(AED) 사용법 단계 훈련", (result) => {
+            feedback = result;
+            Debug.Log($"📝 CPR 훈련 요약:\n{feedback}");
+            // TODO: UI에 피드백 표시 로직 추가
+        }));
+    }
+
+    private void setState(CPRState nextState)
+    {
+
+        if (stageTimeLimit.ContainsKey(currentState))
+        {
+            float elapsedTime = Time.time - currentStageStartTime;
+            float timeLimit = stageTimeLimit[currentState];
+
+            if (elapsedTime > timeLimit)
+            {
+                int penaltySeconds = Mathf.FloorToInt(elapsedTime - timeLimit);
+                if (penaltySeconds > 0)
+                {
+                    int penalty = penaltySeconds * TIME_PENALTY_PER_SECOND;
+                    string errorKey = $"{currentState} 단계 시간 초과";
+                    AddError(errorKey, penalty);
+                    Debug.Log($"⏰ 시간 초과 패널티: -{penalty}점 (현재 점수: {score})");
+                }
+            }
+        }
+
+        currentStageStartTime = Time.time;
+        currentState = nextState;
+
+        // ✅ 단계별 오디오 재생 추가
+
+        Debug.Log($"➡️ 상태 전환: {currentState}");
+    }
+
+
+
+
+    private void initPlag()
+    {
+        wearPassed = false;
+        voicePassed = false;
+        sensorPassed = false;
+        handTrackingPassed = false;
+        eyeTrackingPassed = false;
+        gyroPassed = false;
+        flowPassed = false;
+        pressurePassed = false;
+        markerPositionFirstPassed = false;
+        markerPositionSecondPassed = false;
+        markerDistancePassed = false;
+    }
+
+    private void ResetValidationFlags()
+    {
+        initPlag();
+
+        fiveCycleCount = 0;
+        cprValidator.Reset();
+        breathValidator.Reset();
+    }
+
+
+    public void setVoicePassed()
+    {
+        voicePassed = true;
+    }
+
+    public void setSensorPassed()
+    {
+        sensorPassed = true;
+    }
+
+    public void setHandTrackingPassed()
+    {
+        handTrackingPassed = true;
+    }
+
+    public void setEyeTrackingPassed()
+    {
+        eyeTrackingPassed = true;
+    }
+
+    public void setMarkerPostionFristPassed()
+    {
+        markerPositionFirstPassed = true;
+    }
+
+    public void setMarkerPositionSecondPassed()
+    {
+        markerPositionSecondPassed = true;
+    }
+
+    public void setGyroPassed()
+    {
+        gyroPassed = true;
+    }
+    public void setFlowPassed()
+    {
+        flowPassed = true;
+    }
+    public void setPressurePassed()
+    {
+        pressurePassed = true;
+    }
+    public void setMarkerDistancePassed()
+    {
+        markerDistancePassed = true;
+    }
+
+    void OnEnable()
+    {
+        SensorEvents.OnSensorDataReceived += HandleSensorData;
+        SensorEvents.OnGyroDataReceived += HandleGyroData;
+    }
+
+    void OnDisable()
+    {
+        SensorEvents.OnSensorDataReceived -= HandleSensorData;
+        SensorEvents.OnGyroDataReceived -= HandleGyroData;
+    }
+
+    private void GenerateFeedback()
+    {
+        StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "자동제세동기(AED) 사용법 단계 훈련", (result) =>
+        {
+            feedback = result;
+            Debug.Log($"📝 CPR 피드백:\n{feedback}");
+            // TODO: UI 업데이트 등 필요 시
+        }));
+    }
+
+    private void AddError(string errorType, int penaltyPoints = 1)
+    {
+        if (checkScore.ContainsKey(errorType))
+        {
+            checkScore[errorType] += penaltyPoints;
+        }
+        else
+        {
+            checkScore[errorType] = penaltyPoints;
+        }
+
+        // 점수 차감
+        score -= penaltyPoints;
+        score = Mathf.Max(0, score); // 최소 0점
+
+        Debug.Log($"❌ 오류: {errorType} (-{penaltyPoints}점, 현재 점수: {score})");
+    }
+
+    // 예시: 압박 깊이가 부족할 때
+    public void OnCompressionDepthError()
+    {
+        AddError("가슴압박 깊이 부족");
+    }
+
+    // 예시: 압박 속도가 불규칙할 때
+    public void OnCompressionRateError()
+    {
+        AddError("압박 속도 불규칙");
+    }
+
+    // 예시: 인공호흡이 부족할 때
+    public void OnBreathingError()
+    {
+        AddError("인공호흡 부족");
+    }
+
+    // 수동으로 피드백 생성을 호출하고 싶을 때
+    public void GenerateFeedbackNow()
+    {
+        StartCoroutine(GenerateTrainingSummary());
+    }
+
+    void SaveResultToGameManager()
+    {
+        // 오늘 날짜를 yyyy-MM-dd 형식으로
+        string today = System.DateTime.Now.ToString("yyyy-MM-dd");
+
+        // 경과 시간(초)을 분으로 변환하고 소수점 없이 정수로 표현
+        float elapsedSeconds = timerManager.elapsedTime;
+        int minutes = Mathf.FloorToInt(elapsedSeconds / 60f);
+        int seconds = Mathf.FloorToInt(elapsedSeconds % 60f);
+
+        string durationString = "";
+
+        if (minutes >= 1)
+        {
+            durationString = $"{minutes}분 {seconds}초";
+        }
+        else
+        {
+            durationString = $"{seconds}초";
+        }
+
+        GameManager.Instance.sceneName = "AEDScene";
+        GameManager.Instance.protocolName = "자동제세동기 사용";
+        GameManager.Instance.duration = durationString;
+        GameManager.Instance.score = score;
+        GameManager.Instance.feedback = feedback;
+    }
+
+    void StoreHistory()
+    {
+        // 오늘 날짜를 yyyy-MM-dd 형식으로
+        string today = System.DateTime.Now.ToString("yyyy-MM-dd");
+
+        // 경과 시간(초)을 분으로 변환하고 소수점 없이 정수로 표현
+        int minutes = Mathf.FloorToInt(timerManager.elapsedTime / 60f);
+        string durationString = minutes + "분";
+
+        TrainingResult newResult = new TrainingResult
+        {
+            protocolName = "자동제세동기 사용",
+            date = today,
+            duration = durationString,
+            score = score,
+            feedback = feedback
+        };
+
+        GetComponent<ResultHistoryManager>().SaveNewResult(newResult);
+    }
+
+    private void PlayVoiceForStage(CPRState state)
+    {
+        int stageNumber = (int)state;
+        string path = $"SceneStage/AED{stageNumber + 1}";
+
+        if (AudioManager.Instance != null)
+        {
+            Debug.Log($"🔊 AED 단계 {stageNumber} 오디오 재생: {path}");
+            AudioManager.Instance.PlayVoice(path);
+        }
+        else
+        {
+            Debug.LogWarning("❗ AudioManager.Instance is NULL! 음성을 재생할 수 없습니다.");
         }
     }
 
-    public void UpdateBreathCount(int count)
-    {
-        countTextDisplay.ShowBreathCount(count);
-    }
 
 
 
-}
+} // end
