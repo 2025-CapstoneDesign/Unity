@@ -10,6 +10,13 @@ public class FeedbackManager : MonoBehaviour
 
     void Start()
     {
+
+        if (GameManager.Instance == null)
+        {
+            Debug.LogError("GameManager.Instance가 null이에요!");
+            return;
+        }
+
         protocolNameText.text = GameManager.Instance.protocolName;
         durationText.text = GameManager.Instance.duration;
         scoreText.text = "평가점수 - " +  GameManager.Instance.score.ToString() + "점";
