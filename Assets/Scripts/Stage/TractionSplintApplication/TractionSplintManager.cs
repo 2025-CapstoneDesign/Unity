@@ -318,7 +318,7 @@ public class TractionSplintManager : MonoBehaviour
         // 새 단계로 상태 변경 및 시작 시간 기록
         currentStageStartTime = Time.time;
         currentState = nextState;
-        VoiceSender.Instance.CurrentStageTag = nextState.ToString();
+        VoiceSender.Instance.CurrentStageTag = nextState.ToVoiceTag();
         Debug.Log($"➡️ 상태 전환: {currentState}");
     }
 
