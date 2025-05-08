@@ -541,10 +541,10 @@ public class AEDManager : MonoBehaviour
         }
 
         currentStageStartTime = Time.time;
+        
+
         currentState = nextState;
-
-        // ✅ 단계별 오디오 재생 추가
-
+        VoiceSender.Instance.CurrentStageTag = nextState.ToVoiceTag();
         Debug.Log($"➡️ 상태 전환: {currentState}");
     }
 

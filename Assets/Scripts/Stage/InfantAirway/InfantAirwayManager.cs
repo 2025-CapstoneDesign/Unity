@@ -522,7 +522,7 @@ public class InfantAirwayManager : MonoBehaviour
         }
 
         currentState = nextState;
-        VoiceSender.Instance.CurrentStageTag = nextState.ToString();
+        VoiceSender.Instance.CurrentStageTag = nextState.ToVoiceTag();
         Debug.Log($"➡️ 상태 전환: {currentState}");
     }
 
