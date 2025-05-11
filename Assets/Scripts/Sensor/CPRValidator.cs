@@ -7,16 +7,32 @@ public class CPRValidator
     public List<float> compressionTimestamps = new();
     private float lastValidPressTime = -1f;
 
-    public const float minPressure = 40f;
-    public const float maxPressure = 100f;
-    private const int requiredCount = 5;
-    private const float minInterval = 0.1f;
-    private const float maxInterval = 0.2f;
+    public float minPressure = 40f;
+    public float maxPressure = 100f;
+    private int requiredCount = 5;
+    private float minInterval = 0.1f;
+    private float maxInterval = 0.2f;
 
     public float LastPressureValue { get; private set; }
 
-    public CPRValidator(IUIManager uiManager)
+    public CPRValidator(IUIManager uiManager, string type)
     {
+        if (type == "Infant")
+        {
+            minPressure = 980f;
+            maxPressure = 1100f;
+            requiredCount = 5;
+            minInterval = 0.1f;
+            maxInterval = 0.2f;
+        }
+        else
+        {
+            minPressure = 980f;
+            maxPressure = 1100f;
+            requiredCount = 30;
+            minInterval = 0.1f;
+            maxInterval = 0.2f;
+        }
         ui = uiManager;
     }
 
@@ -59,5 +75,45 @@ public class CPRValidator
     {
         compressionTimestamps.Clear();
         lastValidPressTime = -1f;
+    }
+
+    public int GetCompressionCount()
+    {
+        return compressionTimestamps.Count;
+    }
+
+    public float GetLastPressureValue()
+    {
+        return LastPressureValue;
+    }
+
+    public float GetLastValidPressTime()
+    {
+        return lastValidPressTime;
+    }
+
+    public float GetMinPressure()
+    {
+        return minPressure;
+    }
+
+    public float GetMaxPressure()
+    {
+        return maxPressure;
+    }
+
+    public float GetMinInterval()
+    {
+        return minInterval;
+    }
+
+    public float GetMaxInterval()
+    {
+        return maxInterval;
+    }
+
+    public int GetRequiredCount()
+    {
+        return requiredCount;
     }
 }

@@ -54,8 +54,8 @@ public class AEDManager : MonoBehaviour
 
     void Start()
     {
-        cprValidator = new CPRValidator(uiManager);
-        breathValidator = new BreathValidator(uiManager);
+        cprValidator = new CPRValidator(uiManager, "Adult");
+        breathValidator = new BreathValidator(uiManager, "Adult");
         currentState = CPRState.CheckSafety;
         totalSteps = System.Enum.GetValues(typeof(CPRState)).Length - 1;
         setState(CPRState.CheckSafety);
@@ -120,7 +120,7 @@ public class AEDManager : MonoBehaviour
             case CPRState.ChestCompressions:
                 if (type == "압력 센서" && !pressurePassed)
                 {
-                    if (value < CPRValidator.minPressure)
+                    if (value < cprValidator.GetMinPressure())
                     {
                         AddError("심폐소생술 흉부 압박 약함");
                     }
@@ -138,7 +138,7 @@ public class AEDManager : MonoBehaviour
             case CPRState.ProvideRescueBreaths:
                 if (type == "유량 센서" && !flowPassed)
                 {
-                    if (value < BreathValidator.requiredFlow)
+                    if (value < breathValidator.getBreathFlow())
                     {
                         AddError("인공호흡 호흡량 약함");
                     }
@@ -155,7 +155,7 @@ public class AEDManager : MonoBehaviour
             case CPRState.ContinueCPR:
                 if (fiveCycleCount % 2 == 0 && type == "압력 센서" && !pressurePassed)
                 {
-                    if (value < CPRValidator.minPressure)
+                    if (value < cprValidator.GetMinPressure())
                     {
                         AddError("심폐소생술 흉부 압박 약함");
                     }
@@ -174,7 +174,7 @@ public class AEDManager : MonoBehaviour
                 {
 
                     bool success = breathValidator.TryAddBreath(value);
-                    if (value < BreathValidator.requiredFlow)
+                    if (value < breathValidator.getBreathFlow())
                     {
                         AddError("인공호흡 호흡량 약함");
                     }
@@ -191,7 +191,7 @@ public class AEDManager : MonoBehaviour
             case CPRState.ResumeChestCompressions:
                 if (type == "압력 센서" && !pressurePassed)
                 {
-                    if (value < CPRValidator.minPressure)
+                    if (value < cprValidator.GetMinPressure())
                     {
                         AddError("심폐소생술 흉부 압박 약함");
                     }
@@ -215,7 +215,7 @@ public class AEDManager : MonoBehaviour
         switch (currentState)
         {
             case CPRState.CheckConsciousness:
-                if (!gyroPassed && Mathf.Abs(pitch) > 50f)
+                if (!gyroPassed && Mathf.Abs(roll) > 10f)
                 {
                     Debug.Log("🌀 생존 확인 성공!");
                     setGyroPassed();
@@ -223,7 +223,7 @@ public class AEDManager : MonoBehaviour
                 break;
 
             case CPRState.OpenAirway:
-                if (!gyroPassed && Mathf.Abs(pitch) > 30f)
+                if (!gyroPassed && Mathf.Abs(pitch) > -10f)
                 {
                     Debug.Log("🌀 고개 기울이기 성공!");
                     setGyroPassed();

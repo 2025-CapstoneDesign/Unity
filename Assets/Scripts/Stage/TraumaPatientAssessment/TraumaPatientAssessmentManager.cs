@@ -56,8 +56,8 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
 
     void Start()
     {
-        cprValidator = new CPRValidator(uiManager);
-        breathValidator = new BreathValidator(uiManager);
+        cprValidator = new CPRValidator(uiManager, "Adult");
+        breathValidator = new BreathValidator(uiManager, "Adult");
         currentState = TraumaPatientAssessmentState.EnsureSceneSafety;
         totalSteps = System.Enum.GetValues(typeof(TraumaPatientAssessmentState)).Length - 1;
         setState(TraumaPatientAssessmentState.EnsureSceneSafety);
@@ -138,7 +138,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
         switch (currentState)
         {
             case TraumaPatientAssessmentState.CheckConsciousness:
-                if (!gyroPassed && Mathf.Abs(pitch) > 50f)
+                if (!gyroPassed && Mathf.Abs(roll) > 10f)
                 {
                     Debug.Log("🌀 생존 확인 성공!");
                     setGyroPassed();

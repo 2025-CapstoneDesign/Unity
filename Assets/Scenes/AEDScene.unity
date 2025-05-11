@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028331, g: 0.2257133, b: 0.3069217, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -651,8 +651,8 @@ MonoBehaviour:
   indicator: {fileID: 1008763526}
   gradientBar: {fileID: 1461778265}
   gradientImage: {fileID: 1461778266}
-  minForce: 40
-  maxForce: 100
+  minForce: 10
+  maxForce: 60
   minAlpha: 0.3
   maxAlpha: 1
   smoothSpeed: 5
@@ -752,8 +752,8 @@ MonoBehaviour:
   indicator: {fileID: 1412083694}
   gradientBar: {fileID: 145968361}
   gradientImage: {fileID: 145968362}
-  minForce: 0
-  maxForce: 100
+  minForce: 600
+  maxForce: 1100
   minAlpha: 0.3
   maxAlpha: 1
   smoothSpeed: 5

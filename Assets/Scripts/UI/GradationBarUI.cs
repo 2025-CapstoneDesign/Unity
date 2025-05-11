@@ -9,8 +9,8 @@ public class GradationBarUI : MonoBehaviour
     public Image gradientImage;
 
     [Header("Force Settings")]
-    public float minForce = CPRValidator.minPressure;
-    public float maxForce = CPRValidator.maxPressure;
+    public float minForce;
+    public float maxForce;
 
     [Header("Transparency Settings")]
     public float minAlpha = 0.3f;
