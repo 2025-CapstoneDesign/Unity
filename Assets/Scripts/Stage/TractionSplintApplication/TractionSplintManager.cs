@@ -53,8 +53,8 @@ public class TractionSplintManager : MonoBehaviour
 
     void Start()
     {
-        cprValidator = new CPRValidator(uiManager);
-        breathValidator = new BreathValidator(uiManager);
+        cprValidator = new CPRValidator(uiManager, "Adult");
+        breathValidator = new BreathValidator(uiManager, "Adult");
         currentState = TractionSplintState.EnsureSceneSafety;
         totalSteps = System.Enum.GetValues(typeof(TractionSplintState)).Length - 1;
         setState(TractionSplintState.EnsureSceneSafety);

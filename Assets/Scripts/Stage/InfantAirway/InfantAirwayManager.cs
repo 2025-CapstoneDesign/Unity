@@ -54,8 +54,8 @@ public class InfantAirwayManager : MonoBehaviour
 
     void Start()
     {
-        cprValidator = new CPRValidator(uiManager);
-        breathValidator = new BreathValidator(uiManager);
+        cprValidator = new CPRValidator(uiManager, "Infant");
+        breathValidator = new BreathValidator(uiManager, "Infant");
         currentState = InfantAirwayState.EnsureSceneSafety;
         totalSteps = System.Enum.GetValues(typeof(InfantAirwayState)).Length - 1;
         setState(InfantAirwayState.EnsureSceneSafety);
@@ -113,7 +113,7 @@ public class InfantAirwayManager : MonoBehaviour
             case InfantAirwayState.Perform5BackBlows:
                 if (type == "압력 센서" && !deungduleugiPassed)
                 {
-                    if(value < CPRValidator.minPressure){
+                    if(value < cprValidator.GetMinPressure()){
                         AddError("등두르기 강도 부족");
                     }
                     bool complete = cprValidator.TryAddCompression(value);
@@ -131,7 +131,7 @@ public class InfantAirwayManager : MonoBehaviour
             case InfantAirwayState.Perform30ChestCompressions:
                 if (type == "압력 센서" && !pressurePassed)
                 {
-                    if (value < CPRValidator.minPressure) // 압력이 너무 약하면 오류 기록
+                    if (value < cprValidator.GetMinPressure()) // 압력이 너무 약하면 오류 기록
                     {
                         AddError("흉부 압박 압력 부족");
                     }
@@ -150,7 +150,7 @@ public class InfantAirwayManager : MonoBehaviour
             case InfantAirwayState.ReopenAirwayAndPerform1RescueBreath:
                 if (type == "유량 센서" && !flowPassed)
                 {
-                    if(value < BreathValidator.requiredFlow){
+                    if(value < breathValidator.getBreathFlow()){
                         AddError("인공호흡 호흡량 약함");
                     }
                     bool success = breathValidator.TryAddBreath(value);
@@ -167,7 +167,7 @@ public class InfantAirwayManager : MonoBehaviour
                 if (sixCycleCount % 2 == 0 && type == "압력 센서" && !pressurePassed)
                 {
                     bool complete = cprValidator.TryAddCompression(value);
-                    if (value < CPRValidator.minPressure) // 압력이 너무 약하면 오류 기록
+                    if (value < cprValidator.GetMinPressure()) // 압력이 너무 약하면 오류 기록
                     {
                         AddError("흉부 압박 압력 부족");
                     }
@@ -181,7 +181,7 @@ public class InfantAirwayManager : MonoBehaviour
                 else if (sixCycleCount % 2 == 1 && type == "압력 센서" && !deungduleugiPassed)
                 {
                     bool success = cprValidator.TryAddCompression(value);
-                    if (value < CPRValidator.minPressure) // 압력이 너무 약하면 오류 기록
+                    if (value < cprValidator.GetMinPressure()) // 압력이 너무 약하면 오류 기록
                     {
                         AddError("등두드리기 강도 부족");
                     }
@@ -198,7 +198,7 @@ public class InfantAirwayManager : MonoBehaviour
                 if (type == "압력 센서" && !pressurePassed)
                 {
                     bool complete = cprValidator.TryAddCompression(value);
-                    if (value < CPRValidator.minPressure) // 압력이 너무 약하면 오류 기록
+                    if (value < cprValidator.GetMinPressure()) // 압력이 너무 약하면 오류 기록
                     {
                         AddError("흉부 압박 압력 부족");
                     }
@@ -211,7 +211,7 @@ public class InfantAirwayManager : MonoBehaviour
                 }
                 else if (pressurePassed && type == "유량 센서" && !flowPassed)
                 {
-                    if(value < BreathValidator.requiredFlow){
+                    if(value < breathValidator.getBreathFlow()){
                         AddError("인공호흡 호흡량 약함");
                     }
                     bool success = breathValidator.TryAddBreath(value);
@@ -233,7 +233,7 @@ public class InfantAirwayManager : MonoBehaviour
         switch (currentState)
         {
             case InfantAirwayState.IfUnconsciousPlaceSupine:
-                if (!gyroPassed && Mathf.Abs(pitch) > 45f) // 기울기 임계값 (적절히 조정 필요)
+                if (!gyroPassed && Mathf.Abs(pitch) > -20f) // 기울기 임계값 (적절히 조정 필요)
                 {
                     Debug.Log("🔄 영아 바로눕히기 성공!");
                     setGyroPassed();
@@ -241,7 +241,7 @@ public class InfantAirwayManager : MonoBehaviour
                 break;
 
             case InfantAirwayState.OpenAirwayAndCheckForObstruction:
-                if (!gyroPassed && (Mathf.Abs(pitch) > 30f || Mathf.Abs(roll) > 30f))
+                if (!gyroPassed && (Mathf.Abs(pitch) > -10f))
                 {
                     Debug.Log("🔄 기도 열기 성공!");
                     setGyroPassed();

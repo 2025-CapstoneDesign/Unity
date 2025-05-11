@@ -53,8 +53,8 @@ public class SuctionManager : MonoBehaviour
 
     void Start()
     {
-        cprValidator = new CPRValidator(uiManager);
-        breathValidator = new BreathValidator(uiManager);
+        cprValidator = new CPRValidator(uiManager, "Adult");
+        breathValidator = new BreathValidator(uiManager, "Adult");
         currentState = SuctionState.EnsureSceneSafety;
         totalSteps = System.Enum.GetValues(typeof(SuctionState)).Length - 1;
         setState(SuctionState.EnsureSceneSafety);

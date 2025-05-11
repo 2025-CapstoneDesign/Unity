@@ -53,8 +53,8 @@ public class VaccumSplintManager : MonoBehaviour
 
     void Start()
     {
-        cprValidator = new CPRValidator(uiManager);
-        breathValidator = new BreathValidator(uiManager);
+        cprValidator = new CPRValidator(uiManager, "Adult");
+        breathValidator = new BreathValidator(uiManager, "Adult");
         currentState = VacuumSplintState.EnsureSceneSafety;
         totalSteps = System.Enum.GetValues(typeof(VacuumSplintState)).Length - 1;
         setState(VacuumSplintState.EnsureSceneSafety);
