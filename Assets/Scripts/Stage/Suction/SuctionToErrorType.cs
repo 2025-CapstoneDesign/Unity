@@ -5,11 +5,11 @@ public static class SuctionToErrorType
 {
     private static readonly Dictionary<SuctionState, string> stateToLabel = new Dictionary<SuctionState, string>
     {
-        { SuctionState.EnsureSceneSafety,                "PASS" },
-        { SuctionState.WearPPE,                          "PASS" },
+        { SuctionState.EnsureSceneSafety,                "현장 안전 확인" },
+        { SuctionState.WearPPE,                          "보호장비 착용" },
         { SuctionState.CheckEquipmentAndSupplies,        "PASS" },
-        { SuctionState.TurnOnSuctionDevice,              "PASS" },
-        { SuctionState.CheckSuctionPressure,             "PASS" },
+        { SuctionState.TurnOnSuctionDevice,              "흡인과정의 장비확인" },
+        { SuctionState.CheckSuctionPressure,             "흡인과정의 흡인준비" },
         { SuctionState.TestSuctionWithSaline,            "PASS" },
         { SuctionState.PerformOralSuction,               "PASS" },
         { SuctionState.FlushSuctionTipWithSaline,        "PASS" },

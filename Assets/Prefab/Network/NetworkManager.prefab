@@ -133,7 +133,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3601108048133357318}
-  - component: {fileID: 7556774523085063354}
+  - component: {fileID: 768346098017021688}
   m_Layer: 0
   m_Name: VoiceWebSocketClient
   m_TagString: Untagged
@@ -156,7 +156,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1757093436115327999}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7556774523085063354
+--- !u!114 &768346098017021688
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
