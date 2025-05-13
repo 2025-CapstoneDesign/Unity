@@ -4,9 +4,9 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-public class WebSocketClient : MonoBehaviour
+public class VoiceWebSocketClient : MonoBehaviour
 {
-    public static WebSocketClient Instance;
+    public static VoiceWebSocketClient Instance;
 
     public Action<string> OnMessageReceived;
 

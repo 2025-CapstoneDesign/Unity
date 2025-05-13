@@ -16,7 +16,7 @@ public class TrainingEvaluator : MonoBehaviour
     void Start()
     {
         // WebSocket에서 메시지 수신시 처리
-        WebSocketClient.Instance.OnMessageReceived += OnServerResponse;
+        VoiceWebSocketClient.Instance.OnMessageReceived += OnServerResponse;
     }
 
 void OnServerResponse(string msg)
