@@ -6,7 +6,7 @@ public class SuctionSceneStart : MonoBehaviour
 
     void Start()
     {
-        var info = new SceneStartInfo("흡인(Suction) 처치 훈련을 시작합니다.", null);
+        var info = new SceneStartInfo("흡인 및 산소투여 훈련을 시작합니다.", null);
         sceneStartGuide.SetSceneInfo(info);
 
         if (AudioManager.Instance == null)
@@ -16,7 +16,7 @@ public class SuctionSceneStart : MonoBehaviour
         else
         {
             Debug.Log("AudioManager.Instance 사용 시작");
-            AudioManager.Instance.PlayVoice("SceneStart/Voice_Suction");
+            AudioManager.Instance.PlayVoice("SceneStart/Voice_Stage6");
         }
     }
 }

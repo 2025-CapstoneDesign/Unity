@@ -50,6 +50,8 @@ public class SuctionManager : MonoBehaviour
 
     // 점수 차감 관련 설정
     private const int TIME_PENALTY_PER_SECOND = 1;  // 초과 시간당 차감할 점수
+    
+    private bool hasPlayedVoice = false;
 
     void Start()
     {
@@ -173,60 +175,258 @@ public class SuctionManager : MonoBehaviour
             switch (currentState)
             {
                 case SuctionState.EnsureSceneSafety:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.WearPPE);
                     break;
 
                 case SuctionState.WearPPE:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.CheckEquipmentAndSupplies);
                     break;
 
                 case SuctionState.CheckEquipmentAndSupplies:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.TurnOnSuctionDevice);
                     break;
 
                 case SuctionState.TurnOnSuctionDevice:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.CheckSuctionPressure);
                     break;
 
                 case SuctionState.CheckSuctionPressure:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!gyroPassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.TestSuctionWithSaline);
                     break;
 
                 case SuctionState.TestSuctionWithSaline:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.PerformOralSuction);
                     break;
 
                 case SuctionState.PerformOralSuction:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.FlushSuctionTipWithSaline);
                     break;
 
                 case SuctionState.FlushSuctionTipWithSaline:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.TurnOffSuctionDevice);
                     break;
 
                 case SuctionState.TurnOffSuctionDevice:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.AssembleOxygenTankAndRegulator);
                     break;
 
                 case SuctionState.AssembleOxygenTankAndRegulator:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.OpenOxygenTankValve);
                     break;
 
                 case SuctionState.OpenOxygenTankValve:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.CheckForLeaksAndStateNoLeaks);
                     break;
 
                 case SuctionState.CheckForLeaksAndStateNoLeaks:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.CheckOxygenGaugeAndStateRemainingPressure);
                     break;
 
                 case SuctionState.CheckOxygenGaugeAndStateRemainingPressure:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.ConnectNonRebreatherMask);
                     break;
 
                 case SuctionState.ConnectNonRebreatherMask:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.SetOxygenFlowRate);
                     break;
 
                 case SuctionState.SetOxygenFlowRate:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.FillReservoirBagAndApplyMask);
                     break;
 
                 case SuctionState.FillReservoirBagAndApplyMask:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.MonitorPatientRespiration);
                     break;
 
                 case SuctionState.MonitorPatientRespiration:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.RemoveMaskUponInstruction);
                     break;
 
                 case SuctionState.RemoveMaskUponInstruction:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.TurnOffFlowMeterAndTank);
                     break;
 
                 case SuctionState.TurnOffFlowMeterAndTank:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SuctionState.RecordOnMedicalChart);
+                    break;
+                
+                case SuctionState.RecordOnMedicalChart:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     break;
             }
 
@@ -249,6 +449,22 @@ public class SuctionManager : MonoBehaviour
             feedback = result;
             Debug.Log($"📝 흡인 및 산소공급 훈련 요약:\n{feedback}");
         }));
+    }
+    
+    private void PlayVoiceForStage(SuctionState state)
+    {
+        int stageNumber = (int)state;
+        string path = $"SceneStage/Oxygenation/Oxygenation{stageNumber + 1}";
+
+        if (AudioManager.Instance != null)
+        {
+            Debug.Log($"🔊 흡인 및 산소공급 단계 {stageNumber} 오디오 재생: {path}");
+            AudioManager.Instance.PlayVoice(path);
+        }
+        else
+        {
+            Debug.LogWarning("❗ AudioManager.Instance is NULL! 음성을 재생할 수 없습니다.");
+        }
     }
 
     private void setState(SuctionState nextState)
@@ -296,6 +512,7 @@ public class SuctionManager : MonoBehaviour
         markerPositionFirstPassed = false;
         markerPositionSecondPassed = false;
         markerDistancePassed = false;
+        hasPlayedVoice = false;
     }
 
     private void ResetValidationFlags()
