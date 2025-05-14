@@ -54,6 +54,8 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
     // 점수 차감 관련 설정
     private const int TIME_PENALTY_PER_SECOND = 1;  // 초과 시간당 차감할 점수
 
+    private bool hasPlayedVoice = false;
+
     void Start()
     {
         cprValidator = new CPRValidator(uiManager, "Adult");
@@ -181,7 +183,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
 
     private IEnumerator Procedure()
     {
-
         while (currentState != TraumaPatientAssessmentState.RecordOnMedicalChart)
         {
             Debug.Log($"🧭 현재 단계: {currentState}");
@@ -191,26 +192,40 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
             switch (currentState)
             {
                 case TraumaPatientAssessmentState.EnsureSceneSafety:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!voicePassed) break;
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.WearPPE);
                     break;
 
                 case TraumaPatientAssessmentState.WearPPE:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     wearPassed = true;
                     if (!wearPassed || !voicePassed) break;
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.CheckConsciousness);
                     break;
 
                 case TraumaPatientAssessmentState.CheckConsciousness:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!gyroPassed) break;
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.CheckAirwayForObstruction);
@@ -219,12 +234,17 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
 
 
                 case TraumaPatientAssessmentState.CheckAirwayForObstruction:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!handTrackingPassed)
                     {
                         Debug.Log("✋ 손 위치 인식 대기 중...");
                         break;
                     }
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.AssessBreathingAndPattern);
@@ -232,13 +252,17 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     break;
 
                 case TraumaPatientAssessmentState.AssessBreathingAndPattern:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!handTrackingPassed)
                     {
                         Debug.Log("✋ 손 위치 인식 대기 중...");
                         break;
                     }
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.CheckCirculatoryStatus);
@@ -246,13 +270,17 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     break;
 
                 case TraumaPatientAssessmentState.CheckCirculatoryStatus:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!handTrackingPassed)
                     {
                         Debug.Log("✋ 손 위치 인식 대기 중...");
                         break;
                     }
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.AssessLevelOfConsciousnessUsingAVPU);
@@ -260,7 +288,11 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     break;
 
                 case TraumaPatientAssessmentState.AssessLevelOfConsciousnessUsingAVPU:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!eyeTrackingPassed)
                     {
                         voicePassed = false; // 이전 음성 평가 초기화
@@ -268,7 +300,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                         break;
                     }
                     if (!voicePassed) break;
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.InspectHeadUsingDCAPBLSTIC);
@@ -276,7 +308,11 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     break;
 
                 case TraumaPatientAssessmentState.InspectHeadUsingDCAPBLSTIC:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!eyeTrackingPassed)
                     {
                         voicePassed = false; // 이전 음성 평가 초기화
@@ -284,7 +320,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                         break;
                     }
                     if (!voicePassed) break;
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.InspectNeckUsingDCAPBLSTICJVDTD);
@@ -292,7 +328,11 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     break;
 
                 case TraumaPatientAssessmentState.InspectNeckUsingDCAPBLSTICJVDTD:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!eyeTrackingPassed)
                     {
                         voicePassed = false; // 이전 음성 평가 초기화
@@ -300,7 +340,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                         break;
                     }
                     if (!voicePassed) break;
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.ApplyCervicalCollar);
@@ -308,17 +348,26 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     break;
 
                 case TraumaPatientAssessmentState.ApplyCervicalCollar:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!markerDistancePassed) break;
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.ExposeUpperBody);
                     break;
 
                 case TraumaPatientAssessmentState.ExposeUpperBody:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!voicePassed) break;
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.InspectChestUsingDCAPBLSTICAndAuscultate);
@@ -326,7 +375,11 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     break;
 
                 case TraumaPatientAssessmentState.InspectChestUsingDCAPBLSTICAndAuscultate:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!eyeTrackingPassed)
                     {
                         voicePassed = false; // 이전 음성 평가 초기화
@@ -334,7 +387,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                         break;
                     }
                     if (!voicePassed) break;
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.InspectAbdomenUsingDCAPBTLS);
@@ -342,7 +395,11 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     break;
 
                 case TraumaPatientAssessmentState.InspectAbdomenUsingDCAPBTLS:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!eyeTrackingPassed)
                     {
                         voicePassed = false; // 이전 음성 평가 초기화
@@ -350,16 +407,20 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                         break;
                     }
                     if (!voicePassed) break;
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.ExposeLowerBody);
                     break;
 
                 case TraumaPatientAssessmentState.ExposeLowerBody:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!voicePassed) break;
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.InspectPelvisUsingDCAPBLSTIC);
@@ -367,7 +428,11 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     break;
 
                 case TraumaPatientAssessmentState.InspectPelvisUsingDCAPBLSTIC:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!eyeTrackingPassed)
                     {
                         voicePassed = false; // 이전 음성 평가 초기화
@@ -375,7 +440,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                         break;
                     }
                     if (!voicePassed) break;
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.InspectExtremitiesUsingDCAPBLSTICPMS);
@@ -383,7 +448,11 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     break;
 
                 case TraumaPatientAssessmentState.InspectExtremitiesUsingDCAPBLSTICPMS:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!eyeTrackingPassed)
                     {
                         voicePassed = false; // 이전 음성 평가 초기화
@@ -391,7 +460,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                         break;
                     }
                     if (!voicePassed) break;
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.PerformLogRoll);
@@ -399,9 +468,13 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     break;
 
                 case TraumaPatientAssessmentState.PerformLogRoll:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!markerPositionFirstPassed) break;
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.InspectBackUsingDCAPBLSTIC);
@@ -409,7 +482,11 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     break;
 
                 case TraumaPatientAssessmentState.InspectBackUsingDCAPBLSTIC:
-
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!eyeTrackingPassed)
                     {
                         voicePassed = false; // 이전 음성 평가 초기화
@@ -417,14 +494,14 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                         break;
                     }
                     if (!voicePassed) break;
-                    // 위 Passed
+                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(TraumaPatientAssessmentState.RecordOnMedicalChart);
                     break; 
             }
 
-            yield return new WaitForSeconds(1f); // 반응성을 위해 더 짧은 주기로 체크
+            yield return new WaitForSeconds(2f); // 반응성을 위해 간격 조정 (AEDManager와 동일하게)
         }
 
 
@@ -445,6 +522,22 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
             Debug.Log($"📝 외상환자 평가 훈련 요약:\n{feedback}");
             // TODO: UI에 피드백 표시 로직 추가
         }));
+    }
+
+    private void PlayVoiceForStage(TraumaPatientAssessmentState state)
+    {
+        int stageNumber = (int)state;
+        string path = $"SceneStage/Trauma/Trauma{stageNumber + 1}";
+
+        if (AudioManager.Instance != null)
+        {
+            Debug.Log($"🔊 외상환자 평가 단계 {stageNumber} 오디오 재생: {path}");
+            AudioManager.Instance.PlayVoice(path);
+        }
+        else
+        {
+            Debug.LogWarning("❗ AudioManager.Instance is NULL! 음성을 재생할 수 없습니다.");
+        }
     }
 
     private void setState(TraumaPatientAssessmentState nextState)
@@ -477,9 +570,8 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
         currentState = nextState;
         VoiceSender.Instance.CurrentStageTag = nextState.ToVoiceTag();
         Debug.Log($"➡️ 상태 전환: {currentState}");
+        
     }
-
-
 
     private void initPlag()
     {
@@ -494,6 +586,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
         markerPositionFirstPassed = false;
         markerPositionSecondPassed = false;
         markerDistancePassed = false;
+        hasPlayedVoice = false;
     }
 
     private void ResetValidationFlags()
