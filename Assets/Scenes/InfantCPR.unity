@@ -310,7 +310,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3525007}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea867412c1419364db51fe6c685591d9, type: 3}
+  m_Script: {fileID: 11500000, guid: 48d423d40b85a0b45b2cc16e7c7e7ffc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   sceneStartGuide: {fileID: 1315927772}
@@ -1575,15 +1575,35 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1273606750}
+  - component: {fileID: 1273606749}
   - component: {fileID: 1273606751}
-  - component: {fileID: 1273606752}
   m_Layer: 0
-  m_Name: InfantCprManager
+  m_Name: TraumaManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &1273606749
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273606748}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d166bdfe8b4929e4e9303084cecb6721, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  timerManager: {fileID: 529229144}
+  uiManager: {fileID: 1687033914}
+  feedbackGenerator: {fileID: 2065896491}
+  eyeTrackingValidator: {fileID: 468113612}
+  handValidator: {fileID: 368104370}
+  markerPositionValidator: {fileID: 405844687}
+  markerDistanceValidator: {fileID: 696555819}
+  moveValidator: {fileID: 293894798}
 --- !u!4 &1273606750
 Transform:
   m_ObjectHideFlags: 0
@@ -1611,26 +1631,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4172b9a3ba2c8b84ab3c83e3ebc654b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1273606752
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1273606748}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 61df660b727c03e4f9d1783e4e9d5667, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  timerManager: {fileID: 529229144}
-  uiManager: {fileID: 1687033914}
-  feedbackGenerator: {fileID: 2065896491}
-  eyeTrackingValidator: {fileID: 468113612}
-  handValidator: {fileID: 368104370}
-  markerPositionValidator: {fileID: 405844687}
-  markerDistanceValidator: {fileID: 696555819}
-  moveValidator: {fileID: 293894798}
 --- !u!1 &1315927771
 GameObject:
   m_ObjectHideFlags: 0
@@ -2712,7 +2712,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1687033911}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bcdc93348c2192a45ac6c0938b00dcf5, type: 3}
+  m_Script: {fileID: 11500000, guid: c6ff478e9bb59e5408c81a0773493ee9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   messageText: {fileID: 1632906547}
@@ -2721,7 +2721,7 @@ MonoBehaviour:
   progressBar: {fileID: 974490117}
   fillMaskImage: {fileID: 2142505201}
   compressionUI: {fileID: 145968364}
-  breathUI: {fileID: 337893806}
+  breathUI: {fileID: 1461778268}
 --- !u!1 &1697235722
 GameObject:
   m_ObjectHideFlags: 0
