@@ -201,7 +201,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.WearPPE);
                     break;
 
@@ -216,7 +215,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.CheckConsciousness);
                     break;
 
@@ -230,7 +228,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.CheckAirwayForObstruction);
                     handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
@@ -250,7 +247,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.AssessBreathingAndPattern);
                     handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
@@ -269,7 +265,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.CheckCirculatoryStatus);
                     handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
@@ -288,7 +283,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.AssessLevelOfConsciousnessUsingAVPU);
                     eyeTrackingValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setEyeTrackingPassed);
                     break;
@@ -309,7 +303,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.InspectHeadUsingDCAPBLSTIC);
                     eyeTrackingValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setEyeTrackingPassed);
                     break;
@@ -330,7 +323,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.InspectNeckUsingDCAPBLSTICJVDTD);
                     eyeTrackingValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setEyeTrackingPassed);
                     break;
@@ -351,7 +343,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.ApplyCervicalCollar);
                     markerDistanceValidator.BeginValidation(20, 21, 0.05f, 0.1f, setMarkerDistancePassed);
                     break;
@@ -366,7 +357,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.ExposeUpperBody);
                     break;
 
@@ -380,7 +370,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.InspectChestUsingDCAPBLSTICAndAuscultate);
                     eyeTrackingValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setEyeTrackingPassed);
                     break;
@@ -401,7 +390,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.InspectAbdomenUsingDCAPBTLS);
                     eyeTrackingValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setEyeTrackingPassed);
                     break;
@@ -422,7 +410,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.ExposeLowerBody);
                     break;
 
@@ -436,7 +423,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.InspectPelvisUsingDCAPBLSTIC);
                     eyeTrackingValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setEyeTrackingPassed);
                     break;
@@ -457,7 +443,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.InspectExtremitiesUsingDCAPBLSTICPMS);
                     eyeTrackingValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setEyeTrackingPassed);
                     break;
@@ -478,7 +463,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.PerformLogRoll);
                     moveValidator.BeginValidation(1, new Vector3(-0.5f, 0f, 0f), 0.2f, 2f, setMarkerPostionFristPassed);
                     break;
@@ -493,7 +477,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.InspectBackUsingDCAPBLSTIC);
                     eyeTrackingValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setEyeTrackingPassed);
                     break;
@@ -514,7 +497,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
-                    hasPlayedVoice = false;
                     setState(TraumaPatientAssessmentState.RecordOnMedicalChart);
                     break; 
             }
@@ -604,6 +586,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
         markerPositionFirstPassed = false;
         markerPositionSecondPassed = false;
         markerDistancePassed = false;
+        hasPlayedVoice = false;
     }
 
     private void ResetValidationFlags()

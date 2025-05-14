@@ -52,6 +52,13 @@ public class AudioManager : MonoBehaviour
     {
         Debug.Log("PlayVoice()"); // ????? ?????
 
+        // 이미 재생 중인 음성이 있다면 먼저 중지
+        if (voiceAudioSource != null && voiceAudioSource.isPlaying)
+        {
+            voiceAudioSource.Stop();
+            Debug.Log("[AudioManager] 이전 음성 재생 중지");
+        }
+
         string fullPath = $"{audioFolderPath}/{relativePath}";
         Debug.Log($"[AudioManager] Trying to load: {fullPath}");
 
