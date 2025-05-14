@@ -352,6 +352,22 @@ public class InfantCPRManager : MonoBehaviour
         }));
     }
 
+    private void PlayVoiceForStage(InfantCPRState state)
+    {
+        int stageNumber = (int)state;
+        string path = $"SceneStage/InfantCPR/InfantCPR{stageNumber + 1}";
+
+        if (AudioManager.Instance != null)
+        {
+            Debug.Log($"🔊 영유아 심폐소생술 단계 {stageNumber} 오디오 재생: {path}");
+            AudioManager.Instance.PlayVoice(path);
+        }
+        else
+        {
+            Debug.LogWarning("❗ AudioManager.Instance is NULL! 음성을 재생할 수 없습니다.");
+        }
+    }
+
     private void setState(InfantCPRState nextState)
     {
         // 이전 단계의 시간 초과 여부 확인 및 점수 차감
@@ -382,6 +398,9 @@ public class InfantCPRManager : MonoBehaviour
         currentState = nextState;
         VoiceSender.Instance.CurrentStageTag = nextState.ToVoiceTag();
         Debug.Log($"➡️ 상태 전환: {currentState}");
+        
+        // 새 단계의 음성 안내 재생
+        PlayVoiceForStage(currentState);
     }
 
     private void initPlag()

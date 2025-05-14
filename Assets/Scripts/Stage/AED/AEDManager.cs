@@ -739,7 +739,7 @@ public class AEDManager : MonoBehaviour
     private void PlayVoiceForStage(CPRState state)
     {
         int stageNumber = (int)state;
-        string path = $"SceneStage/AED{stageNumber + 1}";
+        string path = $"SceneStage/AED/AED{stageNumber + 1}";
 
         if (AudioManager.Instance != null)
         {
