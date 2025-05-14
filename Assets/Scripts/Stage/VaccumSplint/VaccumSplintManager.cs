@@ -50,6 +50,8 @@ public class VaccumSplintManager : MonoBehaviour
 
     // 점수 차감 관련 설정
     private const int TIME_PENALTY_PER_SECOND = 1;  // 초과 시간당 차감할 점수
+    
+    private bool hasPlayedVoice = false;
 
     void Start()
     {
@@ -164,33 +166,145 @@ public class VaccumSplintManager : MonoBehaviour
             switch (currentState)
             {
                 case VacuumSplintState.EnsureSceneSafety:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(VacuumSplintState.WearPPE);
                     break;
                     
                 case VacuumSplintState.WearPPE:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(VacuumSplintState.ExposeAndSupportFracture);
                     break;
                     
                 case VacuumSplintState.ExposeAndSupportFracture:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!gyroPassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(VacuumSplintState.AssessDistalPMS);
+                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
                     
                 case VacuumSplintState.AssessDistalPMS:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!handTrackingPassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(VacuumSplintState.MeasureSplintSize);
+                    markerDistanceValidator.BeginValidation(2, 4, 0.2f, 0.3f, setMarkerDistancePassed);
                     break;
                     
                 case VacuumSplintState.MeasureSplintSize:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!markerDistancePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(VacuumSplintState.ApplySplintToInjury);
+                    markerPositionValidator.BeginValidation(1, 12, new Vector3(0.2f, 0.15f, 0f), 0.1f, 1f, setMarkerPostionFristPassed);
                     break;
                     
                 case VacuumSplintState.ApplySplintToInjury:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!markerPositionFirstPassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(VacuumSplintState.AttachVacuumPumpAndEvacuateAir);
                     break;
                     
                 case VacuumSplintState.AttachVacuumPumpAndEvacuateAir:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(VacuumSplintState.ReSecureSplintStraps);
                     break;
                     
                 case VacuumSplintState.ReSecureSplintStraps:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(VacuumSplintState.SecureArmToBody);
                     break;
                     
                 case VacuumSplintState.SecureArmToBody:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(VacuumSplintState.ReassessDistalPMS);
+                    handValidator.BeginVerification(4, new Vector3(0f, -0.1f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
                     
                 case VacuumSplintState.ReassessDistalPMS:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!handTrackingPassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(VacuumSplintState.RecordOnMedicalChart);
+                    break;
+                    
+                case VacuumSplintState.RecordOnMedicalChart:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     break;
             }
 
@@ -214,6 +328,22 @@ public class VaccumSplintManager : MonoBehaviour
             Debug.Log($"📝 진공부목 적용 훈련 요약:\n{feedback}");
             // TODO: UI에 피드백 표시 로직 추가
         }));
+    }
+
+    private void PlayVoiceForStage(VacuumSplintState state)
+    {
+        int stageNumber = (int)state;
+        string path = $"SceneStage/Vaccum/Vaccum{stageNumber + 1}";
+
+        if (AudioManager.Instance != null)
+        {
+            Debug.Log($"🔊 진공부목 적용 단계 {stageNumber} 오디오 재생: {path}");
+            AudioManager.Instance.PlayVoice(path);
+        }
+        else
+        {
+            Debug.LogWarning("❗ AudioManager.Instance is NULL! 음성을 재생할 수 없습니다.");
+        }
     }
 
     private void setState(VacuumSplintState nextState)
@@ -261,6 +391,7 @@ public class VaccumSplintManager : MonoBehaviour
         markerPositionFirstPassed = false;
         markerPositionSecondPassed = false;
         markerDistancePassed = false;
+        hasPlayedVoice = false;
     }
 
     private void ResetValidationFlags()

@@ -21,7 +21,7 @@ EditorBuildSettings:
     path: Assets/Scenes/MenuScene.unity
     guid: c490f855a4ead7243a1e6c34cb1e1868
   - enabled: 1
-    path: Assets/Scenes/TraumaPatientAssessment.unity
+    path: Assets/Scenes/TraumaPatientAssessmentScene.unity
     guid: 2e1073dd24b05d94a9b57e45ac4f818d
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: dddc7d64e5389e4459680f88ba84a33a, type: 2}
