@@ -51,6 +51,8 @@ public class InfantCPRManager : MonoBehaviour
 
     // 점수 차감 관련 설정
     private const int TIME_PENALTY_PER_SECOND = 1;  // 초과 시간당 차감할 점수
+    
+    private bool hasPlayedVoice = false;
 
     void Start()
     {
@@ -231,6 +233,11 @@ public class InfantCPRManager : MonoBehaviour
             switch (currentState)
             {
                 case InfantCPRState.EnsureSceneSafety:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!voicePassed) break;
 
                     uiManager.ShowCheckIconPass(this);
@@ -239,6 +246,11 @@ public class InfantCPRManager : MonoBehaviour
                     break;
 
                 case InfantCPRState.WearPPE:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!voicePassed) break;
 
                     uiManager.ShowCheckIconPass(this);
@@ -247,6 +259,11 @@ public class InfantCPRManager : MonoBehaviour
                     break;
 
                 case InfantCPRState.CheckConsciousness:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!gyroPassed) break;
 
                     uiManager.ShowCheckIconPass(this);
@@ -255,6 +272,11 @@ public class InfantCPRManager : MonoBehaviour
                     break;
 
                 case InfantCPRState.Call119AndRequestAED:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!voicePassed) break;
 
                     uiManager.ShowCheckIconPass(this);
@@ -264,6 +286,11 @@ public class InfantCPRManager : MonoBehaviour
                     break;
 
                 case InfantCPRState.CheckBreathingAndPulse:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     // 1. 손 인식 먼저 기다리기
                     if (!handTrackingPassed)
                     {
@@ -281,6 +308,11 @@ public class InfantCPRManager : MonoBehaviour
                     break;
 
                 case InfantCPRState.Perform30ChestCompressions:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!pressurePassed) break;
 
                     uiManager.ShowCheckIconPass(this);
@@ -289,6 +321,11 @@ public class InfantCPRManager : MonoBehaviour
                     break;
 
                 case InfantCPRState.OpenAirway:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!gyroPassed) break;
 
                     uiManager.ShowCheckIconPass(this);
@@ -297,6 +334,11 @@ public class InfantCPRManager : MonoBehaviour
                     break;
 
                 case InfantCPRState.Perform2RescueBreathsWithPocketMask:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!flowPassed)
                     {
                         // 호흡 센서 확인 로직
@@ -309,6 +351,11 @@ public class InfantCPRManager : MonoBehaviour
                     break;
 
                 case InfantCPRState.Perform5CyclesOf30To2CPR:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (fiveCycleCount < 10)
                     {
                         if (fiveCycleCount % 2 == 0 && pressurePassed)
@@ -327,6 +374,14 @@ public class InfantCPRManager : MonoBehaviour
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(InfantCPRState.RecordOnMedicalChart);
+                    break;
+                    
+                case InfantCPRState.RecordOnMedicalChart:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     break;
             }
 
@@ -355,7 +410,7 @@ public class InfantCPRManager : MonoBehaviour
     private void PlayVoiceForStage(InfantCPRState state)
     {
         int stageNumber = (int)state;
-        string path = $"SceneStage/InfantCPR/InfantCPR{stageNumber + 1}";
+        string path = $"SceneStage/InfantCpr/InfantCpr{stageNumber + 1}";
 
         if (AudioManager.Instance != null)
         {
@@ -399,8 +454,6 @@ public class InfantCPRManager : MonoBehaviour
         VoiceSender.Instance.CurrentStageTag = nextState.ToVoiceTag();
         Debug.Log($"➡️ 상태 전환: {currentState}");
         
-        // 새 단계의 음성 안내 재생
-        PlayVoiceForStage(currentState);
     }
 
     private void initPlag()
@@ -416,6 +469,7 @@ public class InfantCPRManager : MonoBehaviour
         markerPositionFirstPassed = false;
         markerPositionSecondPassed = false;
         markerDistancePassed = false;
+        hasPlayedVoice = false;
     }
 
     private void ResetValidationFlags()

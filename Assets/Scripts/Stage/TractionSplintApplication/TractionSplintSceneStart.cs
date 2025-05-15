@@ -16,7 +16,7 @@ public class TractionSplintSceneStart : MonoBehaviour
         else
         {
             Debug.Log("AudioManager.Instance 사용 시작");
-            AudioManager.Instance.PlayVoice("SceneStart/Voice_Stage2");
+            AudioManager.Instance.PlayVoice("SceneStart/Voice_Stage3");
         }
     }
 }

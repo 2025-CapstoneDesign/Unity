@@ -51,6 +51,8 @@ public class TractionSplintManager : MonoBehaviour
     // 점수 차감 관련 설정
     private const int TIME_PENALTY_PER_SECOND = 1;  // 초과 시간당 차감할 점수
 
+    private bool hasPlayedVoice = false;
+
     void Start()
     {
         cprValidator = new CPRValidator(uiManager, "Adult");
@@ -158,6 +160,11 @@ public class TractionSplintManager : MonoBehaviour
             switch (currentState)
             {
                 case TractionSplintState.EnsureSceneSafety:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!voicePassed) break;
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -165,6 +172,11 @@ public class TractionSplintManager : MonoBehaviour
                     break;
 
                 case TractionSplintState.WearPPE:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     wearPassed = true;
                     if (!wearPassed || !voicePassed) break;
                     uiManager.ShowCheckIconPass(this);
@@ -175,6 +187,11 @@ public class TractionSplintManager : MonoBehaviour
                     break;
 
                 case TractionSplintState.ExposeAndSupportFracture:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!markerPositionFirstPassed) break;
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -183,6 +200,11 @@ public class TractionSplintManager : MonoBehaviour
                     break;
 
                 case TractionSplintState.AssessDistalPulseMotorSensation:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!handTrackingPassed) {
                         break;
                     }
@@ -193,6 +215,11 @@ public class TractionSplintManager : MonoBehaviour
                     break;
 
                 case TractionSplintState.ApplyManualTractionAndDelegate:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!handTrackingPassed) {
                         voicePassed = false;
                         break;
@@ -205,6 +232,11 @@ public class TractionSplintManager : MonoBehaviour
                     break;
 
                 case TractionSplintState.MeasureSplintLength:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!markerDistancePassed) break;
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -213,6 +245,11 @@ public class TractionSplintManager : MonoBehaviour
                     break;
 
                 case TractionSplintState.ApplyTractionSplint:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!markerPositionFirstPassed) break;
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -221,6 +258,11 @@ public class TractionSplintManager : MonoBehaviour
                     break;
 
                 case TractionSplintState.ApplyIschialStrap:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!markerPositionFirstPassed) break;
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -229,6 +271,11 @@ public class TractionSplintManager : MonoBehaviour
                     break;
 
                 case TractionSplintState.ApplyAnkleHitch:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!markerPositionFirstPassed) break;
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -237,6 +284,11 @@ public class TractionSplintManager : MonoBehaviour
                     break;
 
                 case TractionSplintState.ConnectAndTightenAnkleTraction:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!markerPositionFirstPassed) break;
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -246,6 +298,11 @@ public class TractionSplintManager : MonoBehaviour
                     break;
 
                 case TractionSplintState.ApplySupportStraps:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!markerPositionFirstPassed || !handTrackingPassed) break;
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -254,6 +311,11 @@ public class TractionSplintManager : MonoBehaviour
                     break;
 
                 case TractionSplintState.ReassessDistalPMS:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!handTrackingPassed) {
                         break;
                     }
@@ -263,6 +325,11 @@ public class TractionSplintManager : MonoBehaviour
                     break;
 
                 case TractionSplintState.StateLogRollTransferToSpineBoard:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!voicePassed) break;
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -278,6 +345,22 @@ public class TractionSplintManager : MonoBehaviour
         SaveResultToGameManager();
         StoreHistory();
         SceneManager.LoadScene("FeedbackScene");
+    }
+
+    private void PlayVoiceForStage(TractionSplintState state)
+    {
+        int stageNumber = (int)state;
+        string path = $"SceneStage/Splint/Splint{stageNumber + 1}";
+
+        if (AudioManager.Instance != null)
+        {
+            Debug.Log($"🔊 견인부목 적용 단계 {stageNumber} 오디오 재생: {path}");
+            AudioManager.Instance.PlayVoice(path);
+        }
+        else
+        {
+            Debug.LogWarning("❗ AudioManager.Instance is NULL! 음성을 재생할 수 없습니다.");
+        }
     }
 
     private IEnumerator GenerateTrainingSummary()
@@ -335,6 +418,7 @@ public class TractionSplintManager : MonoBehaviour
         markerPositionFirstPassed = false;
         markerPositionSecondPassed = false;
         markerDistancePassed = false;
+        hasPlayedVoice = false;
     }
 
     private void ResetValidationFlags()

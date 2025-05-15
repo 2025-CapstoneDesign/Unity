@@ -51,6 +51,8 @@ public class InfantAirwayManager : MonoBehaviour
 
     // 점수 차감 관련 설정
     private const int TIME_PENALTY_PER_SECOND = 1;  // 초과 시간당 차감할 점수
+    
+    private bool hasPlayedVoice = false;
 
     void Start()
     {
@@ -308,6 +310,11 @@ public class InfantAirwayManager : MonoBehaviour
             switch (currentState)
             {
                 case InfantAirwayState.EnsureSceneSafety:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!voicePassed) break;    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -315,6 +322,11 @@ public class InfantAirwayManager : MonoBehaviour
                     break;
 
                 case InfantAirwayState.WearPPE:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     wearPassed = true;
                     if (!wearPassed || !voicePassed) break;
                     uiManager.ShowCheckIconPass(this);
@@ -323,6 +335,11 @@ public class InfantAirwayManager : MonoBehaviour
                     break;
 
                 case InfantAirwayState.Call119AndRequestAED:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!voicePassed) // 1. 음성인식 안되면 패스
                     {
                         break;
@@ -333,6 +350,11 @@ public class InfantAirwayManager : MonoBehaviour
                     break;
 
                 case InfantAirwayState.Perform5BackBlows:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if(!deungduleugiPassed) break;
 
                     uiManager.ShowCheckIconPass(this);
@@ -341,6 +363,11 @@ public class InfantAirwayManager : MonoBehaviour
                     break;
 
                 case InfantAirwayState.Perform5ChestThrusts:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!pressurePassed) break; 
 
                     uiManager.ShowCheckIconPass(this);
@@ -349,6 +376,11 @@ public class InfantAirwayManager : MonoBehaviour
                     break;
 
                 case InfantAirwayState.RepeatBackBlowsAndChestThrusts:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (sixCycleCount < 6)
                     {
                         if (sixCycleCount % 2 == 0 && pressurePassed)
@@ -369,6 +401,11 @@ public class InfantAirwayManager : MonoBehaviour
                     break;
 
                 case InfantAirwayState.IfUnconsciousPlaceSupine:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!gyroPassed) break;   
                     
                     uiManager.ShowCheckIconPass(this);
@@ -377,6 +414,11 @@ public class InfantAirwayManager : MonoBehaviour
                     break;
 
                 case InfantAirwayState.Perform30ChestCompressions:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!pressurePassed) break;
 
                     uiManager.ShowCheckIconPass(this);
@@ -386,6 +428,11 @@ public class InfantAirwayManager : MonoBehaviour
                     break;
 
                 case InfantAirwayState.OpenAirwayAndCheckForObstruction:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if (!gyroPassed || !handTrackingPassed){
                         voicePassed = false;
                         break;
@@ -398,6 +445,11 @@ public class InfantAirwayManager : MonoBehaviour
                     break;
 
                 case InfantAirwayState.Perform1RescueBreath:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if(!flowPassed) break;
 
                     uiManager.ShowCheckIconPass(this);
@@ -406,6 +458,11 @@ public class InfantAirwayManager : MonoBehaviour
                     break;
 
                 case InfantAirwayState.ReopenAirwayAndPerform1RescueBreath:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if(!gyroPassed || !flowPassed) break;
 
                     uiManager.ShowCheckIconPass(this);
@@ -414,6 +471,11 @@ public class InfantAirwayManager : MonoBehaviour
                     break;
 
                 case InfantAirwayState.Perform30To2CPRCycle:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     if(!pressurePassed){
                         flowPassed = false;
                         break;
@@ -425,6 +487,14 @@ public class InfantAirwayManager : MonoBehaviour
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(InfantAirwayState.RecordOnMedicalChart);
+                    break;
+                
+                case InfantAirwayState.RecordOnMedicalChart:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     break;
             }
 
@@ -448,6 +518,22 @@ public class InfantAirwayManager : MonoBehaviour
         SaveResultToGameManager();
         StoreHistory();
         SceneManager.LoadScene("FeedbackScene"); // 결과 씬 이름으로 이동
+    }
+    
+    private void PlayVoiceForStage(InfantAirwayState state)
+    {
+        int stageNumber = (int)state;
+        string path = $"SceneStage/InfantAirway/InfantAirway{stageNumber + 1}";
+
+        if (AudioManager.Instance != null)
+        {
+            Debug.Log($"🔊 영아 기도폐쇄 단계 {stageNumber} 오디오 재생: {path}");
+            AudioManager.Instance.PlayVoice(path);
+        }
+        else
+        {
+            Debug.LogWarning("❗ AudioManager.Instance is NULL! 음성을 재생할 수 없습니다.");
+        }
     }
 
     void SaveResultToGameManager()
@@ -539,6 +625,7 @@ public class InfantAirwayManager : MonoBehaviour
         flowPassed = false;
         pressurePassed = false;
         deungduleugiPassed = false;
+        hasPlayedVoice = false;
     }
 
     private void ResetValidationFlags()

@@ -6,7 +6,7 @@ public class InfantCPRSceneStart : MonoBehaviour
 
     void Start()
     {
-        var info = new SceneStartInfo("영유아 심폐소생술 훈련을 시작합니다.", null);
+        var info = new SceneStartInfo("영아 심폐소생술 훈련을 시작합니다.", null);
         sceneStartGuide.SetSceneInfo(info);
 
         if (AudioManager.Instance == null)
@@ -16,7 +16,7 @@ public class InfantCPRSceneStart : MonoBehaviour
         else
         {
             Debug.Log("AudioManager.Instance 사용 시작");
-            AudioManager.Instance.PlayVoice("SceneStart/Voice_InfantCPR");
+            AudioManager.Instance.PlayVoice("SceneStart/Voice_Stage5");
         }
     }
 }

@@ -16,7 +16,7 @@ public class VaccumSplintSceneStart : MonoBehaviour
         else
         {
             Debug.Log("AudioManager.Instance 사용 시작");
-            AudioManager.Instance.PlayVoice("SceneStart/Voice_VacuumSplint");
+            AudioManager.Instance.PlayVoice("SceneStart/Voice_Stage7");
         }
     }
 }

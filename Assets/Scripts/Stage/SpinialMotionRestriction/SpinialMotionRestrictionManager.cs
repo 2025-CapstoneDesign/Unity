@@ -45,6 +45,8 @@ public class SpinialMotionRestrictionManager : MonoBehaviour
 
     // 점수 차감 관련 설정
     private const int TIME_PENALTY_PER_SECOND = 1;  // 초과 시간당 차감할 점수
+    
+    private bool hasPlayedVoice = false;
 
     void Start()
     {
@@ -156,33 +158,128 @@ public class SpinialMotionRestrictionManager : MonoBehaviour
             switch (currentState)
             {
                 case SpinalMotionRestrictionState.EnsureSceneSafety:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SpinalMotionRestrictionState.WearPPE);
                     break;
 
                 case SpinalMotionRestrictionState.WearPPE:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SpinalMotionRestrictionState.PerformLogRoll);
                     break;
                 
                 case SpinalMotionRestrictionState.PerformLogRoll:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!gyroPassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SpinalMotionRestrictionState.PositionPatientOnSpineBoard);
                     break;
                 
                 case SpinalMotionRestrictionState.PositionPatientOnSpineBoard:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SpinalMotionRestrictionState.StatePaddingSpaceBetweenBoardAndBody);
                     break;
                 
                 case SpinalMotionRestrictionState.StatePaddingSpaceBetweenBoardAndBody:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SpinalMotionRestrictionState.SecureTorsoAndLegsToBoard);
                     break;
                 
                 case SpinalMotionRestrictionState.SecureTorsoAndLegsToBoard:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SpinalMotionRestrictionState.ApplyHeadImmobilizer);
                     break;
                 
                 case SpinalMotionRestrictionState.ApplyHeadImmobilizer:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SpinalMotionRestrictionState.SecureHands);
                     break;
                 
                 case SpinalMotionRestrictionState.SecureHands:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SpinalMotionRestrictionState.AssessPMSOfExtremities);
                     break;
                 
                 case SpinalMotionRestrictionState.AssessPMSOfExtremities:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
+                    if (!voicePassed) break;
+                    
+                    uiManager.ShowCheckIconPass(this);
+                    initPlag();
+                    setState(SpinalMotionRestrictionState.RecordOnMedicalChart);
                     break;
                 
                 case SpinalMotionRestrictionState.RecordOnMedicalChart:
+                    if (!hasPlayedVoice)
+                    {
+                        PlayVoiceForStage(currentState);
+                        hasPlayedVoice = true;
+                    }
                     break;
             }
 
@@ -206,6 +303,22 @@ public class SpinialMotionRestrictionManager : MonoBehaviour
             Debug.Log($"📝 척추고정 평가 훈련 요약:\n{feedback}");
             // TODO: UI에 피드백 표시 로직 추가
         }));
+    }
+    
+    private void PlayVoiceForStage(SpinalMotionRestrictionState state)
+    {
+        int stageNumber = (int)state;
+        string path = $"SceneStage/Spinal/Spinal{stageNumber + 1}";
+
+        if (AudioManager.Instance != null)
+        {
+            Debug.Log($"🔊 척추고정 단계 {stageNumber} 오디오 재생: {path}");
+            AudioManager.Instance.PlayVoice(path);
+        }
+        else
+        {
+            Debug.LogWarning("❗ AudioManager.Instance is NULL! 음성을 재생할 수 없습니다.");
+        }
     }
 
     private void setState(SpinalMotionRestrictionState nextState)
@@ -254,6 +367,7 @@ public class SpinialMotionRestrictionManager : MonoBehaviour
         markerPositionFirstPassed = false;
         markerPositionSecondPassed = false;
         markerDistancePassed = false;
+        hasPlayedVoice = false;
     }
 
     private void ResetValidationFlags()

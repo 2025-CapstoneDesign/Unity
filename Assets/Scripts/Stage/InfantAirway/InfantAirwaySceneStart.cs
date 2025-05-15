@@ -16,7 +16,7 @@ public class InfantAirwaySceneStart : MonoBehaviour
         else
         {
             Debug.Log("AudioManager.Instance 사용 시작");
-            AudioManager.Instance.PlayVoice("SceneStart/Voice_InfantAirway");
+            AudioManager.Instance.PlayVoice("SceneStart/Voice_Stage4");
         }
     }
 }
