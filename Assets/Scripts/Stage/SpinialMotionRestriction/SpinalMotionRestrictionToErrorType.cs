@@ -11,7 +11,7 @@ public static class SpinalMotionRestrictionToErrorType
         { SpinalMotionRestrictionState.PositionPatientOnSpineBoard,  "긴척추고정판 위치" },
         { SpinalMotionRestrictionState.StatePaddingSpaceBetweenBoardAndBody, "긴척추고정판 패드" },
         { SpinalMotionRestrictionState.SecureTorsoAndLegsToBoard,    "긴척추고정판 몸통 다리 고정" },
-        { SpinalMotionRestrictionState.ApplyHeadImmobilizer,         "긴척추고정판 몸통 다리 척추운동제한의 머리고정대 고정" },
+        { SpinalMotionRestrictionState.ApplyHeadImmobilizer,         "척추운동제한의 머리고정대 고정" },
         { SpinalMotionRestrictionState.SecureHands,                  "척추운동제한의 환자 손 고정" },
         { SpinalMotionRestrictionState.AssessPMSOfExtremities,       "척추운동제한의 팔다리 PMS 확인" },
         { SpinalMotionRestrictionState.RecordOnMedicalChart,         "PASS" }
