@@ -13,6 +13,10 @@ public abstract class BaseUIManager : MonoBehaviour, IUIManager
     [SerializeField] protected Image fillMaskImage;
     [SerializeField] protected GradationBarUI compressionUI;
     [SerializeField] protected GradationBarUI breathUI;
+    [SerializeField] private TextMeshProUGUI alertText;
+    [SerializeField] private AudioSource alertAudio;
+
+    private Coroutine alertCoroutine;
 
     protected Coroutine iconResetCoroutine;
     protected float flashTimer;
@@ -46,6 +50,38 @@ public abstract class BaseUIManager : MonoBehaviour, IUIManager
             flashTimer = 0f;
         }
     }
+
+    public void ShowAlert(string message, float duration)
+    {
+        if (alertCoroutine != null)
+            StopCoroutine(alertCoroutine);
+
+        alertCoroutine = StartCoroutine(ShowAlertCoroutine(message, duration));
+    }
+
+    private IEnumerator ShowAlertCoroutine(string message, float duration)
+    {
+        alertText.text = message;
+        alertText.gameObject.SetActive(true);
+
+        if (alertAudio != null)
+            alertAudio.Play();
+
+        // 🔥 핵심: alertText가 있는 Canvas를 정면 위치로 이동시켜야 함
+        Transform cam = Camera.main.transform;
+        Vector3 targetPos = cam.position + cam.forward * 0.5f;
+
+        // 🟡 alertText가 직접 붙은 Canvas의 Transform을 이동해야 해!
+        Transform canvasTransform = alertText.transform.parent;
+        canvasTransform.position = targetPos;
+        canvasTransform.rotation = Quaternion.LookRotation(canvasTransform.position - cam.position);
+
+        yield return new WaitForSeconds(duration);
+
+        alertText.gameObject.SetActive(false);
+        alertCoroutine = null;
+    }
+
 
     public void ShowCompressionUI(bool visible) => compressionUI.gameObject.SetActive(visible);
     public void ShowBreathUI(bool visible) => breathUI.gameObject.SetActive(visible);
