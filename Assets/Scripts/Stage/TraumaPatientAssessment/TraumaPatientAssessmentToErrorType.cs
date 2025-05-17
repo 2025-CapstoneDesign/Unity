@@ -21,7 +21,7 @@ public static class TraumaPatientAssessmentToErrorType
         { TraumaPatientAssessmentState.InspectAbdomenUsingDCAPBTLS, "외상환자평가의 복부 확인" },
         { TraumaPatientAssessmentState.ExposeLowerBody, "하의 제거" },
         { TraumaPatientAssessmentState.InspectPelvisUsingDCAPBLSTIC, "외상환자평가의 골반 확인" },
-        { TraumaPatientAssessmentState.InspectExtremitiesUsingDCAPBLSTICPMS, "외상환자평가의 하지 PMS 확인" },
+        { TraumaPatientAssessmentState.InspectExtremitiesUsingDCAPBLSTICPMS, "외상환자평가의 사지 PMS 확인" },
         { TraumaPatientAssessmentState.PerformLogRoll, "PASS" },
         { TraumaPatientAssessmentState.InspectBackUsingDCAPBLSTIC, "외상환자평가의 등 확인" },
         { TraumaPatientAssessmentState.RecordOnMedicalChart, "PASS" }

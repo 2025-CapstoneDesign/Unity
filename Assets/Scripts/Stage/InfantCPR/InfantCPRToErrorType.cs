@@ -9,7 +9,7 @@ public static class InfantCPRToErrorType
         { InfantCPRState.WearPPE,                               "보호장비 착용" },
         { InfantCPRState.CheckConsciousness,                    "PASS" },
         { InfantCPRState.Call119AndRequestAED,                  "AED 요청" },
-        { InfantCPRState.CheckBreathingAndPulse,                "맥박 호흡 확인" },
+        { InfantCPRState.CheckBreathingAndPulse,                "자동제세동기의 맥박 호흡 확인" },
         { InfantCPRState.Perform30ChestCompressions,            "PASS" },
         { InfantCPRState.OpenAirway,                            "PASS" },
         { InfantCPRState.Perform2RescueBreathsWithPocketMask,   "PASS" },
