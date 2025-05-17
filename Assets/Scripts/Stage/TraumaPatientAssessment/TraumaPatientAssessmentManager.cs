@@ -224,6 +224,7 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
                         PlayVoiceForStage(currentState);
                         hasPlayedVoice = true;
                     }
+                    if(!voicePassed) break;
                     if (!gyroPassed) break;
                     
                     uiManager.ShowCheckIconPass(this);
@@ -542,7 +543,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
 
     private void setState(TraumaPatientAssessmentState nextState)
     {
-        // 이전 단계의 시간 초과 여부 확인 및 점수 차감
         if (stageTimeLimit.ContainsKey(currentState))
         {
             float elapsedTime = Time.time - currentStageStartTime;
@@ -550,22 +550,22 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
 
             if (elapsedTime > timeLimit)
             {
-                // 초과한 초 단위로 점수 차감 (1초당 1점)
+                // 3초마다 1점씩 차감하도록 수정
                 int penaltySeconds = Mathf.FloorToInt(elapsedTime - timeLimit);
                 if (penaltySeconds > 0)
                 {
-                    int penalty = penaltySeconds * TIME_PENALTY_PER_SECOND;
-
-                    // 에러 기록
-                    string errorKey = $"{currentState} 단계 시간 초과";
-                    AddError(errorKey, penalty);
-
-                    Debug.Log($"⏰ 시간 초과 패널티: -{penalty}점 (현재 점수: {score})");
+                    // 3초마다 1점 차감 (기존: 1초당 1점)
+                    int penalty = Mathf.FloorToInt(penaltySeconds / 3f);
+                    if (penalty > 0) // 최소 3초 이상 초과했을 때만 패널티 적용
+                    {
+                        string errorKey = $"{currentState} 단계 시간 초과";
+                        AddError(errorKey, penalty);
+                        Debug.Log($"⏰ 시간 초과 패널티: -{penalty}점 (현재 점수: {score})");
+                    }
                 }
             }
         }
-
-        // 새 단계로 상태 변경 및 시작 시간 기록
+        
         currentStageStartTime = Time.time;
         currentState = nextState;
         VoiceSender.Instance.CurrentStageTag = nextState.ToVoiceTag();

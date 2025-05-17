@@ -6,7 +6,7 @@ public static class AEDStateToErrorType
     {
         { CPRState.CheckSafety,             "현장 안전 확인" },
         { CPRState.WearPPE,                 "보호장비 착용" },
-        { CPRState.CheckConsciousness,      "PASS" },
+        { CPRState.CheckConsciousness,      "의식 확인" },
         { CPRState.Call119AndRequestAED,    "AED 요청" },
         { CPRState.CheckBreathingAndPulse,  "자동 제세동기의 맥박 호흡 확인" },
         { CPRState.ChestCompressions,       "PASS" },

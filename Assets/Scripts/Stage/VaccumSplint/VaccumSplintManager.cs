@@ -122,13 +122,6 @@ public class VaccumSplintManager : MonoBehaviour
 
         switch (currentState)
         {
-            case VacuumSplintState.ExposeAndSupportFracture:
-                if (!gyroPassed && Mathf.Abs(pitch) > 30f)
-                {
-                    Debug.Log("🌀 골절 부위 지지 확인 성공!");
-                    setGyroPassed();
-                }
-                break;
             default:
                 break;  
         }
@@ -189,6 +182,7 @@ public class VaccumSplintManager : MonoBehaviour
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(VacuumSplintState.ExposeAndSupportFracture);
+                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
                     
                 case VacuumSplintState.ExposeAndSupportFracture:
@@ -197,7 +191,7 @@ public class VaccumSplintManager : MonoBehaviour
                         PlayVoiceForStage(currentState);
                         hasPlayedVoice = true;
                     }
-                    if (!gyroPassed) break;
+                    if (!handTrackingPassed) break;
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -283,7 +277,7 @@ public class VaccumSplintManager : MonoBehaviour
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(VacuumSplintState.ReassessDistalPMS);
-                    handValidator.BeginVerification(4, new Vector3(0f, -0.1f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
+                    handValidator.BeginVerification(1, new Vector3(0f, -0.1f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
                     
                 case VacuumSplintState.ReassessDistalPMS:
@@ -356,17 +350,18 @@ public class VaccumSplintManager : MonoBehaviour
 
             if (elapsedTime > timeLimit)
             {
-                // 초과한 초 단위로 점수 차감 (1초당 1점)
+                // 3초마다 1점씩 차감하도록 수정
                 int penaltySeconds = Mathf.FloorToInt(elapsedTime - timeLimit);
                 if (penaltySeconds > 0)
                 {
-                    int penalty = penaltySeconds * TIME_PENALTY_PER_SECOND;
-
-                    // 에러 기록
-                    string errorKey = $"{currentState} 단계 시간 초과";
-                    AddError(errorKey, penalty);
-
-                    Debug.Log($"⏰ 시간 초과 패널티: -{penalty}점 (현재 점수: {score})");
+                    // 3초마다 1점 차감 (기존: 1초당 1점)
+                    int penalty = Mathf.FloorToInt(penaltySeconds / 3f);
+                    if (penalty > 0) // 최소 3초 이상 초과했을 때만 패널티 적용
+                    {
+                        string errorKey = $"{currentState} 단계 시간 초과";
+                        AddError(errorKey, penalty);
+                        Debug.Log($"⏰ 시간 초과 패널티: -{penalty}점 (현재 점수: {score})");
+                    }
                 }
             }
         }

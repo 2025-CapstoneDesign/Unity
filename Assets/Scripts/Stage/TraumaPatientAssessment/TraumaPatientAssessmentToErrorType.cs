@@ -8,7 +8,7 @@ public static class TraumaPatientAssessmentToErrorType
         { TraumaPatientAssessmentState.EnsureSceneSafety,    "현장 안전 확인" },
         { TraumaPatientAssessmentState.WearPPE,              "보호장비 착용" },
         { TraumaPatientAssessmentState.StabilizeHeadAndDelegateToAssistant, "PASS" },
-        { TraumaPatientAssessmentState.CheckConsciousness,  "PASS" },
+        { TraumaPatientAssessmentState.CheckConsciousness,  "의식 확인" },
         { TraumaPatientAssessmentState.CheckAirwayForObstruction, "PASS" },
         { TraumaPatientAssessmentState.AssessBreathingAndPattern, "PASS" },
         { TraumaPatientAssessmentState.CheckCirculatoryStatus, "PASS" },

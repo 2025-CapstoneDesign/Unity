@@ -14,7 +14,7 @@ public static class InfantAirwayToErrorType
         { InfantAirwayState.Perform5BackBlows,                  "PASS" },
         { InfantAirwayState.Perform5ChestThrusts,               "PASS" },
         { InfantAirwayState.RepeatBackBlowsAndChestThrusts,     "PASS" },
-        { InfantAirwayState.IfUnconsciousPlaceSupine,           "PASS" },
+        { InfantAirwayState.IfUnconsciousPlaceSupine,           "영아 기도 폐쇄 처치법의 자세교정" },
         { InfantAirwayState.Perform30ChestCompressions,         "PASS" },
         { InfantAirwayState.OpenAirwayAndCheckForObstruction,   "영아 심폐 소생술의 기도 개방" },
         { InfantAirwayState.Perform1RescueBreath,               "PASS" },

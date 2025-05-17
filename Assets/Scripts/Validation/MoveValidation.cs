@@ -69,10 +69,38 @@ public class MoveValidation : MonoBehaviour
             onVerifiedCallback = onSuccess,
             isVerified = false,
             currentStayTime = 0f,
-            isInitialized = false,
-            startPos = Vector3.zero
+            // isInitialized and startPos will be set below or in Update
+            isInitialized = false, 
+            startPos = Vector3.zero 
         };
         
+        // Try to set initial position and effect if marker is already visible
+        if (OptimizedArUcoMarkerDetection.markerMap.TryGetValue(markerId, out MarkerData currentMarkerData))
+        {
+            validation.startPos = currentMarkerData.position;
+            validation.isInitialized = true;
+            Vector3 targetPos = validation.startPos + validation.expectedOffset;
+            validation.lastPosition = targetPos; // Though lastPosition is currently unused
+
+            if (targetEffectPrefab != null)
+            {
+                validation.effect = Instantiate(targetEffectPrefab, targetPos, Quaternion.identity);
+                validation.effectRenderer = validation.effect.GetComponentInChildren<Renderer>();
+                if (validation.effectRenderer != null)
+                {
+                    validation.effectRenderer.material = new Material(validation.effectRenderer.material);
+                    validation.effectRenderer.material.color = defaultColor;
+                }
+                validation.effect.SetActive(true);
+            }
+            Debug.Log($"🎯 마커 {validation.markerId}의 초기 위치 즉시 설정(BeginValidation): {validation.startPos:F3}, 목표 위치: {targetPos:F3}");
+        }
+        else
+        {
+            // If marker not visible, initialization will be deferred to Update loop
+            Debug.LogWarning($"마커 {markerId}가 BeginValidation 시점에 보이지 않아 초기 위치 설정이 Update에서 지연됩니다.");
+        }
+
         validations.Add(validation);
         isActive = true;
         
@@ -106,24 +134,38 @@ public class MoveValidation : MonoBehaviour
             if (validation.isVerified)
                 continue;
 
+            // 마커가 인식될 때만 처리
             if (!OptimizedArUcoMarkerDetection.markerMap.TryGetValue(validation.markerId, out MarkerData marker))
             {
                 // 마커가 인식되지 않았을 때 이펙트 숨기기
                 if (validation.effect != null)
                     validation.effect.SetActive(false);
+                // If marker was initialized but now lost, DO NOT reset currentStayTime or color
+                // if (validation.isInitialized) 
+                // {
+                //     validation.currentStayTime = 0f;
+                //     if (validation.effectRenderer != null)
+                //         validation.effectRenderer.material.color = defaultColor; // Reset color if it was changing
+                // }
                 continue;
             }
+            else
+            {
+                // 마커가 다시 인식되었을 때 이펙트 다시 표시
+                if (validation.effect != null && !validation.effect.activeSelf)
+                    validation.effect.SetActive(true);
+            }
 
-            if (validation.startPos == Vector3.zero)
-                validation.startPos = marker.position;
-
-            Vector3 newTargetPos = validation.startPos + validation.expectedOffset;
-
+            // 이펙트와 시작 위치 초기화 (최초 한 번만, if not done in BeginValidation)
             if (!validation.isInitialized)
             {
+                validation.startPos = marker.position;
+                Vector3 targetPos = validation.startPos + validation.expectedOffset;
+                validation.lastPosition = targetPos; // Though lastPosition is currently unused
+                
                 if (validation.effect == null && targetEffectPrefab != null)
                 {
-                    validation.effect = Instantiate(targetEffectPrefab, newTargetPos, Quaternion.identity);
+                    validation.effect = Instantiate(targetEffectPrefab, targetPos, Quaternion.identity);
                     validation.effectRenderer = validation.effect.GetComponentInChildren<Renderer>();
                     if (validation.effectRenderer != null)
                     {
@@ -132,35 +174,10 @@ public class MoveValidation : MonoBehaviour
                     }
                 }
                 
-                if (validation.effect != null)
-                {
-                    validation.effect.transform.position = newTargetPos;
-                    validation.effect.SetActive(true);
-                }
-                
+                validation.effect?.SetActive(true);
                 validation.isInitialized = true;
-                validation.lastPosition = newTargetPos;
-                continue;
+                Debug.Log($"🎯 마커 {validation.markerId}의 지연된 초기 위치 설정(Update): {validation.startPos:F3}, 목표 위치: {targetPos:F3}");
             }
-
-            float positionChange = Vector3.Distance(validation.lastPosition, newTargetPos);
-
-            if (positionChange > 0.1f)
-            {
-                if (validation.effect != null)
-                {
-                    validation.effect.transform.position = newTargetPos;
-                }
-            }
-            else
-            {
-                if (validation.effect != null)
-                {
-                    validation.effect.transform.position = Vector3.Lerp(validation.effect.transform.position, newTargetPos, Time.deltaTime * 10f);
-                }
-            }
-
-            validation.lastPosition = newTargetPos;
 
             Vector3 currentPos = marker.position;
             Vector3 moved = currentPos - validation.startPos;
@@ -220,18 +237,30 @@ public class MoveValidation : MonoBehaviour
     {
         foreach (var validation in validations)
         {
+            // 코루틴이 실행 중이라면 중지
+            if (validation.hideCoroutine != null)
+            {
+                StopCoroutine(validation.hideCoroutine);
+                validation.hideCoroutine = null;
+            }
+            
+            // 이펙트가 있다면 제거
+            if (validation.effect != null)
+            {
+                Destroy(validation.effect);
+                validation.effect = null;
+                validation.effectRenderer = null;
+            }
+            
+            // 모든 상태 초기화
             validation.isVerified = false;
             validation.currentStayTime = 0f;
             validation.startPos = Vector3.zero;
-
-            if (validation.effect != null)
-            {
-                validation.effect.SetActive(false);
-                if (validation.effectRenderer != null)
-                    validation.effectRenderer.material.color = defaultColor;
-            }
+            validation.lastPosition = Vector3.zero;
+            validation.isInitialized = false;  // 중요: isInitialized 플래그 초기화
         }
         
-        isActive = false;
+        isActive = true;  // 검증을 다시 활성화하여 새로운 초기화가 가능하도록 함
+        Debug.Log("🔄 검증 시스템 초기화 완료");
     }
 }

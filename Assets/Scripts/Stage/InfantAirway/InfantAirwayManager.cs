@@ -35,6 +35,7 @@ public class InfantAirwayManager : MonoBehaviour
     public MarkerPositionValidate markerPositionValidator;
     public MarkerDistanceValidate markerDistanceValidator;
     public MoveValidation moveValidator;
+    public TurnValidation turnValidator;
 
     private CPRValidator cprValidator;
     private BreathValidator breathValidator;
@@ -234,16 +235,8 @@ public class InfantAirwayManager : MonoBehaviour
 
         switch (currentState)
         {
-            case InfantAirwayState.IfUnconsciousPlaceSupine:
-                if (!gyroPassed && Mathf.Abs(pitch) > -20f) // 기울기 임계값 (적절히 조정 필요)
-                {
-                    Debug.Log("🔄 영아 바로눕히기 성공!");
-                    setGyroPassed();
-                }
-                break;
-
             case InfantAirwayState.OpenAirwayAndCheckForObstruction:
-                if (!gyroPassed && (Mathf.Abs(pitch) > -10f))
+                if (!gyroPassed && (Mathf.Abs(pitch) > 50f))
                 {
                     Debug.Log("🔄 기도 열기 성공!");
                     setGyroPassed();
@@ -251,7 +244,7 @@ public class InfantAirwayManager : MonoBehaviour
                 break;
 
             case InfantAirwayState.ReopenAirwayAndPerform1RescueBreath:
-                if (!gyroPassed && (Mathf.Abs(pitch) > 30f || Mathf.Abs(roll) > 30f))
+                if (!gyroPassed && (Mathf.Abs(pitch) > 50f))
                 {
                     Debug.Log("🔄 기도 다시 열기 성공!");
                     setGyroPassed();
@@ -406,7 +399,7 @@ public class InfantAirwayManager : MonoBehaviour
                         PlayVoiceForStage(currentState);
                         hasPlayedVoice = true;
                     }
-                    if (!gyroPassed) break;   
+                    if (!voicePassed) break;   
                     
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -586,27 +579,32 @@ public class InfantAirwayManager : MonoBehaviour
 
     private void setState(InfantAirwayState nextState)
     {
-        // 단계 변경 시 시작 시간 갱신
-        currentStageStartTime = Time.time;
-
-        // 이전 단계에서 제한 시간이 있는 경우, 초과 시간에 대해 점수 차감
-        if (currentState != nextState && stageTimeLimit.ContainsKey(currentState))
+        // 이전 단계의 시간 초과 여부 확인 및 점수 차감
+        if (stageTimeLimit.ContainsKey(currentState))
         {
             float elapsedTime = Time.time - currentStageStartTime;
             float timeLimit = stageTimeLimit[currentState];
-            
-            if (elapsedTime > timeLimit && currentState != InfantAirwayState.RecordOnMedicalChart)
+
+            if (elapsedTime > timeLimit)
             {
-                int exceededSeconds = Mathf.FloorToInt(elapsedTime - timeLimit);
-                int penalty = exceededSeconds * TIME_PENALTY_PER_SECOND;
-                
-                if (penalty > 0)
+                // 3초마다 1점씩 차감하도록 수정
+                int penaltySeconds = Mathf.FloorToInt(elapsedTime - timeLimit);
+                if (penaltySeconds > 0)
                 {
-                    AddError($"{AdapterErrorType.GetLabel(currentState)} 단계 시간 초과 ({exceededSeconds}초)", penalty);
+                    // 3초마다 1점 차감 (기존: 1초당 1점)
+                    int penalty = Mathf.FloorToInt(penaltySeconds / 3f);
+                    if (penalty > 0) // 최소 3초 이상 초과했을 때만 패널티 적용
+                    {
+                        string errorKey = $"{currentState} 단계 시간 초과";
+                        AddError(errorKey, penalty);
+                        Debug.Log($"⏰ 시간 초과 패널티: -{penalty}점 (현재 점수: {score})");
+                    }
                 }
             }
         }
 
+        // 새 단계로 상태 변경 및 시작 시간 기록
+        currentStageStartTime = Time.time;
         currentState = nextState;
         VoiceSender.Instance.CurrentStageTag = nextState.ToVoiceTag();
         Debug.Log($"➡️ 상태 전환: {currentState}");
