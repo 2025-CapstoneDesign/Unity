@@ -889,6 +889,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
+--- !u!114 &527435239 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8745250740113098312, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
+  m_PrefabInstance: {fileID: 527435238}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c4d249cd2a79a54c8c86b2a73e40040, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &529229143
 GameObject:
   m_ObjectHideFlags: 0
@@ -1631,6 +1642,7 @@ MonoBehaviour:
   markerPositionValidator: {fileID: 405844687}
   markerDistanceValidator: {fileID: 696555819}
   moveValidator: {fileID: 293894798}
+  turnValidator: {fileID: 527435239}
 --- !u!1 &1315927771
 GameObject:
   m_ObjectHideFlags: 0

@@ -298,7 +298,7 @@ public class AEDManager : MonoBehaviour
                         PlayVoiceForStage(currentState);
                         hasPlayedVoice = true;
                     }
-                    if (!gyroPassed) break;
+                    if (!gyroPassed || !voicePassed) break;
 
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -529,13 +529,18 @@ public class AEDManager : MonoBehaviour
 
             if (elapsedTime > timeLimit)
             {
+                // 3초마다 1점씩 차감하도록 수정
                 int penaltySeconds = Mathf.FloorToInt(elapsedTime - timeLimit);
                 if (penaltySeconds > 0)
                 {
-                    int penalty = penaltySeconds * TIME_PENALTY_PER_SECOND;
-                    string errorKey = $"{currentState} 단계 시간 초과";
-                    AddError(errorKey, penalty);
-                    Debug.Log($"⏰ 시간 초과 패널티: -{penalty}점 (현재 점수: {score})");
+                    // 3초마다 1점 차감 (기존: 1초당 1점)
+                    int penalty = Mathf.FloorToInt(penaltySeconds / 3f);
+                    if (penalty > 0) // 최소 3초 이상 초과했을 때만 패널티 적용
+                    {
+                        string errorKey = $"{currentState} 단계 시간 초과";
+                        AddError(errorKey, penalty);
+                        Debug.Log($"⏰ 시간 초과 패널티: -{penalty}점 (현재 점수: {score})");
+                    }
                 }
             }
         }

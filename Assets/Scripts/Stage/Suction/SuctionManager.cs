@@ -26,7 +26,8 @@ public class SuctionManager : MonoBehaviour
     private bool gyroPassed = false;
     private bool flowPassed = false;
     private bool pressurePassed = false;
-    
+    private bool turnPassed = false;
+
     private int fiveCycleCount = 0;
 
     public EyeTrackingValidate eyeTrackingValidator;
@@ -34,7 +35,8 @@ public class SuctionManager : MonoBehaviour
     public MarkerPositionValidate markerPositionValidator;
     public MarkerDistanceValidate markerDistanceValidator;
     public MoveValidation moveValidator;
-    
+    public TurnValidation turnValidator;
+
     private CPRValidator cprValidator;
     private BreathValidator breathValidator;
 
@@ -50,7 +52,7 @@ public class SuctionManager : MonoBehaviour
 
     // 점수 차감 관련 설정
     private const int TIME_PENALTY_PER_SECOND = 1;  // 초과 시간당 차감할 점수
-    
+
     private bool hasPlayedVoice = false;
 
     void Start()
@@ -131,13 +133,6 @@ public class SuctionManager : MonoBehaviour
 
         switch (currentState)
         {
-            case SuctionState.CheckSuctionPressure:
-                if (!gyroPassed && Mathf.Abs(pitch) > 30f)
-                {
-                    Debug.Log("🌀 압력 확인 동작 인식!");
-                    setGyroPassed();
-                }
-                break;
             default:
                 break;
         }
@@ -181,7 +176,7 @@ public class SuctionManager : MonoBehaviour
                         hasPlayedVoice = true;
                     }
                     if (!voicePassed) break;
-                    
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.WearPPE);
@@ -194,7 +189,7 @@ public class SuctionManager : MonoBehaviour
                         hasPlayedVoice = true;
                     }
                     if (!voicePassed) break;
-                    
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.CheckEquipmentAndSupplies);
@@ -207,10 +202,11 @@ public class SuctionManager : MonoBehaviour
                         hasPlayedVoice = true;
                     }
                     if (!voicePassed) break;
-                    
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.TurnOnSuctionDevice);
+                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case SuctionState.TurnOnSuctionDevice:
@@ -219,8 +215,8 @@ public class SuctionManager : MonoBehaviour
                         PlayVoiceForStage(currentState);
                         hasPlayedVoice = true;
                     }
-                    if (!voicePassed) break;
-                    
+                    if (!handTrackingPassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.CheckSuctionPressure);
@@ -232,21 +228,8 @@ public class SuctionManager : MonoBehaviour
                         PlayVoiceForStage(currentState);
                         hasPlayedVoice = true;
                     }
-                    if (!gyroPassed) break;
-                    
-                    uiManager.ShowCheckIconPass(this);
-                    initPlag();
-                    setState(SuctionState.TestSuctionWithSaline);
-                    break;
-
-                case SuctionState.TestSuctionWithSaline:
-                    if (!hasPlayedVoice)
-                    {
-                        PlayVoiceForStage(currentState);
-                        hasPlayedVoice = true;
-                    }
                     if (!voicePassed) break;
-                    
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.PerformOralSuction);
@@ -259,7 +242,7 @@ public class SuctionManager : MonoBehaviour
                         hasPlayedVoice = true;
                     }
                     if (!voicePassed) break;
-                    
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.FlushSuctionTipWithSaline);
@@ -272,10 +255,11 @@ public class SuctionManager : MonoBehaviour
                         hasPlayedVoice = true;
                     }
                     if (!voicePassed) break;
-                    
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.TurnOffSuctionDevice);
+                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case SuctionState.TurnOffSuctionDevice:
@@ -284,8 +268,8 @@ public class SuctionManager : MonoBehaviour
                         PlayVoiceForStage(currentState);
                         hasPlayedVoice = true;
                     }
-                    if (!voicePassed) break;
-                    
+                    if (!handTrackingPassed) break;
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.AssembleOxygenTankAndRegulator);
@@ -298,10 +282,17 @@ public class SuctionManager : MonoBehaviour
                         hasPlayedVoice = true;
                     }
                     if (!voicePassed) break;
-                    
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.OpenOxygenTankValve);
+                    turnValidator.BeginValidation(
+                    markerId: 1,       // 1번 마커 검증
+                    targetAngle: 90f,  // 90도 회전 목표
+                    tolerance: 5f,     // 오차 ±5도 허용
+                    stayTime: 1.0f,    // 1초간 유지해야 함
+                    onSuccess: setTurnPassed  // 성공 시 호출될 콜백
+                    );
                     break;
 
                 case SuctionState.OpenOxygenTankValve:
@@ -310,21 +301,8 @@ public class SuctionManager : MonoBehaviour
                         PlayVoiceForStage(currentState);
                         hasPlayedVoice = true;
                     }
-                    if (!voicePassed) break;
-                    
-                    uiManager.ShowCheckIconPass(this);
-                    initPlag();
-                    setState(SuctionState.CheckForLeaksAndStateNoLeaks);
-                    break;
+                    if (!turnPassed) break;
 
-                case SuctionState.CheckForLeaksAndStateNoLeaks:
-                    if (!hasPlayedVoice)
-                    {
-                        PlayVoiceForStage(currentState);
-                        hasPlayedVoice = true;
-                    }
-                    if (!voicePassed) break;
-                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.CheckOxygenGaugeAndStateRemainingPressure);
@@ -337,7 +315,7 @@ public class SuctionManager : MonoBehaviour
                         hasPlayedVoice = true;
                     }
                     if (!voicePassed) break;
-                    
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.ConnectNonRebreatherMask);
@@ -350,7 +328,7 @@ public class SuctionManager : MonoBehaviour
                         hasPlayedVoice = true;
                     }
                     if (!voicePassed) break;
-                    
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.SetOxygenFlowRate);
@@ -363,7 +341,7 @@ public class SuctionManager : MonoBehaviour
                         hasPlayedVoice = true;
                     }
                     if (!voicePassed) break;
-                    
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.FillReservoirBagAndApplyMask);
@@ -376,20 +354,7 @@ public class SuctionManager : MonoBehaviour
                         hasPlayedVoice = true;
                     }
                     if (!voicePassed) break;
-                    
-                    uiManager.ShowCheckIconPass(this);
-                    initPlag();
-                    setState(SuctionState.MonitorPatientRespiration);
-                    break;
 
-                case SuctionState.MonitorPatientRespiration:
-                    if (!hasPlayedVoice)
-                    {
-                        PlayVoiceForStage(currentState);
-                        hasPlayedVoice = true;
-                    }
-                    if (!voicePassed) break;
-                    
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.RemoveMaskUponInstruction);
@@ -402,7 +367,7 @@ public class SuctionManager : MonoBehaviour
                         hasPlayedVoice = true;
                     }
                     if (!voicePassed) break;
-                    
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.TurnOffFlowMeterAndTank);
@@ -415,12 +380,12 @@ public class SuctionManager : MonoBehaviour
                         hasPlayedVoice = true;
                     }
                     if (!voicePassed) break;
-                    
+
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     setState(SuctionState.RecordOnMedicalChart);
                     break;
-                
+
                 case SuctionState.RecordOnMedicalChart:
                     if (!hasPlayedVoice)
                     {
@@ -444,13 +409,13 @@ public class SuctionManager : MonoBehaviour
 
     private IEnumerator GenerateTrainingSummary()
     {
-        yield return StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "흡인 및 산소공급 훈련 평가 단계",(result) =>
+        yield return StartCoroutine(feedbackGenerator.GenerateFeedback(checkScore, "흡인 및 산소공급 훈련 평가 단계", (result) =>
         {
             feedback = result;
             Debug.Log($"📝 흡인 및 산소공급 훈련 요약:\n{feedback}");
         }));
     }
-    
+
     private void PlayVoiceForStage(SuctionState state)
     {
         int stageNumber = (int)state;
@@ -477,17 +442,18 @@ public class SuctionManager : MonoBehaviour
 
             if (elapsedTime > timeLimit)
             {
-                // 초과한 초 단위로 점수 차감 (1초당 1점)
+                // 3초마다 1점씩 차감하도록 수정
                 int penaltySeconds = Mathf.FloorToInt(elapsedTime - timeLimit);
                 if (penaltySeconds > 0)
                 {
-                    int penalty = penaltySeconds * TIME_PENALTY_PER_SECOND;
-
-                    // 에러 기록
-                    string errorKey = $"{currentState} 단계 시간 초과";
-                    AddError(errorKey, penalty);
-
-                    Debug.Log($"⏰ 시간 초과 패널티: -{penalty}점 (현재 점수: {score})");
+                    // 3초마다 1점 차감 (기존: 1초당 1점)
+                    int penalty = Mathf.FloorToInt(penaltySeconds / 3f);
+                    if (penalty > 0) // 최소 3초 이상 초과했을 때만 패널티 적용
+                    {
+                        string errorKey = $"{currentState} 단계 시간 초과";
+                        AddError(errorKey, penalty);
+                        Debug.Log($"⏰ 시간 초과 패널티: -{penalty}점 (현재 점수: {score})");
+                    }
                 }
             }
         }
@@ -513,12 +479,13 @@ public class SuctionManager : MonoBehaviour
         markerPositionSecondPassed = false;
         markerDistancePassed = false;
         hasPlayedVoice = false;
+        turnPassed = false;
     }
 
     private void ResetValidationFlags()
     {
         initPlag();
-        
+
         fiveCycleCount = 0;
         cprValidator.Reset();
         breathValidator.Reset();
@@ -558,20 +525,25 @@ public class SuctionManager : MonoBehaviour
     {
         gyroPassed = true;
     }
-    
+
     public void setFlowPassed()
     {
         flowPassed = true;
     }
-    
+
     public void setPressurePassed()
     {
         pressurePassed = true;
     }
-    
+
     public void setMarkerDistancePassed()
     {
         markerDistancePassed = true;
+    }
+
+    public void setTurnPassed()
+    {
+        turnPassed = true;
     }
 
     void OnEnable()

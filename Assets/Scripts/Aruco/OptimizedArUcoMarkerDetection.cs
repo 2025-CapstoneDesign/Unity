@@ -15,7 +15,7 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
     public static Dictionary<int, MarkerData> markerMap = new Dictionary<int, MarkerData>();
 
     public float markerLength = 0.05f;
-    public bool enableDownScaling = true;
+    public bool enableDownScaling = false;
     public bool useFlippedZ = true;
     
     // 마커 위치 안정화를 위한 설정
@@ -73,15 +73,17 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
     private void InitCameraParameters()
     {
         camMatrix = new Mat(3, 3, CvType.CV_64FC1);
-        camMatrix.put(0, 0, 370.6985, 0, 363.9156);
-        camMatrix.put(1, 0, 0, 361.9248, 273.5386);
-        camMatrix.put(2, 0, 0, 0, 1);
+        double scaleX = 1280.0 / 640.0;    // 2.0
+        double scaleY = 720.0  / 480.0;    // 1.5
+
+        camMatrix.put(0,0, 370.6985 * scaleX, 0, 363.9156 * scaleX);
+        camMatrix.put(1,0, 0, 361.9248 * scaleY, 273.5386 * scaleY);
+        camMatrix.put(2,0, 0, 0, 1);
 
         distCoeffs = new MatOfDouble(-0.3952, 2.5100, 0.0587, -0.1033, -11.2717);
 
         scaledCamMatrix = new Mat(3, 3, CvType.CV_64FC1);
         scaledDistCoeffs = new MatOfDouble(distCoeffs.clone());
-
     }
 
     public void OnWebCamTextureToMatHelperInitialized()

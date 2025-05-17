@@ -14,7 +14,7 @@ public class BreathValidator
     {
         if (type == "Infant")
         {
-            requiredFlow = 25f;
+            requiredFlow = 10f;
             requiredCount = 2;
         }
         else

@@ -44,6 +44,7 @@ public class CameraManager : MonoBehaviour
         if (devices.Length > 0)
         {
             Debug.Log($"📸 Using camera: {devices[0].name}");
+            // 640x480에서 1280x720으로 해상도 변경
             webCamTexture = new WebCamTexture(devices[0].name, 1280, 720, 30);
             webCamTexture.Play();
 
