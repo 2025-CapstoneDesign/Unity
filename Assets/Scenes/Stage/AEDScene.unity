@@ -1320,7 +1320,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8587c994b2a378446adfb410dfdd617c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverUrl: ws://localhost:10054
+  serverUrl: 192.168.1.129:10054
 --- !u!1 &974490116
 GameObject:
   m_ObjectHideFlags: 0
@@ -3340,6 +3340,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1543615003825515830, guid: e06a420b3573afd4dae55bf3287c8ea1, type: 3}
+      propertyPath: markerLength
+      value: 0.04
+      objectReference: {fileID: 0}
     - target: {fileID: 1979345816391612889, guid: e06a420b3573afd4dae55bf3287c8ea1, type: 3}
       propertyPath: _requestedFPS
       value: 15
@@ -3714,6 +3718,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 768346098017021688, guid: c2584def47c5c234bb7e363e63066195, type: 3}
+      propertyPath: serverUrl
+      value: 192.168.1.129:10050
+      objectReference: {fileID: 0}
     - target: {fileID: 1757093436115327999, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -3760,7 +3768,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5391519067006067315, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverAddress
-      value: ws://localhost:10049
+      value: 192.168.1.129:10049
       objectReference: {fileID: 0}
     - target: {fileID: 7556774523085063354, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverUrl
