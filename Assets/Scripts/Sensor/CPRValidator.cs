@@ -19,15 +19,15 @@ public class CPRValidator
     {
         if (type == "Infant")
         {
-            minPressure = 980f;
-            maxPressure = 1100f;
+            minPressure = 80f;
+            maxPressure = 200f;
             requiredCount = 5;
             minInterval = 0.1f;
             maxInterval = 0.2f;
         }
         else
         {
-            minPressure = 980f;
+            minPressure = 880f;
             maxPressure = 1100f;
             requiredCount = 30;
             minInterval = 0.1f;

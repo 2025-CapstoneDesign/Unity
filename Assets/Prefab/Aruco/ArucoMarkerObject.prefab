@@ -49,6 +49,10 @@ MonoBehaviour:
   markerLength: 0.05
   enableDownScaling: 0
   useFlippedZ: 1
+  enableSmoothing: 1
+  smoothingFrameCount: 15
+  positionSmoothFactor: 0.8
+  rotationSmoothFactor: 0.5
   previewQuad: {fileID: 0}
   displayCameraPreview: 0
 --- !u!114 &1979345816391612889
@@ -64,14 +68,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _requestedDeviceName: 
-  _requestedWidth: 640
-  _requestedHeight: 480
+  _requestedWidth: 1280
+  _requestedHeight: 720
   _requestedIsFrontFacing: 1
   _requestedFPS: 2
   _rotate90Degree: 0
   _flipVertical: 0
   _flipHorizontal: 0
-  _outputColorFormat: 3
+  _outputColorFormat: 0
   _timeoutFrameCount: 1500
   _onInitialized:
     m_PersistentCalls:
@@ -118,5 +122,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8d27c020f1865746b5abf91a35964df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _downscaleRatio: 3
-  _frameSkippingRatio: 5
+  _downscaleRatio: 2
+  _frameSkippingRatio: 3
