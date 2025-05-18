@@ -13,6 +13,47 @@ public class PoseRecognitionResult
     public bool infant_airway;      // 기도 확보 자세 적합 여부
     public bool infant_compression; // 유아 흉부 압박 적합 여부
     public bool vacuum_pump;        // 흡인기 사용 자세 적합 여부
+    
+    // 각 포즈 타입별 에러 메시지
+    public string cpr_errors;
+    public string infant_airway_errors;
+    public string infant_compression_errors;
+    public string vacuum_pump_errors;
+    
+    // 이전 버전과의 호환성을 위한 속성
+    [JsonIgnore]
+    public string cpr_error_msg => cpr_errors ?? string.Empty;
+    
+    [JsonIgnore]
+    public string infant_airway_error_msg => infant_airway_errors ?? string.Empty;
+    
+    [JsonIgnore]
+    public string infant_compression_error_msg => infant_compression_errors ?? string.Empty;
+    
+    [JsonIgnore]
+    public string vacuum_pump_error_msg => vacuum_pump_errors ?? string.Empty;
+    
+    // 해당 포즈 타입에 따른 에러 메시지 반환
+    public string GetErrorMessage(string poseType)
+    {
+        switch (poseType)
+        {
+            case "cpr":
+                return !cpr && !string.IsNullOrEmpty(cpr_error_msg) 
+                    ? cpr_error_msg : "CPR 자세가 올바르지 않습니다.";
+            case "infant_airway":
+                return !infant_airway && !string.IsNullOrEmpty(infant_airway_error_msg) 
+                    ? infant_airway_error_msg : "기도 확보 자세가 올바르지 않습니다.";
+            case "infant_compression":
+                return !infant_compression && !string.IsNullOrEmpty(infant_compression_error_msg) 
+                    ? infant_compression_error_msg : "유아 흉부 압박 자세가 올바르지 않습니다.";
+            case "vacuum_pump":
+                return !vacuum_pump && !string.IsNullOrEmpty(vacuum_pump_error_msg) 
+                    ? vacuum_pump_error_msg : "흡인기 사용 자세가 올바르지 않습니다.";
+            default:
+                return "자세를 다시 취해주세요.";
+        }
+    }
 }
 
 public class MovenetSocketClient : MonoBehaviour
@@ -55,14 +96,30 @@ public class MovenetSocketClient : MonoBehaviour
         {
             Debug.Log("✅ MovenetWebSocket 연결됨");
             isConnecting = false;
+            // 연결 확인용 메시지 전송
+            SendText("{\"type\":\"ping\"}");
         };
 
         websocket.OnMessage += (bytes) =>
         {
             string msg = Encoding.UTF8.GetString(bytes);
+            
+            if (string.IsNullOrEmpty(msg))
+            {
+                return;
+            }
+            
             try
             {
+                // 먼저 JSON 형식인지 확인
+                if (!msg.StartsWith("{") || !msg.EndsWith("}"))
+                {
+                    Debug.LogWarning($"⚠️ 잘못된 JSON 형식: {msg}");
+                    return;
+                }
+                
                 PoseRecognitionResult result = JsonConvert.DeserializeObject<PoseRecognitionResult>(msg);
+                
                 if (result != null && result.type == "pose_result")
                 {
                     latestPoseResult = result;
@@ -71,7 +128,7 @@ public class MovenetSocketClient : MonoBehaviour
             }
             catch (Exception ex)
             {
-                Debug.LogError("❌ MovenetWebSocket 메시지 파싱 오류: " + ex.Message);
+                Debug.LogError($"❌ 메시지 파싱 오류: {ex.Message}");
             }
         };
 
@@ -104,7 +161,16 @@ public class MovenetSocketClient : MonoBehaviour
 
     void Update()
     {
-        websocket?.DispatchMessageQueue();
+        // websocket 객체가 존재하는지 확인 후 큐 처리
+        if (websocket != null) 
+        {
+            try {
+                websocket.DispatchMessageQueue();
+            }
+            catch (Exception ex) {
+                Debug.LogError($"❌ 메시지 큐 처리 중 오류: {ex.Message}");
+            }
+        }
 
         if (!isConnecting && (websocket == null || websocket.State != WebSocketState.Open))
         {
