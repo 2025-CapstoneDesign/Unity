@@ -317,10 +317,10 @@ public class AEDManager : MonoBehaviour
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     hasPlayedVoice = false;
-                    setState(CPRState.CheckBreathingAndPulse);
+                    setState(CPRState.ChestCompressions);
                     handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
-
+                /*
                 case CPRState.CheckBreathingAndPulse:
                     if (!hasPlayedVoice)
                     {
@@ -339,7 +339,7 @@ public class AEDManager : MonoBehaviour
                     initPlag();
                     hasPlayedVoice = false;
                     setState(CPRState.ChestCompressions);
-                    break;
+                    break; */
 
                 case CPRState.ChestCompressions:
                     if (!hasPlayedVoice)
@@ -632,12 +632,18 @@ public class AEDManager : MonoBehaviour
     {
         SensorEvents.OnSensorDataReceived += HandleSensorData;
         SensorEvents.OnGyroDataReceived += HandleGyroData;
+        
+        if (MovenetSocketClient.Instance != null)
+            MovenetSocketClient.Instance.OnPoseResultReceived += HandlePoseResult;
     }
 
     void OnDisable()
     {
         SensorEvents.OnSensorDataReceived -= HandleSensorData;
         SensorEvents.OnGyroDataReceived -= HandleGyroData;
+        
+        if (MovenetSocketClient.Instance != null)
+            MovenetSocketClient.Instance.OnPoseResultReceived -= HandlePoseResult;
     }
 
     private void GenerateFeedback()
@@ -757,6 +763,71 @@ public class AEDManager : MonoBehaviour
         }
     }
 
+    // 새로 추가한 포즈 처리 메서드
+    private void HandlePoseResult(PoseRecognitionResult result)
+    {
+        // CPR 자세 검증
+        
+        if (currentState == CPRState.ChestCompressions || currentState == CPRState.ResumeChestCompressions)
+        {
+            if (result.cpr && !pressurePassed)
+            {
+                Debug.Log("🫀 CPR 자세 적합!");
+                // 자세가 적합하면 센서 입력을 기다림
+            }
+            else if (!result.cpr && !pressurePassed)
+            {
+                string errorMsg = result.GetErrorMessage("cpr");
+                uiManager.ShowAlert(errorMsg, 2.5f);
+                Debug.Log("🫀 CPR 자세 부적합! " + errorMsg);
+            }
+        }
+
+        // 유아 기도 확보 자세 검증
+        if (currentState == CPRState.OpenAirway)
+        {
+            if (result.infant_airway && !gyroPassed)
+            {
+                Debug.Log("🌀 유아 기도 확보 자세 적합!");
+                setGyroPassed();
+            }
+            else if (!result.infant_airway && !gyroPassed)
+            {
+                string errorMsg = result.GetErrorMessage("infant_airway");
+                uiManager.ShowAlert(errorMsg, 2.5f);
+                Debug.Log("🌀 유아 기도 확보 자세 부적합! " + errorMsg);
+            }
+        }
+
+        // 유아 흉부 압박 자세 검증
+        if (currentState == CPRState.ProvideRescueBreaths)
+        {
+            if (result.infant_compression && !flowPassed)
+            {
+                Debug.Log("🌬 유아 흉부 압박 자세 적합!");
+                // 자세가 적합하면 센서 입력을 기다림
+            }
+            else if (!result.infant_compression && !flowPassed)
+            {
+                string errorMsg = result.GetErrorMessage("infant_compression");
+                uiManager.ShowAlert(errorMsg, 2.5f);
+                Debug.Log("🌬 유아 흉부 압박 자세 부적합! " + errorMsg);
+            }
+        }
+
+        // 흡인기 사용 자세 검증
+        if (result.vacuum_pump && !markerDistancePassed)
+        {
+            Debug.Log("💨 흡인기 사용 자세 적합!");
+            setMarkerDistancePassed();
+        }
+        else if (!result.vacuum_pump && currentState == CPRState.AttachPads && !markerDistancePassed)
+        {
+            string errorMsg = result.GetErrorMessage("vacuum_pump");
+            uiManager.ShowAlert(errorMsg, 2.5f);
+            Debug.Log("💨 흡인기 사용 자세 부적합! " + errorMsg);
+        }
+    }
 
 
 
