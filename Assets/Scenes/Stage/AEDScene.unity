@@ -3628,9 +3628,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 492780683572133723, guid: c2584def47c5c234bb7e363e63066195, type: 3}
+      propertyPath: recordDuration
+      value: 0.1
+      objectReference: {fileID: 0}
     - target: {fileID: 768346098017021688, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverUrl
-      value: ws://192.168.129.126:10050
+      value: ws://192.168.1.129:10050
       objectReference: {fileID: 0}
     - target: {fileID: 1757093436115327999, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3678,7 +3682,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5391519067006067315, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverAddress
-      value: ws://192.168.129.126:10049
+      value: ws://192.168.1.129:10049
       objectReference: {fileID: 0}
     - target: {fileID: 7556774523085063354, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverUrl

@@ -243,6 +243,7 @@ public class AEDManager : MonoBehaviour
         {
             // 단계 + 음성 오답 형태로 기록
             AddError($"{AdapterErrorType.GetLabel(currentState)} 단계 음성 오답", 1);
+            uiManager.ShowAlert("다시 말해보세요", 1f);
             Debug.Log("🟡 음성 평가 : 오답");
         }
         else

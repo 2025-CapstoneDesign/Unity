@@ -29,7 +29,7 @@ public class CPRValidator
         {
             minPressure = 880f;
             maxPressure = 1100f;
-            requiredCount = 30;
+            requiredCount = 5;
             minInterval = 0.1f;
             maxInterval = 0.2f;
         }
