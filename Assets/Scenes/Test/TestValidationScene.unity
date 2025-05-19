@@ -1987,6 +1987,9 @@ MonoBehaviour:
   moveValidator: {fileID: 1059499879}
   handTrackingValidator: {fileID: 1655057982}
   eyeTrackingValidator: {fileID: 1776470798}
+  primaryMarkerId: 1
+  secondaryMarkerId: 12
+  referenceMarkerId: 10
 --- !u!1 &1412083693
 GameObject:
   m_ObjectHideFlags: 0
@@ -2855,6 +2858,8 @@ MonoBehaviour:
   fillMaskImage: {fileID: 2142505201}
   compressionUI: {fileID: 145968364}
   breathUI: {fileID: 1461778268}
+  alertText: {fileID: 0}
+  alertAudio: {fileID: 0}
 --- !u!4 &1687033913
 Transform:
   m_ObjectHideFlags: 0
@@ -3501,6 +3506,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 768346098017021688, guid: c2584def47c5c234bb7e363e63066195, type: 3}
+      propertyPath: serverUrl
+      value: ws://192.168.130.110:10050
+      objectReference: {fileID: 0}
     - target: {fileID: 1757093436115327999, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

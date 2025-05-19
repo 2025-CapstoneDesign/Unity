@@ -5,7 +5,7 @@ public class VoiceSender : MonoBehaviour
 {
     public static VoiceSender Instance;
 
-    public float recordDuration = 0.1f; // 1초에서 0.1초로 변경
+    public float recordDuration; // 1초에서 0.1초로 변경
     private string micDevice;
     private AudioClip clip;
     private int lastReadPosition = 0;
