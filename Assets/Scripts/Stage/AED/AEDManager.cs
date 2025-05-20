@@ -34,6 +34,7 @@ public class AEDManager : MonoBehaviour
     private int fiveCycleCount = 0;
 
     public HandTrackingValidate handValidator;
+    public EyeTrackingValidate eyeTrackingValidator;
     public MarkerPositionValidate markerPositionValidator;
 
     private CPRValidator cprValidator;
@@ -67,13 +68,14 @@ public class AEDManager : MonoBehaviour
         // 각 단계별 제한 시간 설정 (초 단위)
         InitializeTimeLimits();
         currentStageStartTime = Time.time;
+        eyeTrackingValidator.BeginVerification(1, new Vector3(0.2f, 0f, 2f), 0.2f, 2f, setEyeTrackingPassed);
 
     }
 
     private void InitializeTimeLimits()
     {
         // 각 단계별 제한시간 설정 (초 단위)
-        stageTimeLimit[CPRState.CheckSafety] = 10f;
+        stageTimeLimit[CPRState.CheckSafety] = 15f;
         stageTimeLimit[CPRState.WearPPE] = 15f;
         stageTimeLimit[CPRState.CheckConsciousness] = 10f;
         stageTimeLimit[CPRState.Call119AndRequestAED] = 15f;
@@ -270,6 +272,7 @@ public class AEDManager : MonoBehaviour
                         PlayVoiceForStage(currentState);
                         hasPlayedVoice = true;
                     }
+                    if (!eyeTrackingPassed) break;
                     if (!voicePassed) break;
 
                     uiManager.ShowCheckIconPass(this);
@@ -321,7 +324,7 @@ public class AEDManager : MonoBehaviour
                     setState(CPRState.ChestCompressions);
                     handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
                     break;
-                /*
+                
                 case CPRState.CheckBreathingAndPulse:
                     if (!hasPlayedVoice)
                     {
@@ -340,7 +343,7 @@ public class AEDManager : MonoBehaviour
                     initPlag();
                     hasPlayedVoice = false;
                     setState(CPRState.ChestCompressions);
-                    break; */
+                    break;
 
                 case CPRState.ChestCompressions:
                     if (!hasPlayedVoice)

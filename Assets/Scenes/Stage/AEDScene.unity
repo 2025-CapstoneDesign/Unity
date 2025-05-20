@@ -845,6 +845,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
+--- !u!114 &527435239 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7967878666603339636, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
+  m_PrefabInstance: {fileID: 527435238}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bab769c188394104385976c5658b8666, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &527435240 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2589450799121188610, guid: 7abece3c23689cd48b5c874d0ecd9ff0, type: 3}
@@ -1320,7 +1331,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8587c994b2a378446adfb410dfdd617c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverUrl: ws://localhost:10054
+  serverUrl: ws://192.168.1.129:10054
 --- !u!1 &974490116
 GameObject:
   m_ObjectHideFlags: 0
@@ -2123,6 +2134,7 @@ MonoBehaviour:
   uiManager: {fileID: 1687033912}
   feedbackGenerator: {fileID: 2065896491}
   handValidator: {fileID: 527435240}
+  eyeTrackingValidator: {fileID: 527435239}
   markerPositionValidator: {fileID: 1471164842}
 --- !u!1 &1412083693
 GameObject:
@@ -3720,7 +3732,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 768346098017021688, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverUrl
-      value: ws://192.168.130.110:10050
+      value: ws://192.168.1.129:10050
       objectReference: {fileID: 0}
     - target: {fileID: 1757093436115327999, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3768,7 +3780,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5391519067006067315, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverAddress
-      value: ws://localhost:10049
+      value: ws://192.168.1.129:10049
       objectReference: {fileID: 0}
     - target: {fileID: 7556774523085063354, guid: c2584def47c5c234bb7e363e63066195, type: 3}
       propertyPath: serverUrl
