@@ -75,56 +75,93 @@ public class VoiceSender : MonoBehaviour
 
     IEnumerator SendAudio()
     {
-        if (clip == null || !VoiceWebSocketClient.Instance.IsConnected())
+        if (clip == null || !VoiceWebSocketClient.Instance.IsConnected() || !Microphone.IsRecording(micDevice))
         {
-            Debug.LogWarning("🚫 전송 불가: 클립 없음 or 연결 끊김");
+            Debug.LogWarning("🚫 전송 불가: 클립 없음 or 연결 끊김 or 마이크 녹음 중지");
             yield break;
         }
 
         // 현재 마이크 위치 가져오기
         int currentPosition = Microphone.GetPosition(micDevice);
         
+        // 마이크 위치가 유효하지 않은 경우
+        if (currentPosition < 0)
+        {
+            Debug.LogWarning("🚫 유효하지 않은 마이크 위치");
+            lastReadPosition = 0;
+            yield break;
+        }
+
         // 새 데이터가 있는 경우에만 처리
         if (currentPosition != lastReadPosition)
         {
             int sampleCount;
             float[] samples;
             
-            // 링 버퍼에서 위치 계산
-            if (currentPosition < lastReadPosition)
-            {
-                // 버퍼 끝에서 처음으로 순환된 경우
-                sampleCount = (clip.samples - lastReadPosition) + currentPosition;
-                samples = new float[sampleCount * clip.channels];
+            try {
+                // 링 버퍼에서 위치 계산
+                if (currentPosition < lastReadPosition)
+                {
+                    // 안전 방법: 전체 클립 데이터를 가져온 후 필요한 부분만 추출
+                    float[] allSamples = new float[clip.samples * clip.channels];
+                    if (!clip.GetData(allSamples, 0)) {
+                        Debug.LogError("GetData 실패 - 전체 데이터");
+                        yield break;
+                    }
+                    
+                    // 필요한 샘플 수 계산
+                    sampleCount = (clip.samples - lastReadPosition) + currentPosition;
+                    samples = new float[sampleCount * clip.channels];
+                    
+                    // 첫 부분 복사 (lastReadPosition부터 끝까지)
+                    int firstPartLength = (clip.samples - lastReadPosition) * clip.channels;
+                    System.Array.Copy(allSamples, lastReadPosition * clip.channels, 
+                                     samples, 0, firstPartLength);
+                    
+                    // 두번째 부분 복사 (시작부터 currentPosition까지)
+                    System.Array.Copy(allSamples, 0, 
+                                     samples, firstPartLength, 
+                                     currentPosition * clip.channels);
+                }
+                else
+                {
+                    // 일반적인 경우 - 새 데이터만 가져오기
+                    sampleCount = currentPosition - lastReadPosition;
+                    samples = new float[sampleCount * clip.channels];
+                    
+                    // 전체 버퍼를 가져온 후 필요한 부분만 추출
+                    float[] allSamples = new float[clip.samples * clip.channels];
+                    if (!clip.GetData(allSamples, 0)) {
+                        Debug.LogError("GetData 실패 - 전체 데이터");
+                        yield break;
+                    }
+                    
+                    System.Array.Copy(allSamples, lastReadPosition * clip.channels,
+                                     samples, 0, sampleCount * clip.channels);
+                }
                 
-                // 두 부분으로 나누어 데이터 가져오기
-                float[] firstPart = new float[(clip.samples - lastReadPosition) * clip.channels];
-                float[] secondPart = new float[currentPosition * clip.channels];
-                
-                clip.GetData(firstPart, lastReadPosition);
-                clip.GetData(secondPart, 0);
-                
-                // 두 부분 합치기
-                System.Array.Copy(firstPart, 0, samples, 0, firstPart.Length);
-                System.Array.Copy(secondPart, 0, samples, firstPart.Length, secondPart.Length);
+                // 데이터가 유효한지 검사
+                if (samples.Length > 0)
+                {
+                    byte[] bytes = FloatArrayToPCM(samples);
+
+                    // ✅ 1. 현재 단계 태그 먼저 전송
+                    SendVoiceTag(CurrentStageTag);
+
+                    // ✅ 2. 음성 데이터 전송
+                    VoiceWebSocketClient.Instance.SendBytes(bytes);
+
+                    Debug.Log($"📤 음성과 태그 전송 완료: {CurrentStageTag}, 샘플 수: {sampleCount}");
+                }
+                else
+                {
+                    Debug.LogWarning("유효한 샘플 데이터가 없습니다.");
+                }
             }
-            else
+            catch (System.Exception e)
             {
-                // 일반적인 경우 - 새 데이터만 가져오기
-                sampleCount = currentPosition - lastReadPosition;
-                samples = new float[sampleCount * clip.channels];
-                clip.GetData(samples, lastReadPosition);
+                Debug.LogError($"오디오 데이터 처리 오류: {e.Message}\n{e.StackTrace}");
             }
-            
-            byte[] bytes = FloatArrayToPCM(samples);
-
-            // ✅ 1. 현재 단계 태그 먼저 전송
-            SendVoiceTag(CurrentStageTag);
-
-            // ✅ 2. 음성 데이터 전송
-            VoiceWebSocketClient.Instance.SendBytes(bytes);
-
-            Debug.Log($"📤 음성과 태그 전송 완료: {CurrentStageTag}, 샘플 수: {sampleCount}");
             
             // 마지막으로 읽은 위치 업데이트
             lastReadPosition = currentPosition;

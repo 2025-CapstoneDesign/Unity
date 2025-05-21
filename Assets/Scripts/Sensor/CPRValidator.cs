@@ -63,7 +63,7 @@ public class CPRValidator
     if (compressionTimestamps.Count >= requiredCount)
     {
         Debug.Log($"💪 압박 완료");
-
+        ui.ShowCountText(false);
         return true;
     }
 

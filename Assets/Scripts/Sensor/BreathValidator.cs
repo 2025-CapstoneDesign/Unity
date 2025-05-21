@@ -40,6 +40,7 @@ public class BreathValidator
 
             if (breathCount >= requiredCount)
             {
+                ui.ShowCountText(false);
                 return true;
             }
         }
