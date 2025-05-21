@@ -112,6 +112,11 @@ public class AEDManager : MonoBehaviour
             Debug.Log("💾 저장 테스트 시작!");
             StoreHistory(); // 👈 저장 함수 바로 호출
         }
+        if(Input.GetKeyDown(KeyCode.R))
+        {
+            Debug.Log("💾 플래그 테스트 시작!");
+            truePlag(); // 👈 저장 함수 바로 호출
+        }
     }
 
 
@@ -573,6 +578,21 @@ public class AEDManager : MonoBehaviour
         markerPositionFirstPassed = false;
         markerPositionSecondPassed = false;
         markerDistancePassed = false;
+    }
+
+    private void truePlag()
+    {
+        wearPassed = true;
+        voicePassed = true;
+        sensorPassed = true;
+        handTrackingPassed = true;
+        eyeTrackingPassed = true;
+        gyroPassed = true;
+        flowPassed = true;
+        pressurePassed = true;
+        markerPositionFirstPassed = true;
+        markerPositionSecondPassed = true;
+        markerDistancePassed = true;
     }
 
     private void ResetValidationFlags()
