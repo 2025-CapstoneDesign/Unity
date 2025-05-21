@@ -68,7 +68,7 @@ public class AEDManager : MonoBehaviour
         // 각 단계별 제한 시간 설정 (초 단위)
         InitializeTimeLimits();
         currentStageStartTime = Time.time;
-        eyeTrackingValidator.BeginVerification(1, new Vector3(0.2f, 0f, 2f), 0.2f, 2f, setEyeTrackingPassed);
+        eyeTrackingValidator.BeginVerification(1, new Vector3(0f, 0f, 0.5f), 0.2f, 2f, setEyeTrackingPassed);
 
     }
 
