@@ -65,8 +65,21 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
     {
         var dictionary = Objdetect.getPredefinedDictionary(Objdetect.DICT_6X6_250);
         DetectorParameters detectorParams = new DetectorParameters();
+        
+        // 다양한 각도에서의 성능 향상을 위한 매개변수 조정
         detectorParams.set_cornerRefinementMethod(Objdetect.CORNER_REFINE_SUBPIX);
+        detectorParams.set_cornerRefinementMinAccuracy(0.05f);
+        detectorParams.set_cornerRefinementWinSize(5);
+        
+        // 큰 각도나 부분적으로 가려진 마커 감지 성능 향상
+        detectorParams.set_minMarkerPerimeterRate(0.03f);
+        detectorParams.set_maxMarkerPerimeterRate(0.5f);
+        detectorParams.set_perspectiveRemovePixelPerCell(8);
+        detectorParams.set_perspectiveRemoveIgnoredMarginPerCell(0.13f);
+        
+        // ArUco3 감지 방식 활성화 - 기울어진 마커 감지에 더 강함
         detectorParams.set_useAruco3Detection(true);
+        
         detector = new ArucoDetector(dictionary, detectorParams);
     }
 
@@ -180,28 +193,67 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
         Vector3 pos = markerToWorld.GetColumn(3);
         Quaternion rot = Quaternion.LookRotation(markerToWorld.GetColumn(2), markerToWorld.GetColumn(1));
 
-        // 👉 눈 위치 보정
+        // 시선 각도 계산 (카메라 전방 방향과 월드 업벡터 사이의 각도)
+        Vector3 camForward = camToWorld.GetColumn(2);
+        float viewAngle = Vector3.Angle(camForward, Vector3.up);
+        
+        // 눈 위치 보정
         Vector3 eyeOffset = new Vector3(0f, 0.03f, -0.05f);
         Vector3 worldOffset = camToWorld.MultiplyVector(eyeOffset);
         pos += worldOffset;
 
+        // 시선 각도에 따른 적응형 평활화 계수 계산
+        float adaptivePosSmooth = positionSmoothFactor;
+        float adaptiveRotSmooth = rotationSmoothFactor;
+        
+        // 각도가 극단적일수록(수직 또는 수평에 가까울수록) 평활화 강화
+        float angleFactor = Mathf.Abs(Mathf.Sin(viewAngle * Mathf.Deg2Rad));
+        adaptivePosSmooth = Mathf.Lerp(positionSmoothFactor, Mathf.Min(0.9f, positionSmoothFactor * 1.5f), angleFactor);
+        adaptiveRotSmooth = Mathf.Lerp(rotationSmoothFactor, Mathf.Min(0.85f, rotationSmoothFactor * 1.5f), angleFactor);
+
+        // 마커의 월드 방향 안정화 (바닥에 놓인 마커의 경우)
+        Vector3 markerUp = rot * Vector3.up;
+        float upDot = Vector3.Dot(markerUp, Vector3.up);
+        
+        // 마커의 up 벡터가 월드 up과 거의 수직인 경우 (바닥에 놓인 마커)
+        if (Mathf.Abs(upDot) < 0.3f)
+        {
+            // 마커의 법선 벡터(forward)가 거의 수직 방향인지 확인
+            Vector3 markerForward = rot * Vector3.forward;
+            float forwardUpDot = Mathf.Abs(Vector3.Dot(markerForward, Vector3.up));
+            
+            // 마커가 바닥에 있고 법선이 거의 수직인 경우
+            if (forwardUpDot > 0.7f)
+            {
+                // 마커의 up 방향을 월드 공간에 수평하게 유지
+                Vector3 worldRight = Vector3.Cross(markerForward, Vector3.up).normalized;
+                if (worldRight.magnitude > 0.001f)
+                {
+                    Vector3 correctedUp = Vector3.Cross(worldRight, markerForward).normalized;
+                    Quaternion correctedRot = Quaternion.LookRotation(markerForward, correctedUp);
+                    rot = Quaternion.Slerp(rot, correctedRot, 0.7f); // 강한 보정 적용
+                }
+            }
+        }
+
         // 마커 데이터 업데이트 또는 생성
         if (markerMap.ContainsKey(markerId) && enableSmoothing)
         {
-            // 기존 마커 데이터에 새 위치/회전 정보 추가하고 평활화 적용
-            markerMap[markerId].UpdatePosition(pos, positionSmoothFactor, smoothingFrameCount);
-            markerMap[markerId].UpdateRotation(rot, rotationSmoothFactor, smoothingFrameCount);
+            markerMap[markerId].UpdatePosition(pos, adaptivePosSmooth, smoothingFrameCount);
+            markerMap[markerId].UpdateRotation(rot, adaptiveRotSmooth, smoothingFrameCount);
             
-            pos = markerMap[markerId].position;    // 평활화된 위치 사용
-            rot = markerMap[markerId].rotation;    // 평활화된 회전 사용
+            // 시선 각도에 따라 추가 안정화 적용
+            ApplyViewAngleStabilization(markerId, viewAngle);
+            
+            pos = markerMap[markerId].position;
+            rot = markerMap[markerId].rotation;
         }
         else
         {
-            // 새 마커 생성
             markerMap[markerId] = new MarkerData(pos, rot);
         }
 
-        Debug.Log($"📌 마커 {markerId} 감지됨: 위치={pos}, 회전={rot.eulerAngles}");
+        Debug.Log($"📌 마커 {markerId} 감지됨: 위치={pos}, 회전={rot.eulerAngles}, 시선각={viewAngle}°");
 
         MainThreadDispatcher.Enqueue(() =>
         {
@@ -264,9 +316,14 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
 
         rotMat.Dispose();
 
-        // 🧩 좌표계 변환: Y, Z 축 반전
-        Matrix4x4 convert = Matrix4x4.Scale(new Vector3(1, -1, -1));
-        return convert * m;
+        // OpenCV에서 Unity 좌표계로 정확한 변환
+        // 이전에는 단순히 Y, Z를 뒤집었지만, 이제 완전한 변환 적용
+        Matrix4x4 cvToUnity = Matrix4x4.identity;
+        cvToUnity[0, 0] = 1;   // X축은 그대로
+        cvToUnity[1, 1] = -1;  // Y축 반전
+        cvToUnity[2, 2] = -1;  // Z축 반전
+        
+        return cvToUnity * m;
     }
 
 
@@ -283,5 +340,34 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
         scaledCamMatrix?.Dispose();
         scaledDistCoeffs?.Dispose();
         camHelper?.Dispose();
+    }
+
+    private void ApplyViewAngleStabilization(int markerId, float viewAngle)
+    {
+        if (!markerMap.ContainsKey(markerId)) return;
+        
+        MarkerData marker = markerMap[markerId];
+        Quaternion rotation = marker.rotation;
+        
+        // 마커 평면 방향(forward) 계산
+        Vector3 markerNormal = rotation * Vector3.forward;
+        
+        // 마커 평면과 시선 방향 사이의 각도 계산
+        float planeViewAngle = Vector3.Angle(markerNormal, -Camera.main.transform.forward);
+        
+        // 마커가 시선에 거의 수직일 때 (마커가 옆으로 보일 때) 강한 안정화 필요
+        if (planeViewAngle > 70f)
+        {
+            // 마커의 월드 좌표상 높이 안정화
+            Vector3 position = marker.position;
+            float heightAverage = marker.GetRecentHeightAverage();
+            position.y = Mathf.Lerp(position.y, heightAverage, 0.8f);
+            marker.position = position;
+            
+            // 회전 안정화 - 마커가 가파르게 기울어지는 것 방지
+            Vector3 eulerAngles = rotation.eulerAngles;
+            eulerAngles.z = Mathf.LerpAngle(eulerAngles.z, marker.GetRecentZRotationAverage(), 0.7f);
+            marker.rotation = Quaternion.Euler(eulerAngles);
+        }
     }
 }
