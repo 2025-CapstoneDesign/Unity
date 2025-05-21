@@ -98,4 +98,40 @@ public class MarkerData
             rotation = newRot;
         }
     }
+    
+    // 최근 높이 값의 평균 계산
+    public float GetRecentHeightAverage()
+    {
+        if (positionHistory.Count == 0) return position.y;
+        
+        float sum = 0;
+        foreach (Vector3 pos in positionHistory)
+        {
+            sum += pos.y;
+        }
+        return sum / positionHistory.Count;
+    }
+
+    // 최근 Z 회전 값의 평균 계산
+    public float GetRecentZRotationAverage()
+    {
+        if (rotationHistory.Count == 0) return rotation.eulerAngles.z;
+        
+        float sumSin = 0;
+        float sumCos = 0;
+        
+        foreach (Quaternion rot in rotationHistory)
+        {
+            // 오일러 각의 직접 평균은 문제가 있으므로 삼각함수 사용
+            float angle = rot.eulerAngles.z * Mathf.Deg2Rad;
+            sumSin += Mathf.Sin(angle);
+            sumCos += Mathf.Cos(angle);
+        }
+        
+        // 평균 각도 계산 (각도의 직접 평균 대신 방향 벡터의 평균 사용)
+        float avgAngle = Mathf.Atan2(sumSin, sumCos) * Mathf.Rad2Deg;
+        if (avgAngle < 0) avgAngle += 360f;
+        
+        return avgAngle;
+    }
 }

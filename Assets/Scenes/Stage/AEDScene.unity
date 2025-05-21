@@ -3360,7 +3360,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1543615003825515830, guid: e06a420b3573afd4dae55bf3287c8ea1, type: 3}
       propertyPath: markerLength
-      value: 0.4
+      value: 0.04
       objectReference: {fileID: 0}
     - target: {fileID: 1543615003825515830, guid: e06a420b3573afd4dae55bf3287c8ea1, type: 3}
       propertyPath: enableDownScaling
