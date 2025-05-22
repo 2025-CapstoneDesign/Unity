@@ -10,14 +10,37 @@ using System.Security.Cryptography;
 
 public class ResultHistoryManager : MonoBehaviour
 {
-    string filePath;
-    TrainingResultList allResults = new TrainingResultList();
-    private string apiUrl = "http://127.0.0.1:10055/api/protocol";
+    private static string filePath = Path.Combine(Application.dataPath, "Scripts", "History", "local_history.json");
+    private static TrainingResultList allResults = new TrainingResultList();
+    private string apiUrl = "http://192.168.1.129:10055/api/protocol";
+    private string getResultsUrl = "http://192.168.1.129:10055/api/protocol/results";
 
-    void Start()
+    private bool isInitialized = false;
+    private bool dataLoaded = false; // 데이터 로딩 완료 플래그 추가
+
+    async void Start()
     {
-        filePath = Path.Combine(Application.persistentDataPath, "result.json");
-        LoadAllResults(); // 시작 시 기존 기록 불러오기
+        // readonly 제거했으므로 경로 변경 가능
+        LoadAllResults(); // 로컬 데이터 먼저 로드
+        
+        try 
+        {
+            var serverResults = await GetResultsFromServer();
+            if (serverResults != null && serverResults.Any())
+            {
+                allResults.results = new List<TrainingResult>(serverResults);
+                Debug.Log($"서버에서 {serverResults.Count}개의 기록을 가져왔습니다.");
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"서버 데이터 동기화 실패: {e.Message}");
+        }
+        finally
+        {
+            dataLoaded = true; // 데이터 로딩 완료 표시
+            isInitialized = true;
+        }
     }
 
     // 디바이스 ID를 짧은 해시로 변환하는 메서드 추가
@@ -42,25 +65,47 @@ public class ResultHistoryManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public async void SaveNewResult(TrainingResult newResult)
+    public static async void SaveNewResult(TrainingResult newResult)
     {
+        // 디렉토리 존재 확인 및 생성
+        string directory = Path.GetDirectoryName(filePath);
+        if (!Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        // 파일이 존재하면 먼저 읽어오기
+        if (File.Exists(filePath))
+        {
+            string existingJson = File.ReadAllText(filePath);
+            allResults = JsonUtility.FromJson<TrainingResultList>(existingJson);
+        }
+
         allResults.results.Add(newResult);
         string json = JsonUtility.ToJson(allResults, true);
         File.WriteAllText(filePath, json);
-        Debug.Log("기록 저장 완료");
+        Debug.Log($"기록 저장 완료: {filePath}");
 
-        await SendResultToServer(newResult);
+        // 서버 전송은 인스턴스가 있는 경우에만
+        var instance = FindObjectOfType<ResultHistoryManager>();
+        if (instance != null)
+        {
+            await instance.SendResultToServer(newResult);
+        }
+        else
+        {
+            Debug.LogWarning("ResultHistoryManager 인스턴스가 없어 서버 전송은 스킵됩니다.");
+        }
     }
 
     private async Task SendResultToServer(TrainingResult result)
     {
-        string originalId = SystemInfo.deviceUniqueIdentifier;
-        string deviceId = GetShortHashString(originalId); // 짧은 해시로 변환
-        // 직렬화 가능한 클래스로 변환
+        string deviceId = GetShortHashString(SystemInfo.deviceUniqueIdentifier);
+        
         var requestBody = new ProtocolData
         {
             userId = deviceId,
-            protocolName = result.protocolName,
+            protocolName = result.protocol_name,  // TrainingResult의 protocol_name을 protocolName으로 변환
             date = result.date,
             duration = result.duration.ToString(),
             score = result.score.ToString()
@@ -111,19 +156,89 @@ public class ResultHistoryManager : MonoBehaviour
         }
     }
 
+    private async Task<List<TrainingResult>> GetResultsFromServer()
+    {
+        string deviceId = GetShortHashString(SystemInfo.deviceUniqueIdentifier);
+
+        using (UnityWebRequest request = UnityWebRequest.Get($"{getResultsUrl}?userId={deviceId}"))
+        {
+            try
+            {
+                var operation = request.SendWebRequest();
+                while (!operation.isDone)
+                    await Task.Yield();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    string jsonResponse = request.downloadHandler.text;
+                    Debug.Log($"서버에서 데이터 조회 성공: {jsonResponse}");
+                    
+                    // 서버 응답 구조에 맞게 래퍼 클래스 사용
+                    ServerResponse response = JsonUtility.FromJson<ServerResponse>(jsonResponse);
+                    return response?.data ?? new List<TrainingResult>();
+                }
+                
+                Debug.LogError($"서버 조회 실패: {request.error}");
+                return new List<TrainingResult>();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"데이터 조회 중 오류 발생: {e.Message}");
+                return new List<TrainingResult>();
+            }
+        }
+    }
+
+    // 동기 방식의 GetResults 메서드 수정
     public List<TrainingResult> GetResults()
     {
+        if (!dataLoaded) return new List<TrainingResult>();
+
         return allResults.results
             .OrderByDescending(r =>
             {
                 DateTime date;
                 if (DateTime.TryParse(r.date, out date))
                     return date;
-                else
-                    return DateTime.MinValue; // 날짜 파싱 실패 시 가장 오래된 걸로 취급
+                return DateTime.MinValue;
             })
             .Take(10)
             .ToList();
+    }
+
+    // 비동기 방식의 메서드명 변경
+    public async Task<List<TrainingResult>> GetResultsAsync()
+    {
+        var serverResults = await GetResultsFromServer();
+        
+        if (serverResults != null && serverResults.Any())
+        {
+            var results = serverResults
+                .OrderByDescending(r =>
+                {
+                    DateTime date;
+                    if (DateTime.TryParse(r.date, out date))
+                        return date;
+                    else
+                        return DateTime.MinValue;
+                })
+                .Take(10)
+                .ToList();
+
+            // 서버에서 받은 결과를 로컬 데이터에 동기화
+            allResults.results = new List<TrainingResult>(results);
+            string json = JsonUtility.ToJson(allResults, true);
+            File.WriteAllText(filePath, json);
+            
+            return results;
+        }
+        
+        return GetResults(); // 서버 조회 실패 시 로컬 데이터 반환
+    }
+
+    public bool IsDataLoaded() // 데이터 로딩 상태 확인 메서드 추가
+    {
+        return dataLoaded;
     }
 }
 
@@ -131,8 +246,15 @@ public class ResultHistoryManager : MonoBehaviour
 public class ProtocolData
 {
     public string userId;
-    public string protocolName;
+    public string protocolName;  // 서버로 전송할 때는 protocolName 사용
     public string date;
     public string duration;
     public string score;
+}
+
+[Serializable]
+public class ServerResponse
+{
+    public List<TrainingResult> data;
+    public string status;
 }

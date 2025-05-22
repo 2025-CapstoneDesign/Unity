@@ -14,8 +14,8 @@ public class HistoryCardSpawner : MonoBehaviour
         if (historyManager == null)
             historyManager = FindObjectOfType<ResultHistoryManager>();
 
-        // 불러오기 완료까지 대기
-        yield return new WaitUntil(() => historyManager.GetResults().Count > 0);
+        // 데이터 로딩이 완료될 때까지 대기
+        yield return new WaitUntil(() => historyManager.IsDataLoaded());
 
         List<TrainingResult> results = historyManager.GetResults();
         Debug.Log("📦 실제 불러온 기록 수: " + results.Count);

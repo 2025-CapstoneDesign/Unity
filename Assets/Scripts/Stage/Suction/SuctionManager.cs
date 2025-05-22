@@ -645,6 +645,6 @@ public class SuctionManager : MonoBehaviour
             feedback = feedback
         };
 
-        GetComponent<ResultHistoryManager>().SaveNewResult(newResult);
+        ResultHistoryManager.SaveNewResult(newResult);
     }
 }

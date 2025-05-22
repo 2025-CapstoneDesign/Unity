@@ -756,6 +756,6 @@ public class TraumaPatientAssessmentManager : MonoBehaviour
             feedback = feedback
         };
 
-        GetComponent<ResultHistoryManager>().SaveNewResult(newResult);
+        ResultHistoryManager.SaveNewResult(newResult);
     }
 }

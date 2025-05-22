@@ -54,6 +54,7 @@ public class AEDManager : MonoBehaviour
     private const int TIME_PENALTY_PER_SECOND = 1;  // 초과 시간당 차감할 점수
 
     private int cprPose = 0;
+    private string errorMessage = "";
 
     void Start()
     {
@@ -154,6 +155,7 @@ public class AEDManager : MonoBehaviour
                 {
                     if (value < breathValidator.getBreathFlow())
                     {
+                        uiManager.ShowAlert(errorMessage, 1.5f);
                         AddError("인공호흡 호흡량 약함");
                     }
                     bool success = breathValidator.TryAddBreath(value);
@@ -171,6 +173,7 @@ public class AEDManager : MonoBehaviour
                 {
                     if(cprPose >= 4)
                     {
+                        uiManager.ShowAlert(errorMessage, 1.5f);    
                         AddError("5주기 시 심폐소생술 자세 불량");
                     }
                     if (value < cprValidator.GetMinPressure())
@@ -212,6 +215,7 @@ public class AEDManager : MonoBehaviour
                 {
                     if(cprPose >= 4)
                     {
+                        uiManager.ShowAlert(errorMessage, 1.5f);
                         AddError("마지막 단계 심폐소생술 자세 불량");
                     }
                     if (value < cprValidator.GetMinPressure())
@@ -788,7 +792,7 @@ public class AEDManager : MonoBehaviour
             feedback = feedback
         };
 
-        GetComponent<ResultHistoryManager>().SaveNewResult(newResult);
+        ResultHistoryManager.SaveNewResult(newResult);
     }
 
     private void PlayVoiceForStage(CPRState state)
@@ -818,10 +822,11 @@ public class AEDManager : MonoBehaviour
                 {
                     if (result.cpr)
                     {
-                        cprPose = Mathf.Max(cprPose - 1, 0);
+                        cprPose = Mathf.Max(cprPose - 2, 0);
                     }
                     else
                     {
+                        errorMessage = result.GetErrorMessage("cpr");
                         cprPose = Mathf.Min(cprPose + 1, 4);
                     }
                 }
@@ -833,10 +838,11 @@ public class AEDManager : MonoBehaviour
                 {
                     if (result.cpr)
                     {
-                        cprPose = Mathf.Max(cprPose - 1, 0);
+                        cprPose = Mathf.Max(cprPose - 2, 0);
                     }
                     else
                     {
+                        errorMessage = result.GetErrorMessage("cpr");
                         cprPose = Mathf.Min(cprPose + 1, 4);
                     }
                 }
@@ -847,10 +853,11 @@ public class AEDManager : MonoBehaviour
                 {
                     if (result.cpr)
                     {
-                        cprPose = Mathf.Max(cprPose - 1, 0);
+                        cprPose = Mathf.Max(cprPose - 2, 0);
                     }
                     else
                     {
+                        errorMessage = result.GetErrorMessage("cpr");
                         cprPose = Mathf.Min(cprPose + 1, 4);
                     }
                 }
