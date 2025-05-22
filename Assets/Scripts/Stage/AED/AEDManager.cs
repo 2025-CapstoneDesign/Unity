@@ -71,26 +71,27 @@ public class AEDManager : MonoBehaviour
         // 각 단계별 제한 시간 설정 (초 단위)
         InitializeTimeLimits();
         currentStageStartTime = Time.time;
-        eyeTrackingValidator.BeginVerification(1, new Vector3(0f, 0f, 1f), 0.2f, 2f, setEyeTrackingPassed);
+        eyeTrackingValidator.BeginVerification(1, new Vector3(-0.3f, 0f, 1f), 0.2f, 2f, setEyeTrackingPassed);
 
     }
 
     private void InitializeTimeLimits()
     {
         // 각 단계별 제한시간 설정 (초 단위)
-        stageTimeLimit[CPRState.CheckSafety] = 15f;
-        stageTimeLimit[CPRState.WearPPE] = 15f;
-        stageTimeLimit[CPRState.CheckConsciousness] = 10f;
+        stageTimeLimit[CPRState.CheckSafety] = 20f;
+        stageTimeLimit[CPRState.WearPPE] = 20f;
+        stageTimeLimit[CPRState.CheckConsciousness] = 20f;
         stageTimeLimit[CPRState.Call119AndRequestAED] = 15f;
-        stageTimeLimit[CPRState.CheckBreathingAndPulse] = 10f;
-        stageTimeLimit[CPRState.ChestCompressions] = 20f;
-        stageTimeLimit[CPRState.OpenAirway] = 10f;
-        stageTimeLimit[CPRState.ProvideRescueBreaths] = 10f;
-        stageTimeLimit[CPRState.ContinueCPR] = 120f; // 5사이클 수행 시간
-        stageTimeLimit[CPRState.DirectAssistants] = 10f;
+        stageTimeLimit[CPRState.CheckBreathingAndPulse] = 15f;
+        stageTimeLimit[CPRState.ChestCompressions] = 25f;
+        stageTimeLimit[CPRState.OpenAirway] = 15f;
+        stageTimeLimit[CPRState.ProvideRescueBreaths] = 20f;
+        stageTimeLimit[CPRState.ContinueCPR] = 120f // 5사이클 수행 시간
+;
+        stageTimeLimit[CPRState.DirectAssistants] = 20f;
         stageTimeLimit[CPRState.TurnOnAED] = 15f;
         stageTimeLimit[CPRState.AttachPads] = 20f;
-        stageTimeLimit[CPRState.ClearArea] = 10f;
+        stageTimeLimit[CPRState.ClearArea] = 20f;
         stageTimeLimit[CPRState.DeliverShock] = 10f;
         stageTimeLimit[CPRState.ResumeChestCompressions] = 20f;
     }
@@ -348,7 +349,7 @@ public class AEDManager : MonoBehaviour
                     initPlag();
                     hasPlayedVoice = false;
                     setState(CPRState.ChestCompressions);
-                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.05f), 0.2f, 2f, setHandTrackingPassed);
+                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.01f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case CPRState.CheckBreathingAndPulse:
@@ -422,6 +423,11 @@ public class AEDManager : MonoBehaviour
                     }
                     if (fiveCycleCount < 10)
                     {
+                        uiManager.ShowCycleText(true);
+                        // UI에 현재 주기 표시 (1~5)
+                        int currentCycle = (fiveCycleCount / 2) + 1;
+                        uiManager.SetCycleCount(currentCycle);
+
                         if (fiveCycleCount % 2 == 0 && pressurePassed)
                         {
                             fiveCycleCount++;
@@ -444,6 +450,7 @@ public class AEDManager : MonoBehaviour
                     break;
 
                 case CPRState.DirectAssistants:
+                    uiManager.ShowCycleText(false);
                     if (!hasPlayedVoice)
                     {
                         PlayVoiceForStage(currentState);
@@ -455,7 +462,7 @@ public class AEDManager : MonoBehaviour
                     initPlag();
                     hasPlayedVoice = false;
                     setState(CPRState.TurnOnAED);
-                    handValidator.BeginVerification(10, new Vector3(0.05f, 0f, 0.05f), 0.2f, 1f, setHandTrackingPassed);
+                    handValidator.BeginVerification(10, new Vector3(0.05f, 0f, 0.01f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
                 case CPRState.TurnOnAED:
@@ -470,8 +477,8 @@ public class AEDManager : MonoBehaviour
                     uiManager.ShowCheckIconPass(this);
                     hasPlayedVoice = false;
                     setState(CPRState.AttachPads);
-                    markerPositionValidator.BeginValidation(1, 11, new Vector3(0.1f, 0.1f, 0f), 0.1f, 1f, setMarkerPostionFristPassed);
-                    markerPositionValidator.BeginValidation(1, 12, new Vector3(-0.1f, -0.1f, 0f), 0.1f, 1f, setMarkerPositionSecondPassed);
+                    markerPositionValidator.BeginValidation(1, 11, new Vector3(-0.1f, 0.2f, 0f), 0.2f, 1f, setMarkerPostionFristPassed);
+                    markerPositionValidator.BeginValidation(1, 12, new Vector3(0.1f, -0.12f, 0f), 0.2f, 1f, setMarkerPositionSecondPassed);
                     break;
 
                 case CPRState.AttachPads:
@@ -500,7 +507,7 @@ public class AEDManager : MonoBehaviour
                     initPlag();
                     hasPlayedVoice = false;
                     setState(CPRState.DeliverShock);
-                    handValidator.BeginVerification(10, new Vector3(0.05f, 0f, 0.05f), 0.2f, 1f, setHandTrackingPassed);
+                    handValidator.BeginVerification(10, new Vector3(0.05f, 0f, 0.01f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
                 case CPRState.DeliverShock:
@@ -792,7 +799,7 @@ public class AEDManager : MonoBehaviour
             feedback = feedback
         };
 
-        ResultHistoryManager.SaveNewResult(newResult);
+        GetComponent<ResultHistoryManager>().SaveNewResult(newResult);
     }
 
     private void PlayVoiceForStage(CPRState state)

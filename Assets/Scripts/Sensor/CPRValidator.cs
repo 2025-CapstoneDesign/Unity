@@ -9,7 +9,7 @@ public class CPRValidator
 
     public float minPressure = 40f;
     public float maxPressure = 100f;
-    private int requiredCount = 5;
+    private int requiredCount = 10;
     private float minInterval = 0.1f;
     private float maxInterval = 0.2f;
 
@@ -21,7 +21,7 @@ public class CPRValidator
         {
             minPressure = 80f;
             maxPressure = 200f;
-            requiredCount = 5;
+            requiredCount = 30;
             minInterval = 0.1f;
             maxInterval = 0.2f;
         }
@@ -29,7 +29,7 @@ public class CPRValidator
         {
             minPressure = 880f;
             maxPressure = 1100f;
-            requiredCount = 5;
+            requiredCount = 10;
             minInterval = 0.1f;
             maxInterval = 0.2f;
         }

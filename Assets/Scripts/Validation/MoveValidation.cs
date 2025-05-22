@@ -20,6 +20,7 @@ public class MoveValidation : MonoBehaviour
         [NonSerialized] public Renderer effectRenderer;
         [NonSerialized] public Vector3 startPos;
         [NonSerialized] public Vector3 lastPosition;
+        [NonSerialized] public Quaternion lastRotation;
         [NonSerialized] public bool isInitialized = false;
         [NonSerialized] public Coroutine hideCoroutine;
     }
@@ -137,47 +138,68 @@ public class MoveValidation : MonoBehaviour
             // 마커가 인식될 때만 처리
             if (!OptimizedArUcoMarkerDetection.markerMap.TryGetValue(validation.markerId, out MarkerData marker))
             {
-                // 마커가 인식되지 않았을 때 이펙트 숨기기
                 if (validation.effect != null)
                     validation.effect.SetActive(false);
-                // If marker was initialized but now lost, DO NOT reset currentStayTime or color
-                // if (validation.isInitialized) 
-                // {
-                //     validation.currentStayTime = 0f;
-                //     if (validation.effectRenderer != null)
-                //         validation.effectRenderer.material.color = defaultColor; // Reset color if it was changing
-                // }
                 continue;
             }
             else
             {
-                // 마커가 다시 인식되었을 때 이펙트 다시 표시
                 if (validation.effect != null && !validation.effect.activeSelf)
                     validation.effect.SetActive(true);
             }
 
-            // 이펙트와 시작 위치 초기화 (최초 한 번만, if not done in BeginValidation)
             if (!validation.isInitialized)
             {
                 validation.startPos = marker.position;
-                Vector3 targetPos = validation.startPos + validation.expectedOffset;
-                validation.lastPosition = targetPos; // Though lastPosition is currently unused
+                validation.lastRotation = marker.rotation;
                 
                 if (validation.effect == null && targetEffectPrefab != null)
                 {
-                    validation.effect = Instantiate(targetEffectPrefab, targetPos, Quaternion.identity);
+                    Vector3 targetOffset = marker.rotation * validation.expectedOffset;
+                    Vector3 targetPos = marker.position + targetOffset;
+                    
+                    validation.effect = Instantiate(targetEffectPrefab, targetPos, marker.rotation);
                     validation.effectRenderer = validation.effect.GetComponentInChildren<Renderer>();
                     if (validation.effectRenderer != null)
                     {
                         validation.effectRenderer.material = new Material(validation.effectRenderer.material);
                         validation.effectRenderer.material.color = defaultColor;
                     }
+                    
+                    validation.effect?.SetActive(true);
+                    validation.isInitialized = true;
+                    Debug.Log($"🎯 마커 {validation.markerId}의 지연된 초기 위치 설정(Update): {validation.startPos:F3}, 목표 위치: {targetPos:F3}");
                 }
                 
-                validation.effect?.SetActive(true);
-                validation.isInitialized = true;
-                Debug.Log($"🎯 마커 {validation.markerId}의 지연된 초기 위치 설정(Update): {validation.startPos:F3}, 목표 위치: {targetPos:F3}");
+                continue;
             }
+
+            // 타겟 위치 계산 (Hand/EyeTracking과 동일한 방식)
+            Vector3 worldOffset = marker.rotation * validation.expectedOffset;
+            Vector3 newTargetPos = marker.position + worldOffset;
+
+            float positionChange = Vector3.Distance(validation.lastPosition, newTargetPos);
+            float rotationChange = Quaternion.Angle(validation.lastRotation, marker.rotation);
+
+            if (positionChange > 0.1f || rotationChange > 30f)
+            {
+                if (validation.effect != null)
+                {
+                    validation.effect.transform.position = newTargetPos;
+                    validation.effect.transform.rotation = marker.rotation;
+                }
+            }
+            else
+            {
+                if (validation.effect != null)
+                {
+                    validation.effect.transform.position = Vector3.Lerp(validation.effect.transform.position, newTargetPos, Time.deltaTime * 10f);
+                    validation.effect.transform.rotation = Quaternion.Slerp(validation.effect.transform.rotation, marker.rotation, Time.deltaTime * 10f);
+                }
+            }
+
+            validation.lastPosition = newTargetPos;
+            validation.lastRotation = marker.rotation;
 
             Vector3 currentPos = marker.position;
             Vector3 moved = currentPos - validation.startPos;

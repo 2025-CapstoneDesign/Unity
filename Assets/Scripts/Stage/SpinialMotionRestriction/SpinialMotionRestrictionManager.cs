@@ -531,6 +531,6 @@ public class SpinialMotionRestrictionManager : MonoBehaviour
             feedback = feedback
         };
 
-        ResultHistoryManager.SaveNewResult(newResult);
+        GetComponent<ResultHistoryManager>().SaveNewResult(newResult);
     }
 }

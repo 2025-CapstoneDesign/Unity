@@ -547,6 +547,6 @@ public class VaccumSplintManager : MonoBehaviour
             feedback = feedback
         };
 
-        ResultHistoryManager.SaveNewResult(newResult);
+        GetComponent<ResultHistoryManager>().SaveNewResult(newResult);
     }
 }

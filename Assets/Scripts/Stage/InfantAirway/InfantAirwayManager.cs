@@ -574,7 +574,7 @@ public class InfantAirwayManager : MonoBehaviour
             feedback = feedback
         };
 
-        ResultHistoryManager.SaveNewResult(newResult);
+        GetComponent<ResultHistoryManager>().SaveNewResult(newResult);
     }
 
     private void setState(InfantAirwayState nextState)
