@@ -25,6 +25,52 @@ public class HandTrackingValidate : MonoBehaviour
         [NonSerialized] public Quaternion lastRotation;
         [NonSerialized] public bool isInitialized = false;
         [NonSerialized] public Coroutine hideCoroutine;
+        [NonSerialized] public Vector3[] positionHistory = new Vector3[10];
+        [NonSerialized] public Quaternion[] rotationHistory = new Quaternion[10];
+        [NonSerialized] public int historyIndex = 0;
+        [NonSerialized] public bool hasFullHistory = false;
+
+        public void UpdateHistory(Vector3 newPosition, Quaternion newRotation)
+        {
+            positionHistory[historyIndex] = newPosition;
+            rotationHistory[historyIndex] = newRotation;
+            
+            historyIndex = (historyIndex + 1) % positionHistory.Length;
+            if (historyIndex == 0) hasFullHistory = true;
+        }
+        
+        public Vector3 GetStablePosition()
+        {
+            if (!hasFullHistory) return lastPosition;
+            
+            Vector3 avgPosition = Vector3.zero;
+            int count = hasFullHistory ? positionHistory.Length : historyIndex;
+            
+            for (int i = 0; i < count; i++)
+                avgPosition += positionHistory[i];
+                
+            return avgPosition / count;
+        }
+        
+        public Quaternion GetStableRotation()
+        {
+            if (!hasFullHistory) return lastRotation;
+            
+            Vector3 avgForward = Vector3.zero;
+            Vector3 avgUp = Vector3.zero;
+            int count = hasFullHistory ? rotationHistory.Length : historyIndex;
+            
+            for (int i = 0; i < count; i++)
+            {
+                avgForward += rotationHistory[i] * Vector3.forward;
+                avgUp += rotationHistory[i] * Vector3.up;
+            }
+            
+            avgForward /= count;
+            avgUp /= count;
+            
+            return Quaternion.LookRotation(avgForward.normalized, avgUp.normalized);
+        }
     }
 
     [SerializeField] private GameObject targetEffectPrefab;
@@ -151,36 +197,55 @@ public class HandTrackingValidate : MonoBehaviour
                 validation.isInitialized = true;
                 validation.lastPosition = newTargetPos;
                 validation.lastRotation = marker.rotation;
+                validation.UpdateHistory(newTargetPos, marker.rotation);
                 continue;
             }
 
+            // 쿼터니언 부호 검사 및 보정
+            Quaternion targetRotation = marker.rotation;
+            if (Quaternion.Dot(targetRotation, validation.lastRotation) < 0f)
+            {
+                targetRotation = new Quaternion(
+                    -targetRotation.x,
+                    -targetRotation.y,
+                    -targetRotation.z,
+                    -targetRotation.w
+                );
+            }
+
+            // 안정화된 위치와 회전 계산
+            Vector3 stablePosition = validation.GetStablePosition();
+            Quaternion stableRotation = validation.GetStableRotation();
+
+            // 급격한 변화 감지
             float positionChange = Vector3.Distance(validation.lastPosition, newTargetPos);
-            float rotationChange = Quaternion.Angle(validation.lastRotation, marker.rotation);
+            float rotationChange = Quaternion.Angle(validation.lastRotation, targetRotation);
 
-            if (positionChange > 0.1f || rotationChange > 30f)
+            if (validation.effect != null)
             {
-                if (validation.effect != null)
+                if (positionChange > 0.1f || rotationChange > 30f)
                 {
-                    validation.effect.transform.position = newTargetPos;
-                    validation.effect.transform.rotation = marker.rotation;
+                    // 급격한 변화 시 천천히 보간
+                    validation.effect.transform.position = Vector3.Lerp(stablePosition, newTargetPos, Time.deltaTime * 3f);
+                    validation.effect.transform.rotation = Quaternion.Lerp(stableRotation, targetRotation, Time.deltaTime * 3f);
+                }
+                else
+                {
+                    // 작은 변화는 더 빠르게 보간
+                    validation.effect.transform.position = Vector3.Lerp(validation.effect.transform.position, newTargetPos, Time.deltaTime * 8f);
+                    validation.effect.transform.rotation = Quaternion.Lerp(validation.effect.transform.rotation, targetRotation, Time.deltaTime * 8f);
                 }
             }
-            else
-            {
-                if (validation.effect != null)
-                {
-                    validation.effect.transform.position = Vector3.Lerp(validation.effect.transform.position, newTargetPos, Time.deltaTime * 10f);
-                    validation.effect.transform.rotation = Quaternion.Slerp(validation.effect.transform.rotation, marker.rotation, Time.deltaTime * 10f);
-                }
-            }
 
-            validation.lastPosition = newTargetPos;
-            validation.lastRotation = marker.rotation;
+            // 현재 상태 저장
+            validation.lastPosition = validation.effect.transform.position;
+            validation.lastRotation = validation.effect.transform.rotation;
+            validation.UpdateHistory(validation.lastPosition, validation.lastRotation);
 
             if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Palm, Handedness.Right, out MixedRealityPose pose))
             {
                 Vector3 handPos = pose.Position;
-                float dist = Vector3.Distance(handPos, newTargetPos);
+                float dist = Vector3.Distance(handPos, validation.effect.transform.position);
 
                 if (dist <= validation.radius)
                 {

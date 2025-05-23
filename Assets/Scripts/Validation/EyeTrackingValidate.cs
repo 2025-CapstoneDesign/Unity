@@ -181,9 +181,10 @@ public class EyeTrackingValidate : MonoBehaviour
                 continue;
             }
 
-            // 월드 공간에서의 타겟 위치 계산
-            Vector3 worldOffset = marker.rotation * validation.targetLocalOffset;
-            Vector3 newTargetPos = marker.position + worldOffset;
+            // 마커의 로컬 좌표계에서 월드 좌표계로 변환하는 매트릭스 생성
+            Matrix4x4 markerTransform = Matrix4x4.TRS(marker.position, marker.rotation, Vector3.one);
+            // 로컬 오프셋을 월드 좌표계로 변환
+            Vector3 newTargetPos = markerTransform.MultiplyPoint3x4(validation.targetLocalOffset);
 
             if (!validation.isInitialized)
             {

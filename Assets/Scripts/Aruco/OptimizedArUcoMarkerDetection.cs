@@ -68,15 +68,15 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
         
         // HoloLens 2 PV 카메라의 실제 내부 파라미터 (1280x720 해상도 기준)
         double[] cameraMatrix = new double[] {
-            1037.3, 0.0, 637.4,     // fx, 0, cx
-            0.0, 1037.9, 359.5,     // 0, fy, cy
-            0.0, 0.0, 1.0           // 0, 0, 1
+            952.769, 0.0, 634.826,     // fx, 0, cx
+            0.0, 952.769, 357.728,     // 0, fy, cy
+            0.0, 0.0, 1.0              // 0, 0, 1
         };
         
         camMatrix.put(0, 0, cameraMatrix);
 
-        // HoloLens 2 PV 카메라의 실제 왜곡 계수 (double 타입 사용)
-        double[] distCoeffsArray = new double[] { 0.2709, -0.9735, 0.0021, -0.0015, 0.8155 };
+        // HoloLens 2 PV 카메라의 실제 왜곡 계수
+        double[] distCoeffsArray = new double[] { 0.1975, -0.5025, 0.0, 0.0, 0.4204 };
         distCoeffs = new MatOfDouble();
         distCoeffs.fromArray(distCoeffsArray);
 
