@@ -71,7 +71,7 @@ public class AEDManager : MonoBehaviour
         // 각 단계별 제한 시간 설정 (초 단위)
         InitializeTimeLimits();
         currentStageStartTime = Time.time;
-        eyeTrackingValidator.BeginVerification(1, new Vector3(0.4f, 0f, 1f), 0.2f, 2f, setEyeTrackingPassed);
+        eyeTrackingValidator.BeginVerification(1, new Vector3(0.3f, 0f, 1f), 0.2f, 2f, setEyeTrackingPassed);
 
     }
 
@@ -133,6 +133,7 @@ public class AEDManager : MonoBehaviour
                 {
                     if(cprPose >= 4)
                     {
+                        uiManager.ShowAlert(errorMessage, 1.5f);
                         AddError("첫번째 심폐소생술 자세 불량");
                     }
                     if (value < cprValidator.GetMinPressure())
@@ -156,7 +157,6 @@ public class AEDManager : MonoBehaviour
                 {
                     if (value < breathValidator.getBreathFlow())
                     {
-                        uiManager.ShowAlert(errorMessage, 1.5f);
                         AddError("인공호흡 호흡량 약함");
                     }
                     bool success = breathValidator.TryAddBreath(value);
@@ -348,8 +348,8 @@ public class AEDManager : MonoBehaviour
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
                     hasPlayedVoice = false;
-                    setState(CPRState.ChestCompressions);
-                    handValidator.BeginVerification(1, new Vector3(0f, 0.32f, 0.1f), 0.2f, 2f, setHandTrackingPassed);
+                    setState(CPRState.CheckBreathingAndPulse);
+                    handValidator.BeginVerification(1, new Vector3(0f, 0.35f, 0.1f), 0.2f, 2f, setHandTrackingPassed);
                     break;
 
                 case CPRState.CheckBreathingAndPulse:
@@ -462,7 +462,7 @@ public class AEDManager : MonoBehaviour
                     initPlag();
                     hasPlayedVoice = false;
                     setState(CPRState.TurnOnAED);
-                    handValidator.BeginVerification(10, new Vector3(0f, 0f, 0.05f), 0.2f, 1f, setHandTrackingPassed);
+                    handValidator.BeginVerification(10, new Vector3(0f, -0.05f, 0.01f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
                 case CPRState.TurnOnAED:
@@ -477,8 +477,8 @@ public class AEDManager : MonoBehaviour
                     uiManager.ShowCheckIconPass(this);
                     hasPlayedVoice = false;
                     setState(CPRState.AttachPads);
-                    markerPositionValidator.BeginValidation(1, 11, new Vector3(-0.1f, 0.15f, 0.1f), 0.2f, 1f, setMarkerPostionFristPassed);
-                    markerPositionValidator.BeginValidation(1, 12, new Vector3(0.1f, -0.12f, 0.1f), 0.2f, 1f, setMarkerPositionSecondPassed);
+                    markerPositionValidator.BeginValidation(1, 11, new Vector3(0.1f, 0.1f, 0.1f), 0.2f, 1f, setMarkerPostionFristPassed);
+                    markerPositionValidator.BeginValidation(1, 12, new Vector3(-0.1f, -0.1f, 0.1f), 0.2f, 1f, setMarkerPositionSecondPassed);
                     break;
 
                 case CPRState.AttachPads:
@@ -507,7 +507,7 @@ public class AEDManager : MonoBehaviour
                     initPlag();
                     hasPlayedVoice = false;
                     setState(CPRState.DeliverShock);
-                    handValidator.BeginVerification(10, new Vector3(0f, 0f, 0.05f), 0.2f, 1f, setHandTrackingPassed);
+                    handValidator.BeginVerification(10, new Vector3(0f, -0.05f, 0.01f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
                 case CPRState.DeliverShock:
