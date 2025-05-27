@@ -798,14 +798,16 @@ PlayerSettings:
   metroSplashScreenUseBackgroundColor: 0
   platformCapabilities:
     WindowsStoreApps:
-      GazeInput: True
       HumanInterfaceDevice: True
       PrivateNetworkClientServer: True
       InternetClientServer: True
+      InputInjectionBrokered: False
+      PicturesLibrary: True
+      RemovableStorage: True
+      WebCam: True
+      GazeInput: True
       SpatialPerception: True
       InternetClient: True
-      InputInjectionBrokered: False
-      WebCam: True
       Microphone: True
   metroTargetDeviceFamilies: {}
   metroFTAName: 
@@ -871,4 +873,4 @@ PlayerSettings:
   hmiLoadingImage: {fileID: 0}
   platformRequiresReadableAssets: 0
   virtualTexturingSupportEnabled: 0
-  insecureHttpOption: 0
+  insecureHttpOption: 2

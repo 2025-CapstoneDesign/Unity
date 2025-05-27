@@ -20,8 +20,54 @@ public class MoveValidation : MonoBehaviour
         [NonSerialized] public Renderer effectRenderer;
         [NonSerialized] public Vector3 startPos;
         [NonSerialized] public Vector3 lastPosition;
+        [NonSerialized] public Quaternion lastRotation;
         [NonSerialized] public bool isInitialized = false;
         [NonSerialized] public Coroutine hideCoroutine;
+
+        private Vector3 previousPosition;
+        private Quaternion previousRotation;
+        private const int historySize = 10;
+        private readonly Queue<Vector3> positionHistory = new Queue<Vector3>(historySize);
+        private readonly Queue<Quaternion> rotationHistory = new Queue<Quaternion>(historySize);
+
+        public void UpdateHistory(Vector3 newPosition, Quaternion newRotation)
+        {
+            // 히스토리에 새로운 위치와 회전을 추가
+            positionHistory.Enqueue(newPosition);
+            rotationHistory.Enqueue(newRotation);
+
+            // 히스토리 크기가 초과되면 오래된 데이터 제거
+            if (positionHistory.Count > historySize)
+            {
+                positionHistory.Dequeue();
+                rotationHistory.Dequeue();
+            }
+
+            previousPosition = positionHistory.Peek();
+            previousRotation = rotationHistory.Peek();
+        }
+
+        public Vector3 GetStablePosition()
+        {
+            // 히스토리의 평균 위치 계산
+            Vector3 sum = Vector3.zero;
+            foreach (var pos in positionHistory)
+            {
+                sum += pos;
+            }
+            return sum / positionHistory.Count;
+        }
+
+        public Quaternion GetStableRotation()
+        {
+            // 히스토리의 평균 회전 계산 (쿼터니언 보간 사용)
+            Quaternion avgRot = Quaternion.identity;
+            foreach (var rot in rotationHistory)
+            {
+                avgRot *= rot;
+            }
+            return Quaternion.Normalize(avgRot);
+        }
     }
     
     [SerializeField] private GameObject targetEffectPrefab;
@@ -137,47 +183,88 @@ public class MoveValidation : MonoBehaviour
             // 마커가 인식될 때만 처리
             if (!OptimizedArUcoMarkerDetection.markerMap.TryGetValue(validation.markerId, out MarkerData marker))
             {
-                // 마커가 인식되지 않았을 때 이펙트 숨기기
                 if (validation.effect != null)
                     validation.effect.SetActive(false);
-                // If marker was initialized but now lost, DO NOT reset currentStayTime or color
-                // if (validation.isInitialized) 
-                // {
-                //     validation.currentStayTime = 0f;
-                //     if (validation.effectRenderer != null)
-                //         validation.effectRenderer.material.color = defaultColor; // Reset color if it was changing
-                // }
                 continue;
             }
             else
             {
-                // 마커가 다시 인식되었을 때 이펙트 다시 표시
                 if (validation.effect != null && !validation.effect.activeSelf)
                     validation.effect.SetActive(true);
             }
 
-            // 이펙트와 시작 위치 초기화 (최초 한 번만, if not done in BeginValidation)
             if (!validation.isInitialized)
             {
                 validation.startPos = marker.position;
-                Vector3 targetPos = validation.startPos + validation.expectedOffset;
-                validation.lastPosition = targetPos; // Though lastPosition is currently unused
+                validation.lastRotation = marker.rotation;
                 
                 if (validation.effect == null && targetEffectPrefab != null)
                 {
-                    validation.effect = Instantiate(targetEffectPrefab, targetPos, Quaternion.identity);
+                    Vector3 targetOffset = marker.rotation * validation.expectedOffset;
+                    Vector3 targetPos = marker.position + targetOffset;
+                    
+                    validation.effect = Instantiate(targetEffectPrefab, targetPos, marker.rotation);
                     validation.effectRenderer = validation.effect.GetComponentInChildren<Renderer>();
                     if (validation.effectRenderer != null)
                     {
                         validation.effectRenderer.material = new Material(validation.effectRenderer.material);
                         validation.effectRenderer.material.color = defaultColor;
                     }
+                    
+                    validation.effect?.SetActive(true);
+                    validation.isInitialized = true;
+                    Debug.Log($"🎯 마커 {validation.markerId}의 지연된 초기 위치 설정(Update): {validation.startPos:F3}, 목표 위치: {targetPos:F3}");
                 }
                 
-                validation.effect?.SetActive(true);
-                validation.isInitialized = true;
-                Debug.Log($"🎯 마커 {validation.markerId}의 지연된 초기 위치 설정(Update): {validation.startPos:F3}, 목표 위치: {targetPos:F3}");
+                validation.UpdateHistory(marker.position, marker.rotation);
+                continue;
             }
+
+            // 타겟 위치 계산
+            Vector3 worldOffset = marker.rotation * validation.expectedOffset;
+            Vector3 newTargetPos = marker.position + worldOffset;
+
+            // 쿼터니언 부호 검사 및 보정
+            Quaternion targetRotation = marker.rotation;
+            if (Quaternion.Dot(targetRotation, validation.lastRotation) < 0f)
+            {
+                targetRotation = new Quaternion(
+                    -targetRotation.x,
+                    -targetRotation.y,
+                    -targetRotation.z,
+                    -targetRotation.w
+                );
+            }
+
+            // 안정화된 위치와 회전 계산
+            Vector3 stablePosition = validation.GetStablePosition();
+            Quaternion stableRotation = validation.GetStableRotation();
+
+            float positionChange = Vector3.Distance(validation.lastPosition, newTargetPos);
+            float rotationChange = Quaternion.Angle(validation.lastRotation, targetRotation);
+
+            if (positionChange > 0.1f || rotationChange > 30f)
+            {
+                if (validation.effect != null)
+                {
+                    // 급격한 변화 시 안정화된 위치/회전 기반으로 천천히 보간
+                    validation.effect.transform.position = Vector3.Lerp(stablePosition, newTargetPos, Time.deltaTime * 3f);
+                    validation.effect.transform.rotation = Quaternion.Lerp(stableRotation, targetRotation, Time.deltaTime * 3f);
+                }
+            }
+            else
+            {
+                if (validation.effect != null)
+                {
+                    validation.effect.transform.position = Vector3.Lerp(validation.effect.transform.position, newTargetPos, Time.deltaTime * 8f);
+                    validation.effect.transform.rotation = Quaternion.Lerp(validation.effect.transform.rotation, targetRotation, Time.deltaTime * 8f);
+                }
+            }
+
+            // 히스토리 업데이트
+            validation.lastPosition = validation.effect.transform.position;
+            validation.lastRotation = validation.effect.transform.rotation;
+            validation.UpdateHistory(validation.lastPosition, validation.lastRotation);
 
             Vector3 currentPos = marker.position;
             Vector3 moved = currentPos - validation.startPos;

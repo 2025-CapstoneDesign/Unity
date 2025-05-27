@@ -24,6 +24,53 @@ public class MarkerPositionValidate : MonoBehaviour
         [NonSerialized] public Vector3 lastPosition;
         [NonSerialized] public Quaternion lastRotation;
         [NonSerialized] public bool isInitialized = false;
+
+        [NonSerialized] public Vector3[] positionHistory = new Vector3[10];
+        [NonSerialized] public Quaternion[] rotationHistory = new Quaternion[10];
+        [NonSerialized] public int historyIndex = 0;
+        [NonSerialized] public bool hasFullHistory = false;
+
+        public void UpdateHistory(Vector3 newPosition, Quaternion newRotation)
+        {
+            positionHistory[historyIndex] = newPosition;
+            rotationHistory[historyIndex] = newRotation;
+
+            historyIndex = (historyIndex + 1) % positionHistory.Length;
+            if (historyIndex == 0) hasFullHistory = true;
+        }
+
+        public Vector3 GetStablePosition()
+        {
+            if (!hasFullHistory) return lastPosition;
+
+            Vector3 avgPosition = Vector3.zero;
+            int count = hasFullHistory ? positionHistory.Length : historyIndex;
+
+            for (int i = 0; i < count; i++)
+                avgPosition += positionHistory[i];
+
+            return avgPosition / count;
+        }
+
+        public Quaternion GetStableRotation()
+        {
+            if (!hasFullHistory) return lastRotation;
+
+            Vector3 avgForward = Vector3.zero;
+            Vector3 avgUp = Vector3.zero;
+            int count = hasFullHistory ? rotationHistory.Length : historyIndex;
+
+            for (int i = 0; i < count; i++)
+            {
+                avgForward += rotationHistory[i] * Vector3.forward;
+                avgUp += rotationHistory[i] * Vector3.up;
+            }
+
+            avgForward /= count;
+            avgUp /= count;
+
+            return Quaternion.LookRotation(avgForward.normalized, avgUp.normalized);
+        }
     }
 
     public bool IsAnyVerified => validations.Exists(v => v.isVerified);
@@ -144,6 +191,7 @@ public class MarkerPositionValidate : MonoBehaviour
 
             v.lastPosition = newTargetPos;
             v.lastRotation = baseMarker.rotation;
+            v.UpdateHistory(v.lastPosition, v.lastRotation);
 
             if (!map.TryGetValue(v.targetMarkerId, out MarkerData targetMarker))
                 continue;

@@ -2860,6 +2860,7 @@ MonoBehaviour:
   breathUI: {fileID: 1461778268}
   alertText: {fileID: 0}
   alertAudio: {fileID: 0}
+  cycleText: {fileID: 0}
 --- !u!4 &1687033913
 Transform:
   m_ObjectHideFlags: 0
@@ -3111,6 +3112,10 @@ PrefabInstance:
     - target: {fileID: 295376187007630523, guid: e06a420b3573afd4dae55bf3287c8ea1, type: 3}
       propertyPath: _frameSkippingRatio
       value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1543615003825515830, guid: e06a420b3573afd4dae55bf3287c8ea1, type: 3}
+      propertyPath: markerLength
+      value: 0.04
       objectReference: {fileID: 0}
     - target: {fileID: 1543615003825515830, guid: e06a420b3573afd4dae55bf3287c8ea1, type: 3}
       propertyPath: enableDownScaling

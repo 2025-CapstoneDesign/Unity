@@ -11,29 +11,55 @@ public class HistoryCardSpawner : MonoBehaviour
 
     IEnumerator Start()
     {
+        Debug.Log("🎬 HistoryCardSpawner Start");
+        
         if (historyManager == null)
+        {
+            Debug.Log("🔍 Looking for ResultHistoryManager");
             historyManager = FindObjectOfType<ResultHistoryManager>();
+            if (historyManager == null)
+            {
+                Debug.LogError("❌ ResultHistoryManager not found!");
+                yield break;
+            }
+        }
 
-        // 불러오기 완료까지 대기
-        yield return new WaitUntil(() => historyManager.GetResults().Count > 0);
+        Debug.Log("⏳ Waiting for results to load...");
+        yield return new WaitUntil(() => historyManager.isLoaded);
 
         List<TrainingResult> results = historyManager.GetResults();
-        Debug.Log("📦 실제 불러온 기록 수: " + results.Count);
+        Debug.Log($"📦 Loaded {results.Count} results");
+
+        if (cardPrefab == null)
+        {
+            Debug.LogError("❌ Card prefab is not assigned!");
+            yield break;
+        }
+
+        if (gridParent == null)
+        {
+            Debug.LogError("❌ Grid parent is not assigned!");
+            yield break;
+        }
 
         foreach (var data in results)
         {
+            Debug.Log($"🎴 Creating card for: {data.protocol_name}");
             GameObject card = Instantiate(cardPrefab, gridParent);
+            
             TextMeshProUGUI titleText = card.transform.Find("StageName")?.GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI scoreText = card.transform.Find("Score")?.GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI dateText = card.transform.Find("Date")?.GetComponent<TextMeshProUGUI>();
 
-            if (titleText == null) Debug.LogError("StageName 텍스트 못 찾음");
-            if (scoreText == null) Debug.LogError("Score 텍스트 못 찾음");
-            if (dateText == null) Debug.LogError("Date 텍스트 못 찾음");
+            if (titleText == null) Debug.LogError($"❌ StageName text component not found on card {card.name}");
+            if (scoreText == null) Debug.LogError($"❌ Score text component not found on card {card.name}");
+            if (dateText == null) Debug.LogError($"❌ Date text component not found on card {card.name}");
 
-            if (titleText != null) titleText.text = data.protocolName;
-            if (scoreText != null) scoreText.text = $"점수: {data.score}점";
+            if (titleText != null) titleText.text = data.protocol_name;
+            if (scoreText != null) scoreText.text = data.score.ToString();
             if (dateText != null) dateText.text = data.date;
+
+            Debug.Log($"✅ Card created successfully: {data.protocol_name} - {data.date} - Score: {data.score}");
         }
     }
 

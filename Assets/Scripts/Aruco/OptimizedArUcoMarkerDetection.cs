@@ -61,42 +61,64 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
         InitCameraParameters();
     }
 
+    private void InitCameraParameters()
+    {
+        // HoloLens 2의 실제 카메라 파라미터 적용
+        camMatrix = new Mat(3, 3, CvType.CV_64FC1);
+        
+        // HoloLens 2 PV 카메라의 실제 내부 파라미터 (1280x720 해상도 기준)
+        double[] cameraMatrix = new double[] {
+            952.769, 0.0, 634.826,     // fx, 0, cx
+            0.0, 952.769, 357.728,     // 0, fy, cy
+            0.0, 0.0, 1.0              // 0, 0, 1
+        };
+        
+        camMatrix.put(0, 0, cameraMatrix);
+
+        // HoloLens 2 PV 카메라의 실제 왜곡 계수
+        double[] distCoeffsArray = new double[] { 0.1975, -0.5025, 0.0, 0.0, 0.4204 };
+        distCoeffs = new MatOfDouble();
+        distCoeffs.fromArray(distCoeffsArray);
+
+        scaledCamMatrix = new Mat(3, 3, CvType.CV_64FC1);
+        scaledDistCoeffs = new MatOfDouble();
+        scaledDistCoeffs.fromArray((double[])distCoeffsArray.Clone());
+    }
+
     private void InitArucoDetector()
     {
         var dictionary = Objdetect.getPredefinedDictionary(Objdetect.DICT_6X6_250);
         DetectorParameters detectorParams = new DetectorParameters();
         
-        // 다양한 각도에서의 성능 향상을 위한 매개변수 조정
-        detectorParams.set_cornerRefinementMethod(Objdetect.CORNER_REFINE_SUBPIX);
-        detectorParams.set_cornerRefinementMinAccuracy(0.05f);
-        detectorParams.set_cornerRefinementWinSize(5);
+        // 마커 검출을 위한 기본 파라미터 최적화
+        detectorParams.set_adaptiveThreshWinSizeMin(3);
+        detectorParams.set_adaptiveThreshWinSizeMax(23);
+        detectorParams.set_adaptiveThreshWinSizeStep(10);
+        detectorParams.set_adaptiveThreshConstant(7);
         
-        // 큰 각도나 부분적으로 가려진 마커 감지 성능 향상
+        // 마커 검출 정확도 향상을 위한 파라미터
         detectorParams.set_minMarkerPerimeterRate(0.03f);
-        detectorParams.set_maxMarkerPerimeterRate(0.5f);
-        detectorParams.set_perspectiveRemovePixelPerCell(8);
+        detectorParams.set_maxMarkerPerimeterRate(4.0f);
+        detectorParams.set_polygonalApproxAccuracyRate(0.02f);
+        detectorParams.set_minCornerDistanceRate(0.05f);
+        detectorParams.set_minDistanceToBorder(3);
+        
+        // 코너 검출 개선
+        detectorParams.set_cornerRefinementMethod(Objdetect.CORNER_REFINE_SUBPIX);
+        detectorParams.set_cornerRefinementWinSize(5);
+        detectorParams.set_cornerRefinementMaxIterations(30);
+        detectorParams.set_cornerRefinementMinAccuracy(0.1f);
+        
+        // 원근 변환 파라미터 최적화
+        detectorParams.set_perspectiveRemovePixelPerCell(4);
         detectorParams.set_perspectiveRemoveIgnoredMarginPerCell(0.13f);
         
-        // ArUco3 감지 방식 활성화 - 기울어진 마커 감지에 더 강함
+        // ArUco3 개선된 검출 알고리즘 활성화
         detectorParams.set_useAruco3Detection(true);
+        detectorParams.set_minSideLengthCanonicalImg(32);
+        detectorParams.set_minMarkerLengthRatioOriginalImg(0.0f);
         
         detector = new ArucoDetector(dictionary, detectorParams);
-    }
-
-    private void InitCameraParameters()
-    {
-        camMatrix = new Mat(3, 3, CvType.CV_64FC1);
-        double scaleX = 1280.0 / 640.0;    // 2.0
-        double scaleY = 720.0  / 480.0;    // 1.5
-
-        camMatrix.put(0,0, 370.6985 * scaleX, 0, 363.9156 * scaleX);
-        camMatrix.put(1,0, 0, 361.9248 * scaleY, 273.5386 * scaleY);
-        camMatrix.put(2,0, 0, 0, 1);
-
-        distCoeffs = new MatOfDouble(-0.3952, 2.5100, 0.0587, -0.1033, -11.2717);
-
-        scaledCamMatrix = new Mat(3, 3, CvType.CV_64FC1);
-        scaledDistCoeffs = new MatOfDouble(distCoeffs.clone());
     }
 
     public void OnWebCamTextureToMatHelperInitialized()
@@ -158,14 +180,43 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
 
     private void UndistortImage(Mat input, Mat output, float scale)
     {
-        if (enableDownScaling && Math.Abs(scale - 1f) > 0.00001f)
+        using (Mat gray = new Mat())
+        using (Mat blurred = new Mat())
+        using (Mat enhanced = new Mat())
         {
-            RecalculateCameraMatrix(scale);
-            Calib3d.undistort(input, output, scaledCamMatrix, scaledDistCoeffs);
-        }
-        else
-        {
-            Calib3d.undistort(input, output, camMatrix, distCoeffs);
+            // 그레이스케일 변환
+            Imgproc.cvtColor(input, gray, Imgproc.COLOR_RGB2GRAY);
+            
+            // 양방향 필터로 노이즈 제거하면서 엣지 보존
+            double sigmaColor = 50.0;
+            double sigmaSpace = 5.0;
+            Imgproc.bilateralFilter(gray, blurred, 7, sigmaColor, sigmaSpace);
+            
+            // CLAHE(Contrast Limited Adaptive Histogram Equalization) 적용
+            Imgproc.equalizeHist(blurred, enhanced);
+            
+            // 적응형 이진화 적용 - 파라미터를 double로 명시
+            double maxValue = 255.0;
+            double adaptiveThresholdC = 2.0;
+            Imgproc.adaptiveThreshold(
+                enhanced,
+                enhanced,
+                maxValue,
+                Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
+                Imgproc.THRESH_BINARY,
+                11,
+                adaptiveThresholdC
+            );
+            
+            if (enableDownScaling && Math.Abs(scale - 1.0) > 0.00001)
+            {
+                RecalculateCameraMatrix(scale);
+                Calib3d.undistort(enhanced, output, scaledCamMatrix, scaledDistCoeffs);
+            }
+            else
+            {
+                Calib3d.undistort(enhanced, output, camMatrix, distCoeffs);
+            }
         }
     }
 
@@ -176,103 +227,234 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
         using (Mat rvec = new Mat())
         using (Mat tvec = new Mat())
         {
-            if (enableDownScaling && Math.Abs(scale - 1f) > 0.00001f)
-                Calib3d.solvePnP(CreateObjPoints(), points, scaledCamMatrix, scaledDistCoeffs, rvec, tvec);
-            else
-                Calib3d.solvePnP(CreateObjPoints(), points, camMatrix, distCoeffs, rvec, tvec);
+            // 이전 프레임의 회전/이동 벡터를 초기 추정치로 사용
+            int markerId = (int)ids.get(index, 0)[0];
+            Mat initialRvec = null;
+            Mat initialTvec = null;
 
-            SaveMarkerData((int)ids.get(index, 0)[0], rvec, tvec, camToWorld);
+            if (markerMap.ContainsKey(markerId))
+            {
+                // 이전 프레임의 변환 행렬을 Rodrigues 형식으로 변환
+                Matrix4x4 prevTransform = Matrix4x4.TRS(markerMap[markerId].position, markerMap[markerId].rotation, Vector3.one);
+                using (Mat prevRotMat = new Mat(3, 3, CvType.CV_64FC1))
+                {
+                    initialRvec = new Mat();
+                    initialTvec = new Mat(3, 1, CvType.CV_64FC1);
+
+                    for (int row = 0; row < 3; row++)
+                    {
+                        for (int col = 0; col < 3; col++)
+                            prevRotMat.put(row, col, prevTransform[row, col]);
+                        initialTvec.put(row, 0, prevTransform[row, 3]);
+                    }
+
+                    Calib3d.Rodrigues(prevRotMat, initialRvec);
+                }
+            }
+
+            // solvePnP 함수 호출 시 더 정확한 설정 사용
+            bool useExtrinsicGuess = initialRvec != null && initialTvec != null;
+            Mat currentCamMatrix = enableDownScaling && Math.Abs(scale - 1f) > 0.00001f ? scaledCamMatrix : camMatrix;
+            MatOfDouble currentDistCoeffs = enableDownScaling && Math.Abs(scale - 1f) > 0.00001f ? scaledDistCoeffs : distCoeffs;
+            
+            // 초기 포즈 추정
+            Calib3d.solvePnP(CreateObjPoints(), points, currentCamMatrix, currentDistCoeffs, 
+                            rvec, tvec, useExtrinsicGuess, Calib3d.SOLVEPNP_IPPE);
+
+            // 결과 정제
+            using (Mat objPoints = CreateObjPoints())
+            {
+                Calib3d.solvePnPRefineLM(objPoints, points, currentCamMatrix, currentDistCoeffs, rvec, tvec);
+            }
+
+            initialRvec?.Dispose();
+            initialTvec?.Dispose();
+
+            SaveMarkerData(markerId, rvec, tvec, camToWorld);
         }
+    }
+
+    private Matrix4x4 GetTransformMatrix(Mat rvec, Mat tvec, int markerId)
+    {
+        using (Mat rotMat = new Mat())
+        {
+            Calib3d.Rodrigues(rvec, rotMat);
+
+            // 회전 행렬을 쿼터니언으로 변환
+            Quaternion rawQuat = MatrixToQuaternion(rotMat);
+
+            // 이전 프레임의 회전값과 부호 검사
+            if (markerMap.TryGetValue(markerId, out MarkerData prevMarker))
+            {
+                if (Quaternion.Dot(rawQuat, prevMarker.rotation) < 0f)
+                {
+                    // 부호를 반대로 뒤집어 같은 회전 쪽으로 맞춰준다
+                    rawQuat = new Quaternion(-rawQuat.x, -rawQuat.y, -rawQuat.z, -rawQuat.w);
+                }
+            }
+
+            // Unity 좌표계로 변환
+            Matrix4x4 m = Matrix4x4.TRS(
+                new Vector3(
+                    (float)tvec.get(0, 0)[0],
+                    (float)tvec.get(1, 0)[0],
+                    (float)tvec.get(2, 0)[0]
+                ),
+                rawQuat,
+                Vector3.one
+            );
+
+            // OpenCV에서 Unity 좌표계로 변환
+            Matrix4x4 cvToUnity = Matrix4x4.identity;
+            cvToUnity[0, 0] = 1;
+            cvToUnity[1, 1] = -1;
+            cvToUnity[2, 2] = -1;
+
+            return cvToUnity * m;
+        }
+    }
+
+    private Quaternion MatrixToQuaternion(Mat rotMat)
+    {
+        // 회전 행렬의 원소 추출
+        double m00 = rotMat.get(0, 0)[0];
+        double m01 = rotMat.get(0, 1)[0];
+        double m02 = rotMat.get(0, 2)[0];
+        double m10 = rotMat.get(1, 0)[0];
+        double m11 = rotMat.get(1, 1)[0];
+        double m12 = rotMat.get(1, 2)[0];
+        double m20 = rotMat.get(2, 0)[0];
+        double m21 = rotMat.get(2, 1)[0];
+        double m22 = rotMat.get(2, 2)[0];
+
+        float tr = (float)(m00 + m11 + m22);
+        float qw, qx, qy, qz;
+
+        if (tr > 0)
+        {
+            float S = Mathf.Sqrt((float)(tr + 1.0)) * 2;
+            qw = 0.25f * S;
+            qx = (float)(m21 - m12) / S;
+            qy = (float)(m02 - m20) / S;
+            qz = (float)(m10 - m01) / S;
+        }
+        else if ((m00 > m11) && (m00 > m22))
+        {
+            float S = Mathf.Sqrt((float)(1.0 + m00 - m11 - m22)) * 2;
+            qw = (float)(m21 - m12) / S;
+            qx = 0.25f * S;
+            qy = (float)(m01 + m10) / S;
+            qz = (float)(m02 + m20) / S;
+        }
+        else if (m11 > m22)
+        {
+            float S = Mathf.Sqrt((float)(1.0 + m11 - m00 - m22)) * 2;
+            qw = (float)(m02 - m20) / S;
+            qx = (float)(m01 + m10) / S;
+            qy = 0.25f * S;
+            qz = (float)(m12 + m21) / S;
+        }
+        else
+        {
+            float S = Mathf.Sqrt((float)(1.0 + m22 - m00 - m11)) * 2;
+            qw = (float)(m10 - m01) / S;
+            qx = (float)(m02 + m20) / S;
+            qy = (float)(m12 + m21) / S;
+            qz = 0.25f * S;
+        }
+
+        return new Quaternion(qx, qy, qz, qw).normalized;
+    }
+
+    private Matrix4x4 StabilizeRotation(Matrix4x4 currentTransform, int markerId)
+    {
+        if (!markerMap.ContainsKey(markerId))
+            return currentTransform;
+
+        MarkerData previousMarker = markerMap[markerId];
+        Matrix4x4 previousTransform = Matrix4x4.TRS(previousMarker.position, previousMarker.rotation, Vector3.one);
+
+        // 현재와 이전 방향 벡터 추출
+        Vector3 currentUp = currentTransform.GetColumn(1);
+        Vector3 currentForward = currentTransform.GetColumn(2);
+        Vector3 previousUp = previousTransform.GetColumn(1);
+        Vector3 previousForward = previousTransform.GetColumn(2);
+
+        // 방향 벡터 사이의 각도 계산
+        float upAngle = Vector3.Angle(currentUp, previousUp);
+        float forwardAngle = Vector3.Angle(currentForward, previousForward);
+
+        // 급격한 방향 변화 감지 (160도 이상)
+        if (upAngle > 160f || forwardAngle > 160f)
+        {
+            // 이전 방향을 유지
+            return previousTransform;
+        }
+
+        // 부드러운 방향 전환 적용
+        float smoothFactor = 0.8f;
+        Vector3 position = Vector3.Lerp(previousTransform.GetColumn(3), currentTransform.GetColumn(3), smoothFactor);
+        Quaternion rotation = Quaternion.Lerp(previousMarker.rotation, Quaternion.LookRotation(currentForward, currentUp), smoothFactor);
+
+        return Matrix4x4.TRS(position, rotation, Vector3.one);
     }
 
     private void SaveMarkerData(int markerId, Mat rvec, Mat tvec, Matrix4x4 camToWorld)
     {
-        Matrix4x4 markerToCamera = GetTransformMatrix(rvec, tvec);
+        Matrix4x4 markerToCamera = GetTransformMatrix(rvec, tvec, markerId);
         Matrix4x4 markerToWorld = camToWorld * markerToCamera;
+        
+        // 회전 안정화 적용
+        markerToWorld = StabilizeRotation(markerToWorld, markerId);
 
         Vector3 pos = markerToWorld.GetColumn(3);
         Quaternion rot = Quaternion.LookRotation(markerToWorld.GetColumn(2), markerToWorld.GetColumn(1));
 
-        // 시선 각도 계산 (카메라 전방 방향과 월드 업벡터 사이의 각도)
-        Vector3 camForward = camToWorld.GetColumn(2);
-        float viewAngle = Vector3.Angle(camForward, Vector3.up);
-        
-        // 눈 위치 보정
-        Vector3 eyeOffset = new Vector3(0f, 0.03f, -0.05f);
-        Vector3 worldOffset = camToWorld.MultiplyVector(eyeOffset);
-        pos += worldOffset;
-
-        // 시선 각도에 따른 적응형 평활화 계수 계산
-        float adaptivePosSmooth = positionSmoothFactor;
-        float adaptiveRotSmooth = rotationSmoothFactor;
-        
-        // 각도가 극단적일수록(수직 또는 수평에 가까울수록) 평활화 강화
-        float angleFactor = Mathf.Abs(Mathf.Sin(viewAngle * Mathf.Deg2Rad));
-        adaptivePosSmooth = Mathf.Lerp(positionSmoothFactor, Mathf.Min(0.9f, positionSmoothFactor * 1.5f), angleFactor);
-        adaptiveRotSmooth = Mathf.Lerp(rotationSmoothFactor, Mathf.Min(0.85f, rotationSmoothFactor * 1.5f), angleFactor);
-
-        // 마커의 월드 방향 안정화 (바닥에 놓인 마커의 경우)
-        Vector3 markerUp = rot * Vector3.up;
-        float upDot = Vector3.Dot(markerUp, Vector3.up);
-        
-        // 마커의 up 벡터가 월드 up과 거의 수직인 경우 (바닥에 놓인 마커)
-        if (Mathf.Abs(upDot) < 0.3f)
+        if (markerMap.ContainsKey(markerId))
         {
-            // 마커의 법선 벡터(forward)가 거의 수직 방향인지 확인
-            Vector3 markerForward = rot * Vector3.forward;
-            float forwardUpDot = Mathf.Abs(Vector3.Dot(markerForward, Vector3.up));
+            MarkerData marker = markerMap[markerId];
             
-            // 마커가 바닥에 있고 법선이 거의 수직인 경우
-            if (forwardUpDot > 0.7f)
+            // 급격한 변화 감지 및 필터링
+            float positionDelta = Vector3.Distance(marker.position, pos);
+            float rotationDelta = Quaternion.Angle(marker.rotation, rot);
+            
+            if (positionDelta > 0.1f || rotationDelta > 30f)
             {
-                // 마커의 up 방향을 월드 공간에 수평하게 유지
-                Vector3 worldRight = Vector3.Cross(markerForward, Vector3.up).normalized;
-                if (worldRight.magnitude > 0.001f)
-                {
-                    Vector3 correctedUp = Vector3.Cross(worldRight, markerForward).normalized;
-                    Quaternion correctedRot = Quaternion.LookRotation(markerForward, correctedUp);
-                    rot = Quaternion.Slerp(rot, correctedRot, 0.7f); // 강한 보정 적용
-                }
+                // 급격한 변화 발생 시 이전 값을 더 많이 반영
+                pos = Vector3.Lerp(marker.position, pos, 0.3f);
+                rot = Quaternion.Lerp(marker.rotation, rot, 0.3f);
             }
-        }
-
-        // 마커 데이터 업데이트 또는 생성
-        if (markerMap.ContainsKey(markerId) && enableSmoothing)
-        {
-            markerMap[markerId].UpdatePosition(pos, adaptivePosSmooth, smoothingFrameCount);
-            markerMap[markerId].UpdateRotation(rot, adaptiveRotSmooth, smoothingFrameCount);
+            else
+            {
+                // 작은 변화는 부드럽게 반영
+                pos = Vector3.Lerp(marker.position, pos, 0.8f);
+                rot = Quaternion.Lerp(marker.rotation, rot, 0.8f);
+            }
             
-            // 시선 각도에 따라 추가 안정화 적용
-            ApplyViewAngleStabilization(markerId, viewAngle);
-            
-            pos = markerMap[markerId].position;
-            rot = markerMap[markerId].rotation;
+            marker.position = pos;
+            marker.rotation = rot;
         }
         else
         {
             markerMap[markerId] = new MarkerData(pos, rot);
         }
-
-        Debug.Log($"📌 마커 {markerId} 감지됨: 위치={pos}, 회전={rot.eulerAngles}, 시선각={viewAngle}°");
-
-        MainThreadDispatcher.Enqueue(() =>
-        {
-            float distance = Vector3.Distance(Camera.main.transform.position, pos);
-            Debug.Log($"📏 카메라와 마커 {markerId} 사이 거리: {distance}m");
-        });
     }
 
     private void RecalculateCameraMatrix(float scale)
     {
+        // 이미지 스케일링에 따른 카메라 매트릭스 정확한 조정
         double fx = camMatrix.get(0, 0)[0] * scale;
         double fy = camMatrix.get(1, 1)[0] * scale;
         double cx = camMatrix.get(0, 2)[0] * scale;
         double cy = camMatrix.get(1, 2)[0] * scale;
 
-        scaledCamMatrix.put(0, 0, fx); scaledCamMatrix.put(0, 1, 0); scaledCamMatrix.put(0, 2, cx);
-        scaledCamMatrix.put(1, 0, 0); scaledCamMatrix.put(1, 1, fy); scaledCamMatrix.put(1, 2, cy);
-        scaledCamMatrix.put(2, 0, 0); scaledCamMatrix.put(2, 1, 0); scaledCamMatrix.put(2, 2, 1);
+        scaledCamMatrix.put(0, 0, new double[] {
+            fx, 0, cx,
+            0, fy, cy,
+            0, 0, 1
+        });
 
+        // 왜곡 계수는 스케일링의 영향을 받지 않음
         scaledDistCoeffs.fromArray(distCoeffs.toArray());
     }
 
@@ -297,35 +479,6 @@ public class OptimizedArUcoMarkerDetection : MonoBehaviour
             new Point3(-markerLength / 2, -markerLength / 2, 0)
         );
     }
-
-    private Matrix4x4 GetTransformMatrix(Mat rvec, Mat tvec)
-    {
-        Mat rotMat = new Mat();
-        Calib3d.Rodrigues(rvec, rotMat);
-
-        // 변환 행렬 생성
-        Matrix4x4 m = Matrix4x4.identity;
-        for (int row = 0; row < 3; row++)
-            for (int col = 0; col < 3; col++)
-                m[row, col] = (float)rotMat.get(row, col)[0];
-
-        // 위치 벡터 넣기
-        m[0, 3] = (float)tvec.get(0, 0)[0];
-        m[1, 3] = (float)tvec.get(1, 0)[0];
-        m[2, 3] = (float)tvec.get(2, 0)[0];
-
-        rotMat.Dispose();
-
-        // OpenCV에서 Unity 좌표계로 정확한 변환
-        // 이전에는 단순히 Y, Z를 뒤집었지만, 이제 완전한 변환 적용
-        Matrix4x4 cvToUnity = Matrix4x4.identity;
-        cvToUnity[0, 0] = 1;   // X축은 그대로
-        cvToUnity[1, 1] = -1;  // Y축 반전
-        cvToUnity[2, 2] = -1;  // Z축 반전
-        
-        return cvToUnity * m;
-    }
-
 
     private void OnDestroy()
     {

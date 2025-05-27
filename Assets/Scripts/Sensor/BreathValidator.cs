@@ -19,7 +19,7 @@ public class BreathValidator
         }
         else
         {
-            requiredFlow = 25f;
+            requiredFlow = 15f;
             requiredCount = 2;
         }
         ui = uiManager;

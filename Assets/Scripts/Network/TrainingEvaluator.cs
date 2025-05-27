@@ -60,7 +60,7 @@ void OnServerResponse(string msg)
     int NormalizeScore(int score)
     {
         if (score <= 10) return 0;
-        if (score <= 70) return 1;
+        if (score < 69) return 1;
         return 2;
     }
 
