@@ -41,8 +41,12 @@ public class ResultHistoryManager : MonoBehaviour
         }
         DontDestroyOnLoad(gameObject);
 
-        // 초기화 및 데이터 로드
+        // 플랫폼별 경로 설정
+#if UNITY_WSA && !UNITY_EDITOR
+        filePath = Path.Combine(Application.persistentDataPath, "local_history.json");
+#else
         filePath = Path.Combine(Application.dataPath, "Scripts", "History", "local_history.json");
+#endif
         Debug.Log($"📂 History file path: {filePath}");
         LoadAllResults();
     }
@@ -124,22 +128,43 @@ public class ResultHistoryManager : MonoBehaviour
 
     public void LoadAllResults()
     {
-        Debug.Log($"🔍 Checking file exists: {File.Exists(filePath)}");
-        if (File.Exists(filePath))
+        try 
         {
-            string json = File.ReadAllText(filePath);
-            Debug.Log($"📄 Loaded JSON content: {json}");
-            allResults = JsonUtility.FromJson<TrainingResultList>(json);
-            Debug.Log($"📊 Loaded results count: {allResults.results.Count}");
+            Debug.Log($"🔍 Checking file exists: {File.Exists(filePath)}");
+            if (File.Exists(filePath))
+            {
+                string json = File.ReadAllText(filePath);
+                Debug.Log($"📄 Loaded JSON content: {json}");
+                allResults = JsonUtility.FromJson<TrainingResultList>(json);
+            }
+            else
+            {
+                // 초기 실행시 기본 파일 복사
+#if UNITY_WSA && !UNITY_EDITOR
+                TextAsset defaultJson = Resources.Load<TextAsset>("local_history");
+                if (defaultJson != null)
+                {
+                    File.WriteAllText(filePath, defaultJson.text);
+                    allResults = JsonUtility.FromJson<TrainingResultList>(defaultJson.text);
+                }
+                else
+#endif
+                {
+                    Debug.LogWarning("❌ History file not found. Creating new TrainingResultList");
+                    allResults = new TrainingResultList();
+                }
+            }
+            
+            Debug.Log($"📊 Loaded results count: {allResults?.results?.Count ?? 0}");
             foreach (var result in allResults.results)
             {
                 Debug.Log($"📝 Result: {result.protocol_name} - {result.date} - Score: {result.score}");
             }
         }
-        else
+        catch (Exception e)
         {
-            Debug.LogWarning("❌ History file not found. Creating new TrainingResultList");
-            allResults = new TrainingResultList(); // 처음 실행 시
+            Debug.LogError($"❌ Error loading results: {e.Message}");
+            allResults = new TrainingResultList();
         }
         isLoaded = true;
     }

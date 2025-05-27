@@ -313,8 +313,8 @@ public class AEDManager : MonoBehaviour
                     initPlag();
                     hasPlayedVoice = false;
                     setState(CPRState.CheckConsciousness);
-                    handValidator.BeginVerification(1, new Vector3(0.1f, 0.28f, 0.1f), 0.25f, 1f, setMarkerPostionFristPassed);
-                    handValidator.BeginVerification(1, new Vector3(-0.1f, 0.28f, 0.1f), 0.25f, 1f, setMarkerPositionSecondPassed);
+                    handValidator.BeginVerification(1, new Vector3(0.09f, 0.29f, 0.1f), 0.25f, 1f, setMarkerPostionFristPassed);
+                    handValidator.BeginVerification(1, new Vector3(-0.1f, 0.29f, 0.1f), 0.25f, 1f, setMarkerPositionSecondPassed);
                     break;
 
                 case CPRState.CheckConsciousness:
@@ -455,7 +455,7 @@ public class AEDManager : MonoBehaviour
                     initPlag();
                     hasPlayedVoice = false;
                     setState(CPRState.TurnOnAED);
-                    handValidator.BeginVerification(10, new Vector3(0f, -0.05f, 0.01f), 0.2f, 1f, setHandTrackingPassed);
+                    handValidator.BeginVerification(10, new Vector3(-0.02f, -0.05f, 0.07f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
                 case CPRState.TurnOnAED:
@@ -470,8 +470,8 @@ public class AEDManager : MonoBehaviour
                     uiManager.ShowCheckIconPass(this);
                     hasPlayedVoice = false;
                     setState(CPRState.AttachPads);
-                    markerPositionValidator.BeginValidation(1, 11, new Vector3(0.1f, 0.1f, 0.1f), 0.2f, 1f, setMarkerPostionFristPassed);
-                    markerPositionValidator.BeginValidation(1, 12, new Vector3(-0.1f, -0.1f, 0.1f), 0.2f, 1f, setMarkerPositionSecondPassed);
+                    markerPositionValidator.BeginValidation(1, 11, new Vector3(0.09f, 0.1f, 0.08f), 0.2f, 1f, setMarkerPostionFristPassed);
+                    markerPositionValidator.BeginValidation(1, 12, new Vector3(-0.09f, -0.1f, 0.08f), 0.2f, 1f, setMarkerPositionSecondPassed);
                     break;
 
                 case CPRState.AttachPads:
@@ -500,7 +500,7 @@ public class AEDManager : MonoBehaviour
                     initPlag();
                     hasPlayedVoice = false;
                     setState(CPRState.DeliverShock);
-                    handValidator.BeginVerification(10, new Vector3(0f, -0.05f, 0.01f), 0.2f, 1f, setHandTrackingPassed);
+                    handValidator.BeginVerification(10, new Vector3(0.02f, -0.05f, 0.07f), 0.2f, 1f, setHandTrackingPassed);
                     break;
 
                 case CPRState.DeliverShock:

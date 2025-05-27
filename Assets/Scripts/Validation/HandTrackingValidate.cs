@@ -83,31 +83,6 @@ public class HandTrackingValidate : MonoBehaviour
 
     public void BeginVerification(int markerId, Vector3 localOffset, float radius, float holdTime, Action onSuccess)
     {
-        // 동일한 마커 ID로 이미 검증이 진행 중인지 확인
-        HandValidation existingValidation = validations.Find(v => v.markerId == markerId);
-        
-        // 이미 존재하는 검증이 있다면 정리
-        if (existingValidation != null)
-        {
-            // 코루틴이 실행 중이라면 중지
-            if (existingValidation.hideCoroutine != null)
-            {
-                StopCoroutine(existingValidation.hideCoroutine);
-                existingValidation.hideCoroutine = null;
-            }
-            
-            // 이펙트가 있다면 제거
-            if (existingValidation.effect != null)
-            {
-                Destroy(existingValidation.effect);
-                existingValidation.effect = null;
-                existingValidation.effectRenderer = null;
-            }
-            
-            // 리스트에서 제거
-            validations.Remove(existingValidation);
-        }
-        
         // 새 검증 생성
         HandValidation validation = new HandValidation
         {
