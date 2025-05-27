@@ -567,13 +567,24 @@ public class TractionSplintManager : MonoBehaviour
         // 오늘 날짜를 yyyy-MM-dd 형식으로
         string today = System.DateTime.Now.ToString("yyyy-MM-dd");
 
-        // 경과 시간(초)을 분으로 변환하고 소수점 없이 정수로 표현
-        int minutes = Mathf.FloorToInt(timerManager.elapsedTime / 60f);
-        string durationString = minutes + "분";
+        // 경과 시간을 분과 초로 변환
+        float elapsedSeconds = timerManager.elapsedTime;
+        int minutes = Mathf.FloorToInt(elapsedSeconds / 60f);
+        int seconds = Mathf.FloorToInt(elapsedSeconds % 60f);
+
+        string durationString = "";
+        if (minutes >= 1)
+        {
+            durationString = $"{minutes}분 {seconds}초";
+        }
+        else
+        {
+            durationString = $"{seconds}초";
+        }
 
         TrainingResult newResult = new TrainingResult
         {
-            protocolName = "견인 부목 적용",
+            protocol_name = "견인 부목 적용",
             date = today,
             duration = durationString,
             score = score,

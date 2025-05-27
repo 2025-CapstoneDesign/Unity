@@ -242,9 +242,25 @@ public class HandTrackingValidate : MonoBehaviour
             validation.lastRotation = validation.effect.transform.rotation;
             validation.UpdateHistory(validation.lastPosition, validation.lastRotation);
 
-            if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Palm, Handedness.Right, out MixedRealityPose pose))
+            bool rightHandValid = HandJointUtils.TryGetJointPose(TrackedHandJoint.Palm, Handedness.Right, out MixedRealityPose rightPose);
+            bool leftHandValid = HandJointUtils.TryGetJointPose(TrackedHandJoint.Palm, Handedness.Left, out MixedRealityPose leftPose);
+
+            if (rightHandValid || leftHandValid)
             {
-                Vector3 handPos = pose.Position;
+                Vector3 handPos;
+                if (rightHandValid && leftHandValid)
+                {
+                    // 두 손이 모두 인식될 경우, 더 가까운 손의 위치를 사용
+                    float rightDist = Vector3.Distance(rightPose.Position, validation.effect.transform.position);
+                    float leftDist = Vector3.Distance(leftPose.Position, validation.effect.transform.position);
+                    handPos = rightDist < leftDist ? rightPose.Position : leftPose.Position;
+                }
+                else
+                {
+                    // 한 손만 인식될 경우 해당 손의 위치를 사용
+                    handPos = rightHandValid ? rightPose.Position : leftPose.Position;
+                }
+
                 float dist = Vector3.Distance(handPos, validation.effect.transform.position);
 
                 if (dist <= validation.radius)

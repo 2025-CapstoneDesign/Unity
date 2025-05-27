@@ -243,16 +243,8 @@ public class AEDManager : MonoBehaviour
 
         switch (currentState)
         {
-            case CPRState.CheckConsciousness:
-                if (!gyroPassed && Mathf.Abs(roll) > 10f)
-                {
-                    Debug.Log("🌀 생존 확인 성공!");
-                    setGyroPassed();
-                }
-                break;
-
             case CPRState.OpenAirway:
-                if (!gyroPassed && Mathf.Abs(pitch) > -10f)
+                if (!gyroPassed && Mathf.Abs(pitch) > -70f)
                 {
                     Debug.Log("🌀 고개 기울이기 성공!");
                     setGyroPassed();
@@ -321,6 +313,8 @@ public class AEDManager : MonoBehaviour
                     initPlag();
                     hasPlayedVoice = false;
                     setState(CPRState.CheckConsciousness);
+                    handValidator.BeginVerification(1, new Vector3(0.1f, 0.28f, 0.1f), 0.25f, 1f, setMarkerPostionFristPassed);
+                    handValidator.BeginVerification(1, new Vector3(-0.1f, 0.28f, 0.1f), 0.25f, 1f, setMarkerPositionSecondPassed);
                     break;
 
                 case CPRState.CheckConsciousness:
@@ -329,7 +323,8 @@ public class AEDManager : MonoBehaviour
                         PlayVoiceForStage(currentState);
                         hasPlayedVoice = true;
                     }
-                    if (!gyroPassed || !voicePassed) break;
+                    if (!markerPositionFirstPassed || !markerPositionSecondPassed) break;
+                    if (!voicePassed) break;
 
                     uiManager.ShowCheckIconPass(this);
                     initPlag();
@@ -360,8 +355,6 @@ public class AEDManager : MonoBehaviour
                     }
                     if (!handTrackingPassed)
                     {
-                        voicePassed = false;
-                        Debug.Log("✋ 손 위치 인식 대기 중...");
                         break;
                     }
                     if (!voicePassed) break;
@@ -609,6 +602,7 @@ public class AEDManager : MonoBehaviour
         markerPositionFirstPassed = false;
         markerPositionSecondPassed = false;
         markerDistancePassed = false;
+        cprPose = 0;
     }
 
     private void truePlag()
@@ -786,13 +780,24 @@ public class AEDManager : MonoBehaviour
         // 오늘 날짜를 yyyy-MM-dd 형식으로
         string today = System.DateTime.Now.ToString("yyyy-MM-dd");
 
-        // 경과 시간(초)을 분으로 변환하고 소수점 없이 정수로 표현
-        int minutes = Mathf.FloorToInt(timerManager.elapsedTime / 60f);
-        string durationString = minutes + "분";
+        // 경과 시간을 분과 초로 변환
+        float elapsedSeconds = timerManager.elapsedTime;
+        int minutes = Mathf.FloorToInt(elapsedSeconds / 60f);
+        int seconds = Mathf.FloorToInt(elapsedSeconds % 60f);
+
+        string durationString = "";
+        if (minutes >= 1)
+        {
+            durationString = $"{minutes}분 {seconds}초";
+        }
+        else
+        {
+            durationString = $"{seconds}초";
+        }
 
         TrainingResult newResult = new TrainingResult
         {
-            protocolName = "자동제세동기 사용",
+            protocol_name = "자동제세동기 사용",
             date = today,
             duration = durationString,
             score = score,
@@ -829,7 +834,7 @@ public class AEDManager : MonoBehaviour
                 {
                     if (result.cpr)
                     {
-                        cprPose = Mathf.Max(cprPose - 2, 0);
+                        cprPose = Mathf.Max(cprPose - 1, 0);
                     }
                     else
                     {
