@@ -52,8 +52,8 @@
         {
             "protocol_name": "자동제세동기 사용",
             "date": "2025-05-27",
-            "duration": "7초",
-            "score": 100,
+            "duration": "5분 24초",
+            "score": 74,
             "feedback": "wait"
         }
     ]
