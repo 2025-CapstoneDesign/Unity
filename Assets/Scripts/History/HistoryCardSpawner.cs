@@ -49,6 +49,7 @@ public class HistoryCardSpawner : MonoBehaviour
             
             TextMeshProUGUI titleText = card.transform.Find("StageName")?.GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI scoreText = card.transform.Find("Score")?.GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI timeText = card.transform.Find("Time")?.GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI dateText = card.transform.Find("Date")?.GetComponent<TextMeshProUGUI>();
 
             if (titleText == null) Debug.LogError($"❌ StageName text component not found on card {card.name}");
@@ -56,7 +57,8 @@ public class HistoryCardSpawner : MonoBehaviour
             if (dateText == null) Debug.LogError($"❌ Date text component not found on card {card.name}");
 
             if (titleText != null) titleText.text = data.protocol_name;
-            if (scoreText != null) scoreText.text = data.score.ToString();
+            if (timeText != null) timeText.text = data.duration;
+            if (scoreText != null) scoreText.text = $"{data.score}점";
             if (dateText != null) dateText.text = data.date;
 
             Debug.Log($"✅ Card created successfully: {data.protocol_name} - {data.date} - Score: {data.score}");

@@ -131,7 +131,7 @@ public class AEDManager : MonoBehaviour
             case CPRState.ChestCompressions:
                 if (type == "압력 센서" && !pressurePassed)
                 {
-                    if(cprPose >= 4)
+                    if (cprPose >= 4)
                     {
                         uiManager.ShowAlert(errorMessage, 1.5f);
                         AddError("첫번째 심폐소생술 자세 불량");
@@ -414,7 +414,7 @@ public class AEDManager : MonoBehaviour
                         PlayVoiceForStage(currentState);
                         hasPlayedVoice = true;
                     }
-                    if (fiveCycleCount < 10)
+                    if (fiveCycleCount < 4)
                     {
                         uiManager.ShowCycleText(true);
                         // UI에 현재 주기 표시 (1~5)
@@ -444,6 +444,7 @@ public class AEDManager : MonoBehaviour
 
                 case CPRState.DirectAssistants:
                     uiManager.ShowCycleText(false);
+                    uiManager.ShowCountText(false);
                     if (!hasPlayedVoice)
                     {
                         PlayVoiceForStage(currentState);
@@ -832,6 +833,7 @@ public class AEDManager : MonoBehaviour
             case CPRState.ChestCompressions:
                 if (!pressurePassed)
                 {
+                    Debug.Log($"압력 센서 수신: {cprPose} 자세, errorMessage: {errorMessage}");
                     if (result.cpr)
                     {
                         cprPose = Mathf.Max(cprPose - 1, 0);
